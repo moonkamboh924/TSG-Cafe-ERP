@@ -25,74 +25,74 @@ try:
     with app.app_context():
         db.create_all()
         print("✓ Database tables created")
-    
-    # Seed initial data
-    try:
-        from seed_data import seed_database
-        print("Starting seed data initialization...")
-        # Pass 'Sangat Cafe' as default for this deployment
-        # Users can change it in Global Settings after login
-        seed_database(default_business_name='Sangat Cafe')
-        print("Seed data initialization completed!")
-    except Exception as e:
-        print(f"ERROR: Seed data initialization failed: {str(e)}")
-        import traceback
-        traceback.print_exc()
-    
-    # Create/update default admin user
-    try:
-        # Use secure credential system instead of environment variables
-        verification_code = SecureCredentials.get_verification_code()
-        admin_password = SecureCredentials.get_admin_password()
         
-        # Check for old username first, then new username
-        admin = User.query.filter_by(username='MMamoon001').first()
-        if admin:
-            # Update existing user to new username format and full permissions
-            admin.username = 'MM001'
-            admin.role = 'system_administrator'
-            admin.is_protected = True
-            admin.verification_code = verification_code
-            admin.set_password(admin_password)
-            admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
-            db.session.commit()
-        else:
-            # Remove protected status from all other users first
-            other_users = User.query.filter(User.username != 'MM001').all()
-            for user in other_users:
-                if user.is_protected:
-                    user.is_protected = False
+        # Seed initial data (must be inside app context)
+        try:
+            from seed_data import seed_database
+            print("Starting seed data initialization...")
+            # Pass 'Sangat Cafe' as default for this deployment
+            # Users can change it in Global Settings after login
+            seed_database(default_business_name='Sangat Cafe')
+            print("Seed data initialization completed!")
+        except Exception as e:
+            print(f"ERROR: Seed data initialization failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        
+        # Create/update default admin user (must be inside app context)
+        try:
+            # Use secure credential system instead of environment variables
+            verification_code = SecureCredentials.get_verification_code()
+            admin_password = SecureCredentials.get_admin_password()
             
-            admin = User.query.filter_by(username='MM001').first()
-            if not admin:
-                admin = User(
-                    employee_id='EMP001',
-                    username='MM001',
-                    email='muhammad.mamoon@tsgcafe.com',
-                    first_name='Muhammad',
-                    last_name='Mamoon',
-                    full_name='Muhammad Mamoon',
-                    role='system_administrator',
-                    is_active=True,
-                    is_protected=True,
-                    verification_code=verification_code,
-                    requires_password_change=False,
-                )
-                admin.set_password(admin_password)
-                admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
-                db.session.add(admin)
-                db.session.commit()
-            else:
-                # Update existing MM001 user with full permissions and protected status
+            # Check for old username first, then new username
+            admin = User.query.filter_by(username='MMamoon001').first()
+            if admin:
+                # Update existing user to new username format and full permissions
+                admin.username = 'MM001'
                 admin.role = 'system_administrator'
                 admin.is_protected = True
                 admin.verification_code = verification_code
                 admin.set_password(admin_password)
                 admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
                 db.session.commit()
-    except Exception as e:
-        print(f"Error creating/updating admin user: {str(e)}")
-        db.session.rollback()
+            else:
+                # Remove protected status from all other users first
+                other_users = User.query.filter(User.username != 'MM001').all()
+                for user in other_users:
+                    if user.is_protected:
+                        user.is_protected = False
+                
+                admin = User.query.filter_by(username='MM001').first()
+                if not admin:
+                    admin = User(
+                        employee_id='EMP001',
+                        username='MM001',
+                        email='muhammad.mamoon@tsgcafe.com',
+                        first_name='Muhammad',
+                        last_name='Mamoon',
+                        full_name='Muhammad Mamoon',
+                        role='system_administrator',
+                        is_active=True,
+                        is_protected=True,
+                        verification_code=verification_code,
+                        requires_password_change=False,
+                    )
+                    admin.set_password(admin_password)
+                    admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
+                    db.session.add(admin)
+                    db.session.commit()
+                else:
+                    # Update existing MM001 user with full permissions and protected status
+                    admin.role = 'system_administrator'
+                    admin.is_protected = True
+                    admin.verification_code = verification_code
+                    admin.set_password(admin_password)
+                    admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
+                    db.session.commit()
+        except Exception as e:
+            print(f"Error creating/updating admin user: {str(e)}")
+            db.session.rollback()
         
     print("✓ Database initialization complete")
     
