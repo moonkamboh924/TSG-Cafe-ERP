@@ -141,7 +141,8 @@ def get_inventory_items():
     status = request.args.get('status', '').strip()
     search = request.args.get('search', '').strip()
     
-    query = InventoryItem.query
+    # MULTI-TENANT: Filter by business_id
+    query = InventoryItem.query.filter_by(business_id=current_user.business_id)
     
     # Apply filters
     if category:
@@ -201,7 +202,9 @@ def create_inventory_item():
         # Generate SKU if not provided
         sku = data.get('sku') or InventoryItem.generate_next_sku()
         
+        # MULTI-TENANT: Add business_id
         item = InventoryItem(
+            business_id=current_user.business_id,
             sku=sku,
             name=data['name'],
             category=data['category'],

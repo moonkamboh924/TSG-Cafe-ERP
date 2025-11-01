@@ -60,17 +60,19 @@ def today_kpis():
     else:
         revenue_growth = 0 if revenue == 0 else 100
     
-    # Today's orders count (exclude credit payment sales)
+    # MULTI-TENANT: Today's orders count (exclude credit payment sales)
     orders = Sale.query.filter(
         and_(
+            Sale.business_id == current_user.business_id,
             func.date(Sale.created_at) == today,
             ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
         )
     ).count()
     
-    # Yesterday's orders for comparison (exclude credit payment sales)
+    # MULTI-TENANT: Yesterday's orders for comparison (exclude credit payment sales)
     yesterday_orders = Sale.query.filter(
         and_(
+            Sale.business_id == current_user.business_id,
             func.date(Sale.created_at) == yesterday,
             ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
         )

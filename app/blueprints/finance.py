@@ -85,7 +85,8 @@ def list_expenses():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
-    query = Expense.query
+    # MULTI-TENANT: Filter by business_id
+    query = Expense.query.filter_by(business_id=current_user.business_id)
     
     if start_date:
         query = query.filter(func.date(Expense.incurred_at) >= start_date)
@@ -120,7 +121,9 @@ def create_expense():
     data = request.get_json()
     
     try:
+        # MULTI-TENANT: Add business_id
         expense = Expense(
+            business_id=current_user.business_id,
             category=data['category'],
             note=data.get('note', ''),
             amount=data['amount'],
