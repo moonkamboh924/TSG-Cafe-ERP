@@ -5,11 +5,10 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
-    # Handle both DATABASE_URL and postgres:// URL format (Railway/Heroku compatibility)
-    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///erp.db'
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    SQLALCHEMY_DATABASE_URI = database_url
+    
+    # Force SQLite for this application (ignore Railway's DATABASE_URL)
+    # Railway provides PostgreSQL by default, but we're using SQLite
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/erp.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # ERP Configuration
