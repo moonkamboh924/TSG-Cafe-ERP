@@ -8,4 +8,4 @@ cmds = ["pip install -r requirements.txt"]
 cmds = ["python -m flask db upgrade || echo 'Migration will run on first start'"]
 
 [start]
-cmd = "python -m flask db init || true && python -m flask db migrate || true && python -m flask db upgrade && gunicorn run:app --bind 0.0.0.0:$PORT"
+cmd = "gunicorn run:app --bind 0.0.0.0:$PORT"
