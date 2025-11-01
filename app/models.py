@@ -422,7 +422,7 @@ class BillTemplate(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     template_type = db.Column(db.String(20), nullable=False, default='receipt')  # receipt, invoice, kitchen
-    header_name = db.Column(db.String(100), default='Sangat Cafe')
+    header_name = db.Column(db.String(100), default='My Business')
     header_tagline = db.Column(db.String(200), default='Authentic Pakistani Cuisine')
     logo_filename = db.Column(db.String(255))  # Store logo file path
     show_logo = db.Column(db.Boolean, default=True)

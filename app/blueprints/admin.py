@@ -31,7 +31,7 @@ def get_global_settings():
     """Get global settings as JSON for API consumption"""
     from app.models import SystemSetting
     settings = {
-        'restaurant_name': SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP'),
+        'restaurant_name': SystemSetting.get_setting('restaurant_name', 'My Business'),
         'restaurant_subtitle': SystemSetting.get_setting('restaurant_subtitle', 'Powered by Trisync Global'),
         'copyright_company': SystemSetting.get_setting('copyright_company', 'Trysync global'),
         'restaurant_address': SystemSetting.get_setting('restaurant_address', '123 Main Street, Lahore'),
