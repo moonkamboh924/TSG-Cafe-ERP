@@ -222,8 +222,9 @@ def register():
             # Check if this is the first user (fresh system)
             is_first_user = User.query.count() == 0
             
-            # Generate employee ID and username (unique per business)
-            employee_id = 'EMP001'  # First employee of new business
+            # Generate employee ID (globally unique for now, until we fix schema)
+            # TODO: After removing UNIQUE constraint, make this per-business
+            employee_id = User.generate_next_employee_id()
             username = User.generate_username(first_name, last_name, employee_id)
             
             # Check if username already exists in this business
@@ -306,7 +307,20 @@ def register():
             
         except Exception as e:
             db.session.rollback()
-            flash(f'An error occurred during registration: {str(e)}', 'error')
+            
+            # Parse error message for user-friendly display
+            error_msg = str(e)
+            if 'UNIQUE constraint failed: users.employee_id' in error_msg:
+                flash('Registration failed: Employee ID conflict. Please try again.', 'error')
+            elif 'UNIQUE constraint failed: users.email' in error_msg:
+                flash('This email is already registered. Please use a different email or login.', 'error')
+            elif 'UNIQUE constraint failed: users.username' in error_msg:
+                flash('Username already exists. Please try again.', 'error')
+            elif 'UNIQUE constraint failed: businesses.business_name' in error_msg:
+                flash('Business name already exists. Please choose a different name.', 'error')
+            else:
+                flash(f'Registration failed: {error_msg}', 'error')
+            
             erp_name = SystemSetting.get_setting('restaurant_name', 'My Business')
             return render_template('auth/register.html', erp_name=erp_name)
     

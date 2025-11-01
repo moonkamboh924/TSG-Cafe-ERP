@@ -1,6 +1,13 @@
 """
 Seed data for initial database setup
 """
+import sys
+import io
+
+# Fix encoding for Windows console
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 from app.models import (
     MenuCategory, InventoryItem, Supplier, SystemSetting,
     BillTemplate, db
