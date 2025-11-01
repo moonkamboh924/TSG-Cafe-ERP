@@ -197,13 +197,13 @@
             </div>
             {% if show_tax %}
             <div class="total-row">
-                <span>Tax (17%):</span>
-                <span>PKR 196</span>
+                <span>Tax ({{ tax_rate|int }}%):</span>
+                <span>PKR {{ (1150 * tax_rate / 100)|round|int }}</span>
             </div>
             {% endif %}
             <div class="total-row final">
                 <span>Total:</span>
-                <span>PKR {% if show_tax %}1,346{% else %}1,150{% endif %}</span>
+                <span>PKR {% if show_tax %}{{ (1150 + (1150 * tax_rate / 100))|round|int|format_number }}{% else %}1,150{% endif %}</span>
             </div>
         </div>
         
