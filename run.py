@@ -117,7 +117,9 @@ if __name__ == '__main__':
                 
                 admin = User.query.filter_by(username='MM001').first()
                 if not admin:
+                    # MULTI-TENANT: Assign to Legacy Business (ID: 1)
                     admin = User(
+                        business_id=1,  # Legacy Business
                         employee_id='EMP001',
                         username='MM001',
                         email='muhammad.mamoon@tsgcafe.com',
@@ -125,6 +127,7 @@ if __name__ == '__main__':
                         last_name='Mamoon',
                         full_name='Muhammad Mamoon',
                         role='system_administrator',
+                        is_owner=True,  # Owner of Legacy Business
                         is_active=True,
                         is_protected=True,
                         verification_code=verification_code,
@@ -137,6 +140,10 @@ if __name__ == '__main__':
                     print("Default system administrator created with enhanced security credentials")
                 else:
                     # Update existing MM001 user with full permissions and protected status
+                    # MULTI-TENANT: Ensure business_id is set
+                    if not admin.business_id:
+                        admin.business_id = 1  # Assign to Legacy Business
+                        admin.is_owner = True
                     admin.role = 'system_administrator'
                     admin.is_protected = True
                     admin.verification_code = verification_code

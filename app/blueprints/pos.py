@@ -77,7 +77,11 @@ def get_menu():
     category_id = request.args.get('category_id', type=int)
     search_query = request.args.get('q', '').strip()
     
-    query = MenuItem.query.filter(MenuItem.is_active == True)
+    # MULTI-TENANT: Filter by business_id
+    query = MenuItem.query.filter(
+        MenuItem.business_id == current_user.business_id,
+        MenuItem.is_active == True
+    )
     
     if category_id:
         query = query.filter(MenuItem.category_id == category_id)
@@ -96,7 +100,9 @@ def get_menu():
 @login_required
 @require_permissions('pos.view')
 def get_categories():
+    # MULTI-TENANT: Filter by business_id
     categories = MenuCategory.query.filter(
+        MenuCategory.business_id == current_user.business_id,
         MenuCategory.is_active == True
     ).order_by(MenuCategory.order_index).all()
     

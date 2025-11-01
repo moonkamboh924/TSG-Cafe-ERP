@@ -270,8 +270,6 @@ def register():
             business.owner_id = user.id
             
             # MULTI-TENANT: Create business-specific settings
-            # Note: Due to UNIQUE constraint on key, we check if settings exist
-            # TODO: Remove UNIQUE constraint in Phase 3 to allow per-business settings
             settings_to_create = [
                 ('restaurant_name', business_name),
                 ('restaurant_phone', phone),
@@ -287,15 +285,13 @@ def register():
             ]
             
             for key, value in settings_to_create:
-                # Check if setting already exists (due to UNIQUE constraint)
-                existing = SystemSetting.query.filter_by(key=key).first()
-                if not existing:
-                    setting = SystemSetting(
-                        business_id=business.id,
-                        key=key,
-                        value=value
-                    )
-                    db.session.add(setting)
+                # Create settings for this business
+                setting = SystemSetting(
+                    business_id=business.id,
+                    key=key,
+                    value=value
+                )
+                db.session.add(setting)
             
             db.session.commit()
             

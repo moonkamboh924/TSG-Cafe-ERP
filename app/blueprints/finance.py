@@ -23,20 +23,26 @@ def financial_summary():
     # Today's revenue (excluding credit payment tracking sales + including credit payments received)
     # Today's revenue = Cash Sales + Account Sales + Credit Payments Received
     # Exclude credit payment tracking sales AND unpaid credit sales
+    # MULTI-TENANT: Filter by business_id
     cash_account_sales = db.session.query(func.sum(Sale.total)).filter(
+        Sale.business_id == current_user.business_id,
         func.date(Sale.created_at) == today,
         ~Sale.invoice_no.like('%-PAY-%'),
         Sale.payment_method.in_(['cash', 'online', 'account'])
     ).scalar() or 0
     
+    # MULTI-TENANT: Filter by business_id
     credit_payments_revenue = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
+        CreditPayment.business_id == current_user.business_id,
         func.date(CreditPayment.payment_date) == today
     ).scalar() or 0
     
     today_revenue = float(cash_account_sales) + float(credit_payments_revenue)
     
     # Today's expenses
+    # MULTI-TENANT: Filter by business_id
     today_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.business_id == current_user.business_id,
         func.date(Expense.incurred_at) == today
     ).scalar() or 0
     
@@ -48,19 +54,25 @@ def financial_summary():
     
     # This month's revenue = Cash Sales + Account Sales + Credit Payments Received
     # Exclude credit payment tracking sales AND unpaid credit sales
+    # MULTI-TENANT: Filter by business_id
     month_cash_account_sales = db.session.query(func.sum(Sale.total)).filter(
+        Sale.business_id == current_user.business_id,
         func.date(Sale.created_at) >= month_start,
         ~Sale.invoice_no.like('%-PAY-%'),
         Sale.payment_method.in_(['cash', 'online', 'account'])
     ).scalar() or 0
     
+    # MULTI-TENANT: Filter by business_id
     month_credit_payments = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
+        CreditPayment.business_id == current_user.business_id,
         func.date(CreditPayment.payment_date) >= month_start
     ).scalar() or 0
     
     month_revenue = float(month_cash_account_sales) + float(month_credit_payments)
     
+    # MULTI-TENANT: Filter by business_id
     month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.business_id == current_user.business_id,
         func.date(Expense.incurred_at) >= month_start
     ).scalar() or 0
     
@@ -155,7 +167,8 @@ def list_daily_closings():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 30, type=int)
     
-    closings = DailyClosing.query.order_by(DailyClosing.date.desc()).paginate(
+    # MULTI-TENANT: Filter by business_id
+    closings = DailyClosing.query.filter_by(business_id=current_user.business_id).order_by(DailyClosing.date.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     
@@ -186,31 +199,36 @@ def create_daily_closing():
     data = request.get_json()
     closing_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
     
-    # Check if closing already exists for this date
-    existing = DailyClosing.query.filter_by(date=closing_date).first()
+    # Check if closing already exists for this date (for this business)
+    existing = DailyClosing.query.filter_by(business_id=current_user.business_id, date=closing_date).first()
     if existing:
         return jsonify({'error': 'Daily closing already exists for this date'}), 400
     
     try:
         # Calculate totals for the day = Cash Sales + Account Sales + Credit Payments Received
         # Exclude credit payment tracking sales AND unpaid credit sales
+        # MULTI-TENANT: Filter by business_id
         cash_account_sales_total = db.session.query(func.sum(Sale.total)).filter(
+            Sale.business_id == current_user.business_id,
             func.date(Sale.created_at) == closing_date,
             ~Sale.invoice_no.like('%-PAY-%'),
             Sale.payment_method.in_(['cash', 'online', 'account'])
         ).scalar() or 0
         
         credit_payments_total = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
+            CreditPayment.business_id == current_user.business_id,
             func.date(CreditPayment.payment_date) == closing_date
         ).scalar() or 0
         
         sales_total = float(cash_account_sales_total) + float(credit_payments_total)
         
         expense_total = db.session.query(func.sum(Expense.amount)).filter(
+            Expense.business_id == current_user.business_id,
             func.date(Expense.incurred_at) == closing_date
         ).scalar() or 0
         
         closing = DailyClosing(
+            business_id=current_user.business_id,
             date=closing_date,
             opening_cash=data['opening_cash'],
             sales_total=sales_total,

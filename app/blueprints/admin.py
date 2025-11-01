@@ -103,9 +103,9 @@ def create_user():
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'error': 'Email already exists'}), 400
         
-        # Generate next employee ID (ensure uniqueness)
-        employee_id = User.generate_next_employee_id()
-        while User.query.filter_by(employee_id=employee_id).first():
+        # MULTI-TENANT: Generate next employee ID (ensure uniqueness)
+        employee_id = User.generate_next_employee_id(current_user.business_id)
+        while User.query.filter_by(business_id=current_user.business_id, employee_id=employee_id).first():
             # If duplicate, increment and try again
             num = int(employee_id[3:]) + 1
             employee_id = f"EMP{num:03d}"
@@ -208,18 +208,9 @@ def update_user(user_id):
     if request.method == 'GET':
         return jsonify(user.to_dict())
     
-    # Handle DELETE request - create deletion request (not direct delete)
+    # Handle DELETE request - System Administrator only
     if request.method == 'DELETE':
-        from app.models import AccountDeletionRequest
-        
-        # Users cannot delete their own account directly
-        if user.id == current_user.id:
-            return jsonify({
-                'error': 'You cannot delete your own account. Please submit a deletion request instead.',
-                'show_request_form': True
-            }), 403
-        
-        # Only system administrator can delete other users
+        # Only system administrator can delete users
         if current_user.role != 'system_administrator':
             return jsonify({
                 'error': 'Only System Administrators can delete user accounts.'
@@ -232,9 +223,21 @@ def update_user(user_id):
             }), 403
         
         try:
-            # Delete any pending account deletion requests for this user first
-            from app.models import AccountDeletionRequest, PasswordResetRequest
-            AccountDeletionRequest.query.filter_by(user_id=user.id).delete()
+            from app.models import Sale, Expense, DailyClosing, PasswordResetRequest
+            
+            # System administrator can delete any account
+            # Set user_id to NULL in related records to maintain referential integrity
+            
+            # Update sales to set user_id to NULL
+            Sale.query.filter_by(user_id=user.id).update({'user_id': None})
+            
+            # Update expenses to set user_id to NULL
+            Expense.query.filter_by(user_id=user.id).update({'user_id': None})
+            
+            # Update daily closings to set user_id to NULL
+            DailyClosing.query.filter_by(user_id=user.id).update({'user_id': None})
+            
+            # Delete any pending password reset requests for this user
             PasswordResetRequest.query.filter_by(user_id=user.id).delete()
             
             # Log the deletion before removing
@@ -464,7 +467,8 @@ def get_timezone_info():
 @require_permissions('admin.view')
 def get_next_employee_id():
     """Get the next employee ID for username generation"""
-    next_id = User.generate_next_employee_id()
+    # MULTI-TENANT: Generate employee ID for current business
+    next_id = User.generate_next_employee_id(current_user.business_id)
     return jsonify({'employee_id': next_id})
 
 @bp.route('/api/stats')
@@ -480,11 +484,17 @@ def get_system_stats():
         # Total users
         total_users = User.query.count()
         
-        # Active users (logged in within last 30 days)
+        # MULTI-TENANT: Active users (logged in within last 30 days)
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-        active_users = User.query.filter(
-            User.last_login >= thirty_days_ago
-        ).count() if hasattr(User, 'last_login') else 0
+        if current_user.role == 'system_administrator':
+            active_users = User.query.filter(
+                User.last_login >= thirty_days_ago
+            ).count() if hasattr(User, 'last_login') else 0
+        else:
+            active_users = User.query.filter(
+                User.business_id == current_user.business_id,
+                User.last_login >= thirty_days_ago
+            ).count() if hasattr(User, 'last_login') else 0
         
         # Total menu items
         total_menu_items = MenuItem.query.count()
@@ -492,10 +502,16 @@ def get_system_stats():
         # Total inventory items
         total_inventory_items = InventoryItem.query.count()
         
-        # Low stock items (assuming stock < 10 is low)
-        low_stock_items = InventoryItem.query.filter(
-            InventoryItem.current_stock < 10
-        ).count()
+        # MULTI-TENANT: Low stock items (assuming stock < 10 is low)
+        if current_user.role == 'system_administrator':
+            low_stock_items = InventoryItem.query.filter(
+                InventoryItem.current_stock < 10
+            ).count()
+        else:
+            low_stock_items = InventoryItem.query.filter(
+                InventoryItem.business_id == current_user.business_id,
+                InventoryItem.current_stock < 10
+            ).count()
         
         # Today's sales
         today = datetime.now(timezone.utc).date()
@@ -509,10 +525,16 @@ def get_system_stats():
             Expense.incurred_at >= current_month
         ).scalar() or 0
         
-        # Recent audit logs count
-        recent_logs = AuditLog.query.filter(
-            AuditLog.created_at >= datetime.now(timezone.utc) - timedelta(days=7)
-        ).count()
+        # MULTI-TENANT: Recent audit logs count
+        if current_user.role == 'system_administrator':
+            recent_logs = AuditLog.query.filter(
+                AuditLog.created_at >= datetime.now(timezone.utc) - timedelta(days=7)
+            ).count()
+        else:
+            recent_logs = AuditLog.query.filter(
+                AuditLog.business_id == current_user.business_id,
+                AuditLog.created_at >= datetime.now(timezone.utc) - timedelta(days=7)
+            ).count()
         
         return jsonify({
             'success': True,
@@ -1288,139 +1310,3 @@ def approve_password_reset():
         db.session.rollback()
         flash(f'Error approving password reset: {str(e)}', 'error')
         return redirect(url_for('admin.password_reset_requests'))
-
-@bp.route('/account-deletion-requests')
-@login_required
-@require_permissions('admin.view')
-def account_deletion_requests():
-    """View all account deletion requests - System Administrator only"""
-    # Only system administrators can access account deletion requests
-    if current_user.role != 'system_administrator':
-        flash('Access denied. Only System Administrators can manage account deletion requests.', 'error')
-        return redirect(url_for('dashboard.index'))
-    
-    from app.models import AccountDeletionRequest
-    requests = AccountDeletionRequest.query.order_by(AccountDeletionRequest.requested_at.desc()).all()
-    return render_template('admin/account_deletion_requests.html', requests=requests)
-
-@bp.route('/api/request-account-deletion', methods=['POST'])
-@login_required
-def request_account_deletion():
-    """User requests to delete their own account"""
-    try:
-        from app.models import AccountDeletionRequest
-        
-        reason = request.form.get('reason', '').strip()
-        
-        # Check if there's already a pending request
-        existing_request = AccountDeletionRequest.query.filter_by(
-            user_id=current_user.id,
-            status='pending'
-        ).first()
-        
-        if existing_request:
-            return jsonify({
-                'success': False,
-                'message': 'You already have a pending account deletion request.'
-            }), 400
-        
-        # Create deletion request
-        deletion_request = AccountDeletionRequest(
-            user_id=current_user.id,
-            reason=reason,
-            status='pending'
-        )
-        db.session.add(deletion_request)
-        db.session.commit()
-        
-        log_audit('account_deletion_request', 'user', current_user.id, {
-            'reason': reason,
-            'request_id': deletion_request.id
-        })
-        
-        return jsonify({
-            'success': True,
-            'message': 'Your account deletion request has been submitted. A System Administrator will review it within 24-48 hours.'
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': f'Error submitting request: {str(e)}'
-        }), 500
-
-@bp.route('/api/approve-account-deletion', methods=['POST'])
-@login_required
-@require_permissions('admin.edit')
-def approve_account_deletion():
-    """Approve account deletion request and delete user - System Administrator only"""
-    # Only system administrators can approve account deletions
-    if current_user.role != 'system_administrator':
-        flash('Access denied. Only System Administrators can approve account deletions.', 'error')
-        return redirect(url_for('dashboard.index'))
-    
-    try:
-        from app.models import AccountDeletionRequest
-        
-        request_id = request.form.get('request_id')
-        admin_notes = request.form.get('admin_notes', '')
-        action = request.form.get('action')  # 'approve' or 'reject'
-        
-        if not request_id or not action:
-            flash('Request ID and action are required.', 'error')
-            return redirect(url_for('admin.account_deletion_requests'))
-        
-        # Get the deletion request
-        deletion_request = AccountDeletionRequest.query.get_or_404(request_id)
-        
-        if deletion_request.status != 'pending':
-            flash('This request has already been processed.', 'error')
-            return redirect(url_for('admin.account_deletion_requests'))
-        
-        # Get the user
-        user = User.query.get(deletion_request.user_id)
-        if not user:
-            flash('User not found.', 'error')
-            return redirect(url_for('admin.account_deletion_requests'))
-        
-        if action == 'reject':
-            # Reject the request
-            deletion_request.status = 'rejected'
-            deletion_request.approved_at = datetime.now(timezone.utc)
-            deletion_request.approved_by_id = current_user.id
-            deletion_request.admin_notes = admin_notes
-            db.session.commit()
-            
-            flash(f'Account deletion request for {user.full_name} has been rejected.', 'success')
-            return redirect(url_for('admin.account_deletion_requests'))
-        
-        elif action == 'approve':
-            # Approve and delete the account
-            user_name = user.full_name
-            user_email = user.email
-            user_id = user.id
-            
-            # Log the deletion before removing
-            log_audit('approve_account_deletion', 'user', user_id, {
-                'user_name': user_name,
-                'user_email': user_email,
-                'approved_by': current_user.full_name,
-                'reason': deletion_request.reason
-            })
-            
-            # Delete all related requests first to avoid foreign key constraints
-            PasswordResetRequest.query.filter_by(user_id=user_id).delete()
-            AccountDeletionRequest.query.filter_by(user_id=user_id).delete()
-            
-            # Delete the user (this will cascade delete other related data)
-            db.session.delete(user)
-            db.session.commit()
-            
-            flash(f'Account for {user_name} ({user_email}) has been permanently deleted from the system.', 'success')
-            return redirect(url_for('admin.account_deletion_requests'))
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error processing account deletion: {str(e)}', 'error')
-        return redirect(url_for('admin.account_deletion_requests'))

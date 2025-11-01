@@ -97,8 +97,8 @@ def create_item():
     data = request.get_json()
     
     try:
-        # Generate SKU if not provided
-        sku = data.get('sku') or MenuItem.generate_next_sku()
+        # MULTI-TENANT: Generate SKU if not provided
+        sku = data.get('sku') or MenuItem.generate_next_sku(current_user.business_id)
         
         # MULTI-TENANT: Add business_id
         item = MenuItem(
@@ -229,7 +229,8 @@ def get_item(item_id):
 @login_required
 @require_permissions('menu.view')
 def get_next_sku():
-    next_sku = MenuItem.generate_next_sku()
+    # MULTI-TENANT: Generate SKU for current business
+    next_sku = MenuItem.generate_next_sku(current_user.business_id)
     return jsonify({'sku': next_sku})
 
 # Inventory Items API for Recipe Builder
@@ -240,7 +241,11 @@ def list_inventory_items():
     q = request.args.get('q', '').strip()
     category = request.args.get('category', '').strip()
     
-    query = InventoryItem.query.filter(InventoryItem.is_active == True)
+    # MULTI-TENANT: Filter by business_id
+    query = InventoryItem.query.filter(
+        InventoryItem.business_id == current_user.business_id,
+        InventoryItem.is_active == True
+    )
     
     if q:
         search_pattern = f'%{q}%'
@@ -259,7 +264,9 @@ def list_inventory_items():
 @login_required
 @require_permissions('menu.view')
 def list_inventory_categories():
+    # MULTI-TENANT: Filter by business_id
     categories = db.session.query(InventoryItem.category).filter(
+        InventoryItem.business_id == current_user.business_id,
         InventoryItem.is_active == True
     ).distinct().all()
     

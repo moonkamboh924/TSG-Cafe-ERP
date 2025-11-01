@@ -178,10 +178,16 @@ class User(UserMixin, db.Model):
         return []
     
     @staticmethod
-    def generate_next_employee_id():
+    def generate_next_employee_id(business_id=None):
         """Generate the next employee ID in format EMP001, EMP002, etc."""
-        # Get the highest employee ID number
-        last_user = User.query.filter(User.employee_id.like('EMP%')).order_by(User.employee_id.desc()).first()
+        # MULTI-TENANT: Get the highest employee ID number for this business
+        if business_id:
+            last_user = User.query.filter(
+                User.business_id == business_id,
+                User.employee_id.like('EMP%')
+            ).order_by(User.employee_id.desc()).first()
+        else:
+            last_user = User.query.filter(User.employee_id.like('EMP%')).order_by(User.employee_id.desc()).first()
         
         if last_user and last_user.employee_id:
             try:
@@ -253,9 +259,16 @@ class MenuItem(db.Model):
     recipe_items = db.relationship('MenuRecipe', backref='menu_item', lazy=True, cascade='all, delete-orphan')
     
     @staticmethod
-    def generate_next_sku():
+    def generate_next_sku(business_id=None):
         """Generate the next SKU in format MENU001, MENU002, etc."""
-        last_item = MenuItem.query.filter(MenuItem.sku.like('MENU%')).order_by(MenuItem.sku.desc()).first()
+        # MULTI-TENANT: Get the highest SKU for this business
+        if business_id:
+            last_item = MenuItem.query.filter(
+                MenuItem.business_id == business_id,
+                MenuItem.sku.like('MENU%')
+            ).order_by(MenuItem.sku.desc()).first()
+        else:
+            last_item = MenuItem.query.filter(MenuItem.sku.like('MENU%')).order_by(MenuItem.sku.desc()).first()
         
         if last_item and last_item.sku:
             try:
@@ -349,7 +362,7 @@ class Sale(db.Model):
     tax = db.Column(db.Numeric(10, 2), nullable=False)
     total = db.Column(db.Numeric(10, 2), nullable=False)
     payment_method = db.Column(db.String(20), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     lines = db.relationship('SaleLine', backref='sale', lazy=True, cascade='all, delete-orphan')
     user = db.relationship('User', backref='sales')
@@ -401,7 +414,7 @@ class Expense(db.Model):
     note = db.Column(db.String(255))
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     incurred_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     user = db.relationship('User', backref='expenses')
     
@@ -426,7 +439,7 @@ class DailyClosing(db.Model):
     expense_total = db.Column(db.Numeric(10, 2), nullable=False)
     closing_cash = db.Column(db.Numeric(10, 2), nullable=False)
     notes = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     user = db.relationship('User', backref='daily_closings')
@@ -599,9 +612,16 @@ class InventoryItem(db.Model):
     recipe_usages = db.relationship('MenuRecipe', backref='inventory_item', lazy=True)
     
     @staticmethod
-    def generate_next_sku():
+    def generate_next_sku(business_id=None):
         """Generate the next SKU in format INV001, INV002, etc."""
-        last_item = InventoryItem.query.filter(InventoryItem.sku.like('INV%')).order_by(InventoryItem.sku.desc()).first()
+        # MULTI-TENANT: Get the highest SKU for this business
+        if business_id:
+            last_item = InventoryItem.query.filter(
+                InventoryItem.business_id == business_id,
+                InventoryItem.sku.like('INV%')
+            ).order_by(InventoryItem.sku.desc()).first()
+        else:
+            last_item = InventoryItem.query.filter(InventoryItem.sku.like('INV%')).order_by(InventoryItem.sku.desc()).first()
         
         if last_item and last_item.sku:
             try:
@@ -725,7 +745,7 @@ class PasswordResetRequest(db.Model):
     __tablename__ = 'password_reset_requests'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Request details
     status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, completed
@@ -764,7 +784,7 @@ class AccountDeletionRequest(db.Model):
     __tablename__ = 'account_deletion_requests'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Request details
     reason = db.Column(db.Text)  # Why user wants to delete account

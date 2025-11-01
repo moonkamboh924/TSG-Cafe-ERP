@@ -121,7 +121,11 @@ def list_purchase_orders():
 @login_required
 @require_permissions('inventory.view')
 def list_suppliers():
-    suppliers = Supplier.query.filter(Supplier.is_active == True).all()
+    # MULTI-TENANT: Filter by business_id
+    suppliers = Supplier.query.filter(
+        Supplier.business_id == current_user.business_id,
+        Supplier.is_active == True
+    ).all()
     return jsonify([{
         'id': supplier.id,
         'name': supplier.name,
@@ -199,8 +203,8 @@ def create_inventory_item():
     try:
         data = request.get_json()
         
-        # Generate SKU if not provided
-        sku = data.get('sku') or InventoryItem.generate_next_sku()
+        # MULTI-TENANT: Generate SKU if not provided
+        sku = data.get('sku') or InventoryItem.generate_next_sku(current_user.business_id)
         
         # MULTI-TENANT: Add business_id
         item = InventoryItem(
@@ -322,7 +326,9 @@ def delete_inventory_item(item_id):
 @require_permissions('inventory.view')
 def get_inventory_categories():
     """Get all unique inventory categories"""
+    # MULTI-TENANT: Filter by business_id
     categories = db.session.query(InventoryItem.category).distinct().filter(
+        InventoryItem.business_id == current_user.business_id,
         InventoryItem.is_active == True
     ).all()
     
@@ -403,7 +409,8 @@ def get_inventory_units():
 @require_permissions('inventory.view')
 def get_next_inventory_sku():
     """Get the next available inventory SKU"""
+    # MULTI-TENANT: Generate SKU for current business
     return jsonify({
         'success': True,
-        'sku': InventoryItem.generate_next_sku()
+        'sku': InventoryItem.generate_next_sku(current_user.business_id)
     })

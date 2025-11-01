@@ -27,21 +27,24 @@ def sales_report():
     # Sales report: Revenue = Cash+Online+Account sales + Credit payments received
     # Order count includes all order types (Cash+Online+Account+Credit) excluding payment tracking
     
-    # Get cash/online/account sales by date
+    # MULTI-TENANT: Get cash/online/account sales by date
+    from flask_login import current_user
     sales_query = db.session.query(
         func.date(Sale.created_at).label('date'),
         func.count(Sale.id).label('order_count'),
         func.sum(Sale.total).label('sales_total')
     ).filter(
+        Sale.business_id == current_user.business_id,
         ~Sale.invoice_no.like('%-PAY-%'),
         Sale.payment_method.in_(['cash', 'online', 'account'])
     )
     
-    # Get all orders count (including credit) by date for accurate order counting
+    # MULTI-TENANT: Get all orders count (including credit) by date for accurate order counting
     all_orders_query = db.session.query(
         func.date(Sale.created_at).label('date'),
         func.count(Sale.id).label('total_order_count')
     ).filter(
+        Sale.business_id == current_user.business_id,
         ~Sale.invoice_no.like('%-PAY-%')
     )
     
@@ -66,11 +69,13 @@ def sales_report():
     sales_results = sales_query.order_by('date').all()
     orders_results = all_orders_query.order_by('date').all()
     
-    # Get credit payments by date
+    # MULTI-TENANT: Get credit payments by date
     from ..models import CreditPayment
     credit_payments_query = db.session.query(
         func.date(CreditPayment.payment_date).label('date'),
         func.sum(CreditPayment.payment_amount).label('credit_payments')
+    ).filter(
+        CreditPayment.business_id == current_user.business_id
     )
     
     if start_date:
@@ -88,11 +93,12 @@ def sales_report():
     
     credit_results = credit_payments_query.order_by('date').all()
     
-    # Get total order value (all orders including credit) by date
+    # MULTI-TENANT: Get total order value (all orders including credit) by date
     total_orders_query = db.session.query(
         func.date(Sale.created_at).label('date'),
         func.sum(Sale.total).label('total_order_value')
     ).filter(
+        Sale.business_id == current_user.business_id,
         ~Sale.invoice_no.like('%-PAY-%')
     )
     
@@ -183,6 +189,8 @@ def top_items_report():
         end_date = request.args.get('end_date')
         limit = request.args.get('limit', 10, type=int)
         
+        # MULTI-TENANT: Filter by business_id
+        from flask_login import current_user
         query = db.session.query(
             MenuItem.name,
             MenuCategory.name.label('category'),
@@ -191,7 +199,8 @@ def top_items_report():
         ).select_from(SaleLine)\
          .join(MenuItem, SaleLine.item_id == MenuItem.id)\
          .join(MenuCategory, MenuItem.category_id == MenuCategory.id)\
-         .join(Sale, SaleLine.sale_id == Sale.id)
+         .join(Sale, SaleLine.sale_id == Sale.id)\
+         .filter(Sale.business_id == current_user.business_id)
         
         if start_date:
             query = query.filter(func.date(Sale.created_at) >= start_date)
@@ -226,18 +235,20 @@ def expenses_report():
     end_date = request.args.get('end_date')
     group_by = request.args.get('group_by', 'category')
     
+    # MULTI-TENANT: Filter by business_id
+    from flask_login import current_user
     if group_by == 'category':
         query = db.session.query(
             Expense.category,
             func.count(Expense.id).label('count'),
             func.sum(Expense.amount).label('total_amount')
-        ).group_by(Expense.category)
+        ).filter(Expense.business_id == current_user.business_id).group_by(Expense.category)
     else:  # by date
         query = db.session.query(
             func.date(Expense.incurred_at).label('date'),
             func.count(Expense.id).label('count'),
             func.sum(Expense.amount).label('total_amount')
-        ).group_by(func.date(Expense.incurred_at))
+        ).filter(Expense.business_id == current_user.business_id).group_by(func.date(Expense.incurred_at))
     
     if start_date:
         query = query.filter(func.date(Expense.incurred_at) >= start_date)
@@ -263,8 +274,10 @@ def export_sales():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     
-    # Export sales: All order types (Cash + Online + Account + Credit) - exclude only payment tracking records
+    # MULTI-TENANT: Export sales: All order types (Cash + Online + Account + Credit) - exclude only payment tracking records
+    from flask_login import current_user
     query = Sale.query.filter(
+        Sale.business_id == current_user.business_id,
         ~Sale.invoice_no.like('%-PAY-%')
     )
     
@@ -316,7 +329,9 @@ def export_expenses():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     
-    query = Expense.query
+    # MULTI-TENANT: Filter by business_id
+    from flask_login import current_user
+    query = Expense.query.filter_by(business_id=current_user.business_id)
     
     if start_date:
         query = query.filter(func.date(Expense.incurred_at) >= start_date)
@@ -358,11 +373,16 @@ def export_expenses():
 @require_permissions('reports.view')
 def inventory_report():
     from ..models import InventoryItem
+    from flask_login import current_user
     
     category = request.args.get('category')
     low_stock_only = request.args.get('low_stock_only', 'false').lower() == 'true'
     
-    query = InventoryItem.query.filter(InventoryItem.is_active == True)
+    # MULTI-TENANT: Filter by business_id
+    query = InventoryItem.query.filter(
+        InventoryItem.business_id == current_user.business_id,
+        InventoryItem.is_active == True
+    )
     
     if category:
         query = query.filter(InventoryItem.category == category)
@@ -392,11 +412,16 @@ def inventory_report():
 @require_permissions('reports.view')
 def export_inventory():
     from ..models import InventoryItem
+    from flask_login import current_user
     
     category = request.args.get('category')
     low_stock_only = request.args.get('low_stock_only', 'false').lower() == 'true'
     
-    query = InventoryItem.query.filter(InventoryItem.is_active == True)
+    # MULTI-TENANT: Filter by business_id
+    query = InventoryItem.query.filter(
+        InventoryItem.business_id == current_user.business_id,
+        InventoryItem.is_active == True
+    )
     
     if category:
         query = query.filter(InventoryItem.category == category)
