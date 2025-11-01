@@ -22,7 +22,8 @@ class DataPersistenceService:
         
         # Configure SQLite for better performance and reliability
         def configure_sqlite():
-            if 'sqlite' in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
+            db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+            if 'sqlite' in db_uri:
                 try:
                     from sqlalchemy import text
                     with db.engine.connect() as conn:
@@ -40,6 +41,8 @@ class DataPersistenceService:
                         logger.info("SQLite configured for optimal performance and reliability")
                 except Exception as e:
                     logger.warning(f"Could not configure SQLite optimizations: {str(e)}")
+            elif 'postgresql' in db_uri or 'postgres' in db_uri:
+                logger.info("PostgreSQL database detected - using default configuration")
         
         # Configure SQLite when app context is available
         try:
