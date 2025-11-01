@@ -833,13 +833,15 @@ def remove_logo():
 @require_permissions('admin.view')
 def bill_preview():
     """Generate bill preview page"""
-    # Get tax rate from global settings
+    # Get settings from global settings - ALWAYS use current settings, not saved template
     from app.models import SystemSetting
+    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
     tax_rate = float(SystemSetting.get_setting('tax_rate', '0'))
     
     # Get template data from query parameters
     template_type = request.args.get('template_type', 'receipt')
-    header_name = request.args.get('header_name', SystemSetting.get_setting('restaurant_name', 'My Business'))
+    # ALWAYS use current business name from global settings, ignore URL parameter
+    header_name = business_name
     header_tagline = request.args.get('header_tagline', 'Authentic Pakistani Cuisine')
     show_logo = request.args.get('show_logo', 'false') == 'true'
     show_order_number = request.args.get('show_order_number', 'true') == 'true'
