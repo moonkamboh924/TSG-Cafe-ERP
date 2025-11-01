@@ -198,8 +198,9 @@ def checkout():
         max_attempts = 100
         invoice_no = None
         
-        # Get the highest invoice number for today
+        # MULTI-TENANT: Get the highest invoice number for today from current business
         existing_invoices = Sale.query.filter(
+            Sale.business_id == current_user.business_id,
             Sale.invoice_no.like(f'{date_part}-%')
         ).order_by(Sale.invoice_no.desc()).all()
         
@@ -219,8 +220,8 @@ def checkout():
         for attempt in range(max_attempts):
             test_invoice_no = f'{date_part}-{next_number:02d}'
             
-            # Check if this invoice number already exists
-            existing_sale = Sale.query.filter_by(invoice_no=test_invoice_no).first()
+            # MULTI-TENANT: Check if this invoice number already exists in current business
+            existing_sale = Sale.query.filter_by(business_id=current_user.business_id, invoice_no=test_invoice_no).first()
             if not existing_sale:
                 invoice_no = test_invoice_no
                 break
@@ -263,7 +264,9 @@ def checkout():
         from app.utils.timezone_utils import convert_local_to_utc
         utc_time = convert_local_to_utc(current_time)
         
+        # MULTI-TENANT: Add business_id
         sale = Sale(
+            business_id=current_user.business_id,
             invoice_no=invoice_no,
             customer_name=customer_name,
             customer_phone=customer_phone,
@@ -287,7 +290,9 @@ def checkout():
         
         # Create sale lines and update inventory
         for line_data in sale_lines:
+            # MULTI-TENANT: Add business_id
             sale_line = SaleLine(
+                business_id=current_user.business_id,
                 sale_id=sale.id,
                 item_id=line_data['item_id'],
                 qty=line_data['qty'],
@@ -384,8 +389,11 @@ def get_sales():
     date_to = request.args.get('date_to')
     search = request.args.get('search', '').strip()
     
-    # Exclude credit payment sale records from order history
-    query = Sale.query.filter(~Sale.invoice_no.like('%-PAY-%'))
+    # MULTI-TENANT: Filter by business_id and exclude credit payment sale records
+    query = Sale.query.filter(
+        Sale.business_id == current_user.business_id,
+        ~Sale.invoice_no.like('%-PAY-%')
+    )
     
     if date_from:
         try:
@@ -615,7 +623,8 @@ def get_credit_sales():
     status = request.args.get('status', '')
     search = request.args.get('search', '').strip()
     
-    query = CreditSale.query
+    # MULTI-TENANT: Filter by business_id
+    query = CreditSale.query.filter_by(business_id=current_user.business_id)
     
     if status:
         query = query.filter(CreditSale.status == status)

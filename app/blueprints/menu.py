@@ -16,7 +16,8 @@ def index():
 @login_required
 @require_permissions('menu.view')
 def list_categories():
-    categories = MenuCategory.query.order_by(MenuCategory.order_index).all()
+    # MULTI-TENANT: Filter by business_id
+    categories = MenuCategory.query.filter_by(business_id=current_user.business_id).order_by(MenuCategory.order_index).all()
     return jsonify([{
         'id': cat.id,
         'name': cat.name,
@@ -32,7 +33,9 @@ def create_category():
     data = request.get_json()
     
     try:
+        # MULTI-TENANT: Add business_id
         category = MenuCategory(
+            business_id=current_user.business_id,
             name=data['name'],
             order_index=data.get('order_index', 0),
             is_active=data.get('is_active', True)
@@ -66,7 +69,8 @@ def list_items():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
-    query = MenuItem.query
+    # MULTI-TENANT: Filter by business_id
+    query = MenuItem.query.filter_by(business_id=current_user.business_id)
     
     if category_id:
         query = query.filter(MenuItem.category_id == category_id)
@@ -96,7 +100,9 @@ def create_item():
         # Generate SKU if not provided
         sku = data.get('sku') or MenuItem.generate_next_sku()
         
+        # MULTI-TENANT: Add business_id
         item = MenuItem(
+            business_id=current_user.business_id,
             sku=sku,
             name=data['name'],
             category_id=data['category_id'],
