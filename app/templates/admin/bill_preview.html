@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Preview - {{ template_type.title() }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .bill-container {
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            line-height: 1.4;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+        }
+        .header-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .header-tagline {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .address-line {
+            font-size: 11px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+            margin: 0 auto;
+        }
+        .order-info {
+            border-bottom: 1px solid #000;
+            padding: 10px 0;
+            margin-bottom: 10px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .items {
+            margin-bottom: 10px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .totals {
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .total-row.final {
+            font-weight: bold;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 11px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+        .qr-code {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .qr-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #000;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        @media print {
+            body { 
+                margin: 0; 
+                background: white; 
+            }
+            .bill-container { 
+                border: none; 
+                margin: 0; 
+            }
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bill-container" style="width: {% if paper_size == '58mm' %}220px{% elif paper_size == '80mm' %}300px{% elif paper_size == 'A4' %}595px{% else %}420px{% endif %}; font-size: {% if font_size == 'small' %}11px{% elif font_size == 'large' %}15px{% else %}13px{% endif %};">
+        <div class="header">
+            {% if show_logo and logo_filename %}
+            <div class="logo">
+                <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo">
+            </div>
+            {% endif %}
+            <div class="header-name">{{ header_name.upper() }}</div>
+            <div class="header-tagline">{{ header_tagline }}</div>
+            <div class="address-line">123 Main Street, Lahore</div>
+            <div class="address-line">Phone: +92 300 1234567</div>
+        </div>
+        
+        <div class="order-info">
+            {% if show_order_number %}
+            <div class="info-row">
+                <span>Order #: 001234</span>
+                {% if show_table %}
+                <span>Table: 5</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% if show_date_time %}
+            <div class="info-row">
+                <span>Date: <span class="current-date"></span></span>
+                <span>Time: <span class="current-time"></span></span>
+            </div>
+            {% endif %}
+            
+            {% if show_cashier %}
+            <div style="font-size: 12px;">Cashier: Muhammad Mamoon</div>
+            {% endif %}
+        </div>
+        
+        <div class="items">
+            <div class="item-row">
+                <span>Chicken Karahi</span>
+                <span>PKR 850</span>
+            </div>
+            <div class="item-row">
+                <span>Naan (2x)</span>
+                <span>PKR 120</span>
+            </div>
+            <div class="item-row">
+                <span>Lassi</span>
+                <span>PKR 180</span>
+            </div>
+        </div>
+        
+        <div class="totals">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>PKR 1,150</span>
+            </div>
+            {% if show_tax %}
+            <div class="total-row">
+                <span>Tax (17%):</span>
+                <span>PKR 196</span>
+            </div>
+            {% endif %}
+            <div class="total-row final">
+                <span>Total:</span>
+                <span>PKR {% if show_tax %}1,346{% else %}1,150{% endif %}</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            {% for line in footer_message.split('\n') %}
+            <div>{{ line }}</div>
+            {% endfor %}
+            
+            {% if show_qr_code %}
+            <div class="qr-code">
+                <div class="qr-placeholder">QR Code</div>
+                <div style="font-size: 10px; margin-top: 5px;">Scan for feedback</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Preview
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Close
+        </button>
+    </div>
+
+    <script>
+        // Set current date and time
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const dateElement = document.querySelector('.current-date');
+            const timeElement = document.querySelector('.current-time');
+            
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('en-GB');
+            }
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleTimeString('en-GB', {hour12: false});
+            }
+        });
+    </script>
+</body>
+</html>

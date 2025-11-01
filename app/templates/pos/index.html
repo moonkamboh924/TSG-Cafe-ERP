@@ -1,0 +1,2139 @@
+{% extends "base.html" %}
+
+{% block title %}Point of Sale - Sangat Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header with Navigation -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Point of Sale</h1>
+            <div class="flex space-x-3">
+                <button id="newOrderBtn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>New Order
+                </button>
+                <button id="orderHistoryBtn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-history mr-2"></i>Order History
+                </button>
+                <button id="creditOrdersBtn" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg">
+                    <i class="fas fa-credit-card mr-2"></i>Credit Orders
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="posContent" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-screen">
+            
+            <!-- Menu Items Section -->
+            <div class="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-3xl border border-white/40 shadow-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Menu Items</h2>
+                    <div class="flex space-x-3">
+                        <select id="categoryFilter" title="Filter by Category" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Categories</option>
+                        </select>
+                        <input type="text" id="searchInput" placeholder="Search items..." class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div id="menuGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                    <!-- Menu items will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Cart Section -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-3xl border border-white/40 shadow-xl p-6 flex flex-col">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Cart</h2>
+                
+                <!-- Cart Items -->
+                <div id="cartItems" class="flex-1 overflow-y-auto mb-6 space-y-3">
+                    <!-- Cart items will be loaded here -->
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="border-t pt-4 space-y-3">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">₨0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Tax (<span id="taxRate">16</span>%):</span>
+                        <span id="tax">₨0.00</span>
+                    </div>
+                    <div class="flex justify-between text-xl font-bold text-gray-800 border-t pt-2">
+                        <span>Total:</span>
+                        <span id="total">₨0.00</span>
+                    </div>
+                </div>
+                
+                <!-- Customer Information -->
+                <div class="mt-6 space-y-3">
+                    <input type="text" id="customerName" placeholder="Customer Name" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="tel" id="customerPhone" placeholder="Customer Phone" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" id="tableNumber" placeholder="Table Number" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="paymentMethod" title="Payment Method" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="cash">Cash</option>
+                        <option value="online">Online Payment</option>
+                        <option value="credit">Credit (Pay Later)</option>
+                    </select>
+                </div>
+                
+                <!-- Checkout Button -->
+                <button id="checkoutBtn" class="mt-6 w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Complete Order
+                </button>
+            </div>
+        </div>
+    </div>
+        
+    <!-- Order History Section (Initially Hidden) -->
+    <div id="orderHistorySection" class="hidden w-full mt-6">
+            <div class="bg-white/70 backdrop-blur-sm rounded-3xl border border-white/40 shadow-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Order History</h2>
+                    <div class="flex space-x-3">
+                        <input type="date" id="dateFrom" title="From Date" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="date" id="dateTo" title="To Date" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="text" id="orderSearch" placeholder="Search orders..." title="Search Orders" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button id="searchOrdersBtn" title="Search Orders" class="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="px-4 py-3 text-left font-semibold">Invoice</th>
+                                <th class="px-4 py-3 text-left font-semibold">Date</th>
+                                <th class="px-4 py-3 text-left font-semibold">Customer</th>
+                                <th class="px-4 py-3 text-left font-semibold">Table</th>
+                                <th class="px-4 py-3 text-right font-semibold">Total</th>
+                                <th class="px-4 py-3 text-left font-semibold">Payment</th>
+                                <th class="px-4 py-3 text-center font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderHistoryTable">
+                            <!-- Orders will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="orderPagination" class="flex justify-center mt-6">
+                    <!-- Pagination will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+    <!-- Credit Orders Section (Initially Hidden) -->
+    <div id="creditOrdersSection" class="hidden w-full mt-6">
+        <div class="bg-white/70 backdrop-blur-sm rounded-3xl border border-white/40 shadow-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Credit Orders</h2>
+                <div class="flex space-x-3">
+                    <select id="creditStatusFilter" title="Filter by Status" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="partial">Partial</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                    <input type="text" id="creditSearch" placeholder="Search customers..." title="Search Credit Orders" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button id="searchCreditBtn" title="Search Credit Orders" class="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 transition-colors">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button id="bulkDeleteBtn" title="Bulk Delete Credit Orders" class="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition-colors">
+                        <i class="fas fa-trash-alt mr-2"></i>Bulk Delete
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="px-4 py-3 text-center">
+                                <input type="checkbox" id="selectAllCredit" class="rounded border-gray-300 text-red-600 focus:ring-red-500" title="Select All Credit Orders">
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold">Invoice</th>
+                            <th class="px-4 py-3 text-left font-semibold">Customer</th>
+                            <th class="px-4 py-3 text-left font-semibold">Phone</th>
+                            <th class="px-4 py-3 text-right font-semibold">Credit Amount</th>
+                            <th class="px-4 py-3 text-right font-semibold">Paid</th>
+                            <th class="px-4 py-3 text-right font-semibold">Remaining</th>
+                            <th class="px-4 py-3 text-left font-semibold">Status</th>
+                            <th class="px-4 py-3 text-center font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditOrdersTable">
+                        <!-- Credit orders will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="creditPagination" class="flex justify-center mt-6">
+                <!-- Pagination will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+<!-- Success Modal -->
+<div id="successModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Order Completed!</h3>
+            <p class="text-gray-600 mb-6">Invoice <span id="invoiceNumber" class="font-semibold"></span> has been generated successfully.</p>
+            <div class="flex space-x-3">
+                <button id="printBillBtn" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300">
+                    <i class="fas fa-print mr-2"></i>Print Bill
+                </button>
+                <button id="closeSuccessModal" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Success Modal -->
+<div id="updateSuccessModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-edit text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Order Updated!</h3>
+            <p class="text-gray-600 mb-6">Invoice <span id="updateInvoiceNumber" class="font-semibold"></span> has been updated successfully.</p>
+            <div class="flex space-x-3">
+                <button id="printUpdatedBillBtn" class="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300">
+                    <i class="fas fa-print mr-2"></i>Print Bill
+                </button>
+                <button id="closeUpdateSuccessModal" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Order Modal -->
+<div id="viewOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-2xl mx-4 shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Order Details</h3>
+            <button id="closeViewModal" title="Close Modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="viewOrderContent">
+            <!-- Order details will be loaded here -->
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-6">
+            <button id="closeViewOrderBtn" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors">
+                Close
+            </button>
+            <button id="printFromViewBtn" class="px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
+                <i class="fas fa-print mr-2"></i>Print Bill
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Order Modal -->
+<div id="editOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-2xl mx-4 shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Edit Order</h3>
+            <button id="closeEditModal" title="Close Modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="editOrderContent">
+            <!-- Order details will be loaded here -->
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-6">
+            <button id="cancelEditBtn" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors">
+                Cancel
+            </button>
+            <button id="saveOrderBtn" class="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Delete Order</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to delete this order? This action cannot be undone.</p>
+            <div class="flex space-x-3">
+                <button id="cancelDeleteBtn" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let cart = [];
+let menuItems = [];
+let categories = [];
+let currentOrderId = null;
+let currentPage = 1;
+let isEditMode = false;
+
+// Load initial data
+document.addEventListener('DOMContentLoaded', function() {
+    loadGlobalSettings();
+    loadCategories();
+    loadMenuItems();
+    loadCart();
+    // Event listeners
+    console.log('Setting up basic event listeners...');
+    
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const clearCartBtn = document.getElementById('clearCartBtn');
+    const closeSuccessModalBtn = document.getElementById('closeSuccessModal');
+    
+    if (categoryFilter) categoryFilter.addEventListener('change', filterItems);
+    if (searchInput) searchInput.addEventListener('input', filterItems);
+    if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
+    if (clearCartBtn) clearCartBtn.addEventListener('click', clearCart);
+    if (closeSuccessModalBtn) closeSuccessModalBtn.addEventListener('click', closeSuccessModal);
+    
+    // Clear cart modal event listeners
+    const cancelClearCartBtn = document.getElementById('cancelClearCartBtn');
+    const confirmClearCartBtn = document.getElementById('confirmClearCartBtn');
+    if (cancelClearCartBtn) cancelClearCartBtn.addEventListener('click', closeClearCartModal);
+    if (confirmClearCartBtn) confirmClearCartBtn.addEventListener('click', confirmClearCart);
+    
+    // New order management event listeners
+    console.log('Setting up order management event listeners...');
+    
+    const newOrderBtn = document.getElementById('newOrderBtn');
+    if (newOrderBtn) {
+        newOrderBtn.addEventListener('click', showNewOrder);
+        console.log('✅ New Order button listener added');
+    } else {
+        console.error('❌ New Order button not found');
+    }
+    
+    const orderHistoryBtn = document.getElementById('orderHistoryBtn');
+    console.log('Looking for orderHistoryBtn:', orderHistoryBtn);
+    if (orderHistoryBtn) {
+        console.log('✅ Order History button found, adding event listener');
+        orderHistoryBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔥 Order History button clicked!');
+            try {
+                showOrderHistory();
+            } catch (error) {
+                console.error('❌ Error in showOrderHistory:', error);
+            }
+        });
+    } else {
+        console.error('❌ Order History button not found in DOM!');
+        console.log('Available buttons:', document.querySelectorAll('button'));
+    }
+    
+    const creditOrdersBtn = document.getElementById('creditOrdersBtn');
+    if (creditOrdersBtn) {
+        creditOrdersBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showCreditOrders();
+        });
+    }
+    
+    const searchOrdersBtn = document.getElementById('searchOrdersBtn');
+    if (searchOrdersBtn) {
+        searchOrdersBtn.addEventListener('click', searchOrders);
+    }
+    
+    const printBillBtn = document.getElementById('printBillBtn');
+    if (printBillBtn) {
+        printBillBtn.addEventListener('click', printLastBill);
+    }
+    
+    // Modal event listeners
+    document.getElementById('closeViewModal').addEventListener('click', closeViewModal);
+    document.getElementById('closeViewOrderBtn').addEventListener('click', closeViewModal);
+    document.getElementById('printFromViewBtn').addEventListener('click', printFromView);
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+    document.getElementById('saveOrderBtn').addEventListener('click', saveOrderChanges);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteOrder);
+    
+    // Update success modal event listeners
+    document.getElementById('closeUpdateSuccessModal').addEventListener('click', closeUpdateSuccessModal);
+    document.getElementById('printUpdatedBillBtn').addEventListener('click', printUpdatedBill);
+    
+    // Credit order modal event listeners
+    document.getElementById('closeViewCreditModal').addEventListener('click', closeViewCreditModal);
+    document.getElementById('closeViewCreditBtn').addEventListener('click', closeViewCreditModal);
+    document.getElementById('closeEditCreditModal').addEventListener('click', closeEditCreditModal);
+    document.getElementById('cancelEditCreditBtn').addEventListener('click', closeEditCreditModal);
+    document.getElementById('saveCreditOrderBtn').addEventListener('click', saveCreditOrderChanges);
+    document.getElementById('cancelDeleteCreditBtn').addEventListener('click', closeDeleteCreditModal);
+    document.getElementById('confirmDeleteCreditBtn').addEventListener('click', confirmDeleteCreditSale);
+    
+    // Bulk delete event listeners
+    document.getElementById('bulkDeleteBtn').addEventListener('click', showBulkDeleteModal);
+    document.getElementById('cancelBulkDeleteBtn').addEventListener('click', closeBulkDeleteModal);
+    document.getElementById('confirmBulkDeleteBtn').addEventListener('click', confirmBulkDeleteCreditSales);
+    document.getElementById('selectAllCredit').addEventListener('change', toggleAllCreditSelection);
+});
+
+async function loadGlobalSettings() {
+    try {
+        const response = await fetch('/admin/api/global-settings');
+        if (response.ok) {
+            const settings = await response.json();
+            const taxRate = parseFloat(settings.tax_rate || 0) / 100;
+            window.globalTaxRate = taxRate;
+            
+            // Update tax rate display
+            const taxRateDisplay = document.getElementById('taxRate');
+            if (taxRateDisplay) {
+                taxRateDisplay.textContent = Math.round(taxRate * 100);
+            }
+            
+            // Update cart totals with new tax rate
+            updateCart();
+        }
+    } catch (error) {
+        console.error('Failed to load global settings:', error);
+        window.globalTaxRate = 0.0; // Fallback to 0%
+    }
+}
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/pos/api/categories');
+        categories = await response.json();
+        
+        const select = document.getElementById('categoryFilter');
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+async function loadMenuItems() {
+    try {
+        const response = await fetch('/pos/api/menu');
+        const data = await response.json();
+        menuItems = data.items;
+        renderMenuItems(menuItems);
+    } catch (error) {
+        console.error('Error loading menu items:', error);
+    }
+}
+
+function renderMenuItems(items) {
+    const grid = document.getElementById('menuGrid');
+    grid.innerHTML = items.map(item => `
+        <div class="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-blue-200" onclick="addToCart(${item.id})">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-utensils text-white text-xl"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2">${item.name}</h3>
+                <p class="text-sm text-gray-500 mb-3">${item.category || 'No Category'}</p>
+                <p class="text-xl font-bold text-blue-600">₨${parseFloat(item.price).toFixed(2)}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterItems() {
+    const categoryId = document.getElementById('categoryFilter').value;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    let filtered = menuItems;
+    
+    if (categoryId) {
+        filtered = filtered.filter(item => item.category_id == categoryId);
+    }
+    
+    if (searchTerm) {
+        filtered = filtered.filter(item => 
+            item.name.toLowerCase().includes(searchTerm) ||
+            (item.category && item.category.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    renderMenuItems(filtered);
+}
+
+function addToCart(itemId) {
+    const item = menuItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const existingItem = cart.find(i => i.item_id === itemId);
+    if (existingItem) {
+        existingItem.qty += 1;
+    } else {
+        cart.push({
+            item_id: itemId,
+            name: item.name,
+            price: parseFloat(item.price),
+            qty: 1
+        });
+    }
+    
+    updateCart();
+    saveCart();
+}
+
+function removeFromCart(itemId) {
+    cart = cart.filter(item => item.item_id !== itemId);
+    updateCart();
+    saveCart();
+}
+
+function updateQuantity(itemId, newQty) {
+    const item = cart.find(i => i.item_id === itemId);
+    if (item) {
+        if (newQty <= 0) {
+            removeFromCart(itemId);
+        } else {
+            item.qty = newQty;
+            updateCart();
+            saveCart();
+        }
+    }
+}
+
+function updateCart() {
+    const cartContainer = document.getElementById('cartItems');
+    
+    if (cart.length === 0) {
+        cartContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Cart is empty</p>';
+        document.getElementById('checkoutBtn').disabled = true;
+    } else {
+        cartContainer.innerHTML = cart.map(item => `
+            <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                    <p class="text-sm text-gray-500">₨${item.price.toFixed(2)} each</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="updateQuantity(${item.item_id}, ${item.qty - 1})" class="w-8 h-8 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">-</button>
+                    <span class="w-8 text-center font-semibold">${item.qty}</span>
+                    <button onclick="updateQuantity(${item.item_id}, ${item.qty + 1})" class="w-8 h-8 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">+</button>
+                    <button onclick="removeFromCart(${item.item_id})" class="w-8 h-8 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors ml-2">×</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('checkoutBtn').disabled = false;
+    }
+    
+    // Update totals
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const taxRate = window.globalTaxRate || 0.0; // Use global tax rate or fallback to 0%
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax;
+    
+    document.getElementById('subtotal').textContent = `₨${subtotal.toFixed(2)}`;
+    document.getElementById('tax').textContent = `₨${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `₨${total.toFixed(2)}`;
+}
+
+async function saveCart() {
+    try {
+        await fetch('/pos/api/cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ items: cart })
+        });
+    } catch (error) {
+        console.error('Error saving cart:', error);
+    }
+}
+
+async function loadCart() {
+    try {
+        const response = await fetch('/pos/api/cart');
+        const data = await response.json();
+        cart = data.items || [];
+        updateCart();
+    } catch (error) {
+        console.error('Error loading cart:', error);
+    }
+}
+
+async function checkout() {
+    console.log('🚀 CHECKOUT FUNCTION CALLED');
+    console.log('📊 Current state:');
+    console.log('- isEditMode:', isEditMode);
+    console.log('- currentOrderId:', currentOrderId);
+    console.log('- cart length:', cart.length);
+    console.log('- cart contents:', cart);
+    
+    if (cart.length === 0) {
+        console.log('❌ Cart is empty, aborting checkout');
+        return;
+    }
+    
+    const customerName = document.getElementById('customerName').value || 'Walk-in Customer';
+    const customerPhone = document.getElementById('customerPhone').value;
+    const tableNumber = document.getElementById('tableNumber').value;
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    
+    console.log('📝 Form data:');
+    console.log('- customerName:', customerName);
+    console.log('- customerPhone:', customerPhone);
+    console.log('- tableNumber:', tableNumber);
+    console.log('- paymentMethod:', paymentMethod);
+    
+    try {
+        let response, result;
+        
+        if (isEditMode && currentOrderId) {
+            console.log('✏️ UPDATE MODE DETECTED - Updating existing order');
+            console.log('🎯 Updating order ID:', currentOrderId);
+            
+            const updatePayload = {
+                items: cart,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                table_number: tableNumber,
+                payment_method: paymentMethod
+            };
+            
+            console.log('📤 Sending PUT request with payload:', updatePayload);
+            
+            // Update existing order
+            response = await fetch(`/pos/api/sales/${currentOrderId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatePayload)
+            });
+            
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response ok:', response.ok);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ HTTP Error Response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            result = await response.json();
+            console.log('📥 Response data:', result);
+            
+            if (result.success) {
+                console.log('✅ Order updated successfully!');
+                
+                // Show update success modal instead of alert
+                document.getElementById('updateInvoiceNumber').textContent = result.sale.invoice_no;
+                window.updatedOrderId = currentOrderId; // Store for printing
+                document.getElementById('updateSuccessModal').classList.remove('hidden');
+                document.getElementById('updateSuccessModal').classList.add('flex');
+                
+                // Reset edit mode
+                console.log('🔄 Resetting edit mode...');
+                isEditMode = false;
+                currentOrderId = null;
+                const checkoutBtn = document.getElementById('checkoutBtn');
+                checkoutBtn.textContent = 'Complete Order';
+                checkoutBtn.style.backgroundColor = '';
+                checkoutBtn.style.borderColor = '';
+                
+                // Clear form and cart
+                cart = [];
+                updateCart();
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerPhone').value = '';
+                document.getElementById('tableNumber').value = '';
+                document.getElementById('paymentMethod').value = 'cash';
+                
+                // Refresh order history if visible
+                if (!document.getElementById('orderHistorySection').classList.contains('hidden')) {
+                    console.log('🔄 Refreshing order history...');
+                    await loadOrderHistory(currentPage);
+                }
+            } else {
+                console.error('❌ Update failed:', result.error);
+                showErrorNotification('Update Failed', 'Error updating order: ' + result.error);
+            }
+        } else {
+            console.log('🆕 CREATE MODE - Creating new order');
+            
+            // Create new order
+            response = await fetch('/pos/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    items: cart,
+                    customer_name: customerName,
+                    customer_phone: customerPhone,
+                    table_number: tableNumber,
+                    payment_method: paymentMethod
+                })
+            });
+            
+            result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('invoiceNumber').textContent = result.sale.invoice_no;
+                document.getElementById('successModal').classList.remove('hidden');
+                document.getElementById('successModal').classList.add('flex');
+                
+                // Clear form and cart
+                cart = [];
+                updateCart();
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerPhone').value = '';
+                document.getElementById('tableNumber').value = '';
+                document.getElementById('paymentMethod').value = 'cash';
+            } else {
+                showErrorNotification('Checkout Failed', 'Error: ' + result.error);
+            }
+        }
+    } catch (error) {
+        console.error('💥 Checkout error:', error);
+        console.error('💥 Error stack:', error.stack);
+        showErrorNotification('Checkout Error', 'An error occurred during checkout: ' + error.message);
+    }
+}
+
+function clearCart() {
+    // Show clear cart confirmation modal
+    document.getElementById('clearCartModal').classList.remove('hidden');
+    document.getElementById('clearCartModal').classList.add('flex');
+}
+
+function closeClearCartModal() {
+    document.getElementById('clearCartModal').classList.add('hidden');
+    document.getElementById('clearCartModal').classList.remove('flex');
+}
+
+function confirmClearCart() {
+    cart = [];
+    updateCart();
+    saveCart();
+    closeClearCartModal();
+    showToast('Cart cleared successfully', 'success');
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+    document.getElementById('successModal').classList.remove('flex');
+}
+
+// Order Management Functions
+function showNewOrder() {
+    document.getElementById('orderHistorySection').classList.add('hidden');
+    document.getElementById('creditOrdersSection').classList.add('hidden');
+    document.getElementById('posContent').classList.remove('hidden');
+    // Don't reset edit mode here - let the calling function handle it
+    console.log('📍 showNewOrder called - preserving edit state:', isEditMode, currentOrderId);
+}
+
+async function showOrderHistory() {
+    console.log('=== SHOWING ORDER HISTORY ===');
+    
+    const posContent = document.getElementById('posContent');
+    const historySection = document.getElementById('orderHistorySection');
+    const creditSection = document.getElementById('creditOrdersSection');
+    const tableElement = document.getElementById('orderHistoryTable');
+    
+    console.log('POS Content element found:', !!posContent);
+    console.log('History Section element found:', !!historySection);
+    console.log('Table element found:', !!tableElement);
+    
+    if (!historySection) {
+        console.error('❌ Order history section not found in DOM!');
+        return;
+    }
+    
+    if (!posContent) {
+        console.error('❌ POS content section not found in DOM!');
+        return;
+    }
+    
+    console.log('Before toggle - POS classes:', posContent.className);
+    console.log('Before toggle - History classes:', historySection.className);
+    
+    posContent.classList.add('hidden');
+    creditSection.classList.add('hidden');
+    historySection.classList.remove('hidden');
+    
+    console.log('After toggle - POS classes:', posContent.className);
+    console.log('After toggle - History classes:', historySection.className);
+    console.log('History section visible:', !historySection.classList.contains('hidden'));
+    
+    // Add a test row to verify table is working
+    if (tableElement) {
+        console.log('✅ Adding loading message to table');
+        tableElement.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-blue-500 font-semibold">🔄 Loading orders...</td></tr>';
+    } else {
+        console.error('❌ Table element not found!');
+    }
+    
+    console.log('=== CALLING LOAD ORDER HISTORY ===');
+    await loadOrderHistory();
+}
+
+async function showCreditOrders() {
+    const posContent = document.getElementById('posContent');
+    const historySection = document.getElementById('orderHistorySection');
+    const creditSection = document.getElementById('creditOrdersSection');
+    
+    if (!creditSection || !posContent) {
+        console.error('Credit orders section not found!');
+        return;
+    }
+    
+    posContent.classList.add('hidden');
+    historySection.classList.add('hidden');
+    creditSection.classList.remove('hidden');
+    
+    await loadCreditOrders();
+}
+
+async function loadCreditOrders(page = 1) {
+    try {
+        const status = document.getElementById('creditStatusFilter').value;
+        const search = document.getElementById('creditSearch').value;
+        
+        let url = `/pos/api/credit-sales?page=${page}&per_page=10`;
+        if (status) url += `&status=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            renderCreditOrders(data.credit_sales);
+            renderCreditPagination(data.pagination);
+        } else {
+            console.error('Failed to load credit orders:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading credit orders:', error);
+    }
+}
+
+function renderCreditOrders(creditSales) {
+    const tableBody = document.getElementById('creditOrdersTable');
+    
+    // Store credit sales data globally for access by other functions
+    creditSalesData = creditSales;
+    
+    if (creditSales.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">No credit orders found</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = creditSales.map(credit => {
+        const statusColor = {
+            'pending': 'bg-red-100 text-red-800',
+            'partial': 'bg-yellow-100 text-yellow-800',
+            'paid': 'bg-green-100 text-green-800'
+        }[credit.status] || 'bg-gray-100 text-gray-800';
+        
+        return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3 text-center">
+                    <input type="checkbox" class="credit-checkbox rounded border-gray-300 text-red-600 focus:ring-red-500" value="${credit.id}" title="Select credit order">
+                </td>
+                <td class="px-4 py-3">${credit.invoice_no}</td>
+                <td class="px-4 py-3">${credit.customer_name}</td>
+                <td class="px-4 py-3">${credit.customer_phone || '-'}</td>
+                <td class="px-4 py-3 text-right">₨${credit.credit_amount.toFixed(2)}</td>
+                <td class="px-4 py-3 text-right">₨${credit.paid_amount.toFixed(2)}</td>
+                <td class="px-4 py-3 text-right">₨${credit.remaining_amount.toFixed(2)}</td>
+                <td class="px-4 py-3">
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">
+                        ${credit.status.toUpperCase()}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex justify-center space-x-2">
+                        <button onclick="viewCreditOrder(${credit.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editCreditOrder(${credit.id})" class="bg-orange-500 text-white px-3 py-1 rounded-lg hover:bg-orange-600 transition-colors text-sm">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${credit.status !== 'paid' ? `
+                            <button onclick="showPaymentModal(${credit.id})" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                <i class="fas fa-money-bill"></i>
+                            </button>
+                        ` : ''}
+                        <button onclick="deleteCreditSale(${credit.id}, ${credit.paid_amount > 0})" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm" title="${credit.paid_amount > 0 ? 'Force delete (has payments)' : 'Delete credit sale'}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderCreditPagination(pagination) {
+    const paginationContainer = document.getElementById('creditPagination');
+    
+    if (pagination.pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHtml = '<div class="flex space-x-2">';
+    
+    if (pagination.has_prev) {
+        paginationHtml += `<button onclick="loadCreditOrders(${pagination.prev_num})" class="px-3 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Previous</button>`;
+    }
+    
+    for (let i = 1; i <= pagination.pages; i++) {
+        const isActive = i === pagination.page;
+        paginationHtml += `<button onclick="loadCreditOrders(${i})" class="px-3 py-2 ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200'} rounded-lg hover:bg-blue-600">${i}</button>`;
+    }
+    
+    if (pagination.has_next) {
+        paginationHtml += `<button onclick="loadCreditOrders(${pagination.next_num})" class="px-3 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Next</button>`;
+    }
+    
+    paginationHtml += '</div>';
+    paginationContainer.innerHTML = paginationHtml;
+}
+
+function showPaymentModal(creditSaleId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-money-bill text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800">Collect Payment</h3>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="number" id="paymentAmount" placeholder="Payment Amount" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" step="0.01" min="0">
+                
+                <select id="paymentMethodModal" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online Payment</option>
+                </select>
+                
+                <textarea id="paymentNotes" placeholder="Payment notes (optional)" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" rows="3"></textarea>
+            </div>
+            
+            <div class="flex space-x-3 mt-6">
+                <button onclick="closePaymentModal()" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="processPayment(${creditSaleId})" class="flex-1 bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors">
+                    Process Payment
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    window.currentPaymentModal = modal;
+}
+
+function closePaymentModal() {
+    if (window.currentPaymentModal) {
+        document.body.removeChild(window.currentPaymentModal);
+        window.currentPaymentModal = null;
+    }
+}
+
+async function processPayment(creditSaleId) {
+    const amount = parseFloat(document.getElementById('paymentAmount').value);
+    const method = document.getElementById('paymentMethodModal').value;
+    const notes = document.getElementById('paymentNotes').value;
+    
+    if (!amount || amount <= 0) {
+        showErrorNotification('Invalid Amount', 'Please enter a valid payment amount');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/pos/api/credit-sales/${creditSaleId}/pay`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                payment_amount: amount,
+                payment_method: method,
+                notes: notes
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessNotification(`Payment of ₨${amount.toFixed(2)} received successfully!`, `Invoice: ${result.invoice_no || 'N/A'}`);
+            closePaymentModal();
+            loadCreditOrders(); // Refresh the list
+        } else {
+            showErrorNotification('Payment Failed', result.error);
+        }
+    } catch (error) {
+        console.error('Payment processing error:', error);
+        showErrorNotification('Payment Error', 'An error occurred while processing payment');
+    }
+}
+
+async function loadOrderHistory(page = 1) {
+    try {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const search = document.getElementById('orderSearch').value;
+        
+        let url = `/pos/api/sales?page=${page}&per_page=10`;
+        if (dateFrom) url += `&date_from=${dateFrom}`;
+        if (dateTo) url += `&date_to=${dateTo}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        console.log('Loading order history from URL:', url);
+        
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        console.log('Response OK:', response.ok);
+        
+        // Check if response is actually HTML (login page) even with 200 status
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+        
+        if (contentType && contentType.includes('text/html')) {
+            const errorText = await response.text();
+            console.error('Received HTML instead of JSON - likely redirected to login');
+            console.error('HTML content:', errorText.substring(0, 200));
+            document.getElementById('orderHistoryTable').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Session expired. Please refresh the page and log in again.</td></tr>';
+            return;
+        }
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('HTTP error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('API response data:', data);
+        
+        if (data.success) {
+            console.log('Sales data:', data.sales);
+            console.log('Number of sales:', data.sales.length);
+            renderOrderHistory(data.sales);
+            renderPagination(data.pagination);
+        } else {
+            console.error('API error:', data.error || 'Unknown error');
+            document.getElementById('orderHistoryTable').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Error loading orders: ' + (data.error || 'Unknown error') + '</td></tr>';
+        }
+        currentPage = page;
+    } catch (error) {
+        console.error('Error loading order history:', error);
+        console.error('Error stack:', error.stack);
+        document.getElementById('orderHistoryTable').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Error: ' + error.message + '</td></tr>';
+    }
+}
+
+function renderOrderHistory(orders) {
+    const tbody = document.getElementById('orderHistoryTable');
+    console.log('Rendering orders:', orders);
+    console.log('Table body element:', tbody);
+    
+    if (!tbody) {
+        console.error('Table body element not found!');
+        return;
+    }
+    
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No orders found</td></tr>';
+        return;
+    }
+    
+    const tableHTML = orders.map(order => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 font-semibold text-blue-600">${order.invoice_no}</td>
+            <td class="px-4 py-3">${new Date(order.created_at).toLocaleDateString()}</td>
+            <td class="px-4 py-3">${order.customer_name}</td>
+            <td class="px-4 py-3">${order.table_number || '-'}</td>
+            <td class="px-4 py-3 text-right font-semibold">₨${parseFloat(order.total).toFixed(2)}</td>
+            <td class="px-4 py-3 capitalize">${order.payment_method}</td>
+            <td class="px-4 py-3 text-center">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="viewOrder(${order.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editOrder(${order.id})" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="printBill(${order.id})" class="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition-colors text-sm">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <button onclick="deleteOrder(${order.id})" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    console.log('Generated table HTML length:', tableHTML.length);
+    console.log('First 200 chars of HTML:', tableHTML.substring(0, 200));
+    tbody.innerHTML = tableHTML;
+    console.log('Table updated. Row count:', tbody.children.length);
+    console.log('Table visible:', tbody.offsetParent !== null);
+    
+}
+
+function renderPagination(pagination) {
+    const container = document.getElementById('orderPagination');
+    if (pagination.pages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '<div class="flex space-x-2">';
+    
+    // Previous button
+    if (pagination.has_prev) {
+        paginationHTML += `<button onclick="loadOrderHistory(${pagination.prev_num})" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Previous</button>`;
+    }
+    
+    // Page numbers
+    for (let i = Math.max(1, pagination.page - 2); i <= Math.min(pagination.pages, pagination.page + 2); i++) {
+        const isActive = i === pagination.page;
+        paginationHTML += `<button onclick="loadOrderHistory(${i})" class="px-3 py-2 ${isActive ? 'bg-blue-600' : 'bg-gray-300'} text-white rounded-lg hover:bg-blue-500">${i}</button>`;
+    }
+    
+    // Next button
+    if (pagination.has_next) {
+        paginationHTML += `<button onclick="loadOrderHistory(${pagination.next_num})" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Next</button>`;
+    }
+    
+    paginationHTML += '</div>';
+    container.innerHTML = paginationHTML;
+}
+
+async function searchOrders() {
+    await loadOrderHistory(1);
+}
+
+async function viewOrder(orderId) {
+    console.log('🔍 Viewing order:', orderId);
+    try {
+        const response = await fetch(`/pos/api/sales/${orderId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ API response received:', data);
+        
+        const order = data.sale || data;
+        console.log('✅ Order data extracted:', order);
+        
+        // Store current order ID for printing
+        window.currentViewOrderId = orderId;
+        
+        // Build detailed order view HTML
+        let orderHTML = `
+            <div class="space-y-6">
+                <!-- Order Header -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Order Information</h4>
+                            <p><strong>Invoice:</strong> ${order.invoice_no || 'N/A'}</p>
+                            <p><strong>Date:</strong> ${order.created_at ? new Date(order.created_at).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Payment:</strong> <span class="capitalize">${order.payment_method || 'N/A'}</span></p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Customer Details</h4>
+                            <p><strong>Name:</strong> ${order.customer_name || 'Walk-in Customer'}</p>
+                            <p><strong>Phone:</strong> ${order.customer_phone || 'N/A'}</p>
+                            <p><strong>Table:</strong> ${order.table_number || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Items -->
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-4">Order Items</h4>
+                    <div class="bg-white rounded-xl border overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold">Item</th>
+                                    <th class="px-4 py-3 text-center font-semibold">Qty</th>
+                                    <th class="px-4 py-3 text-right font-semibold">Unit Price</th>
+                                    <th class="px-4 py-3 text-right font-semibold">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+        
+        if (order.lines && Array.isArray(order.lines)) {
+            order.lines.forEach(line => {
+                const itemName = line.item_name || line.item?.name || line.name || 'Unknown Item';
+                const qty = line.qty || 0;
+                const unitPrice = line.unit_price || line.price || 0;
+                const lineTotal = line.line_total || (qty * unitPrice);
+                
+                orderHTML += `
+                    <tr class="border-t">
+                        <td class="px-4 py-3">${itemName}</td>
+                        <td class="px-4 py-3 text-center">${qty}</td>
+                        <td class="px-4 py-3 text-right">₨${parseFloat(unitPrice).toFixed(2)}</td>
+                        <td class="px-4 py-3 text-right font-semibold">₨${parseFloat(lineTotal).toFixed(2)}</td>
+                    </tr>`;
+            });
+        } else {
+            orderHTML += `
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">No items found in order</td>
+                </tr>`;
+        }
+        
+        orderHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>₨${parseFloat(order.subtotal || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tax:</span>
+                            <span>₨${parseFloat(order.tax || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-xl font-bold border-t pt-2">
+                            <span>Total:</span>
+                            <span>₨${parseFloat(order.total || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        
+        // Show the modal
+        document.getElementById('viewOrderContent').innerHTML = orderHTML;
+        document.getElementById('viewOrderModal').classList.remove('hidden');
+        document.getElementById('viewOrderModal').classList.add('flex');
+        
+    } catch (error) {
+        console.error('❌ Error viewing order:', error);
+        showErrorNotification('Load Error', `Error loading order details: ${error.message}`);
+    }
+}
+
+async function editOrder(orderId) {
+    console.log('✏️ Editing order:', orderId);
+    try {
+        const response = await fetch(`/pos/api/sales/${orderId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ API response received for editing:', data);
+        
+        const order = data.sale || data;
+        console.log('✅ Order data extracted for editing:', order);
+        
+        currentOrderId = orderId;
+        isEditMode = true;
+        
+        // Load order data into cart
+        if (order.lines && Array.isArray(order.lines)) {
+            cart = order.lines.map(line => ({
+                item_id: line.item_id,
+                name: line.item_name || line.item?.name || line.name || 'Unknown Item',
+                price: parseFloat(line.unit_price || line.price || 0),
+                qty: line.qty || 0
+            }));
+        } else {
+            console.error('❌ Order lines not found or not an array:', order.lines);
+            cart = [];
+        }
+        
+        console.log('📦 Cart loaded with order items:', cart);
+        
+        // Fill customer info
+        const customerNameField = document.getElementById('customerName');
+        if (customerNameField) {
+            customerNameField.value = order.customer_name;
+            console.log('✅ Customer name filled:', order.customer_name);
+        } else {
+            console.error('❌ Customer name field not found');
+        }
+        
+        const customerPhoneField = document.getElementById('customerPhone');
+        const tableNumberField = document.getElementById('tableNumber');
+        const paymentMethodField = document.getElementById('paymentMethod');
+        
+        if (customerPhoneField) {
+            customerPhoneField.value = order.customer_phone || '';
+            console.log('✅ Customer phone filled:', order.customer_phone);
+        } else {
+            console.error('❌ Customer phone field not found');
+        }
+        
+        if (tableNumberField) {
+            tableNumberField.value = order.table_number || '';
+            console.log('✅ Table number filled:', order.table_number);
+        } else {
+            console.error('❌ Table number field not found');
+        }
+        
+        if (paymentMethodField) {
+            paymentMethodField.value = order.payment_method;
+            console.log('✅ Payment method filled:', order.payment_method);
+        } else {
+            console.error('❌ Payment method field not found');
+        }
+        
+        // Switch to POS view and update cart
+        console.log('🔄 Switching to POS view for editing...');
+        showNewOrder();
+        updateCart();
+        
+        // Ensure edit mode persists after showNewOrder()
+        isEditMode = true;
+        currentOrderId = orderId;
+        console.log('🔒 Re-enforcing edit mode after showNewOrder - isEditMode:', isEditMode, 'currentOrderId:', currentOrderId);
+        
+        // Change checkout button text and add debug info
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.textContent = 'Update Order';
+            console.log('✅ Checkout button text changed to "Update Order"');
+            console.log('✅ Edit mode set - isEditMode:', isEditMode, 'currentOrderId:', currentOrderId);
+        } else {
+            console.error('❌ Checkout button not found');
+        }
+        
+        // Add visual indicator that we're in edit mode
+        checkoutBtn.style.backgroundColor = '#f59e0b';
+        checkoutBtn.style.borderColor = '#f59e0b';
+        
+    } catch (error) {
+        console.error('❌ Error loading order for edit:', error);
+        showErrorNotification('Load Error', `Error loading order for editing: ${error.message}`);
+    }
+}
+
+async function saveOrderChanges() {
+    // Just call the main checkout function which handles both new and edit modes
+    await checkout();
+}
+
+function deleteOrder(orderId) {
+    currentOrderId = orderId;
+    document.getElementById('deleteOrderModal').classList.remove('hidden');
+    document.getElementById('deleteOrderModal').classList.add('flex');
+}
+
+async function confirmDeleteOrder() {
+    if (!currentOrderId) return;
+    
+    try {
+        const response = await fetch(`/pos/api/sales/${currentOrderId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessNotification('Success', 'Order deleted successfully!');
+            closeDeleteModal();
+            await loadOrderHistory(currentPage);
+        } else {
+            showErrorNotification('Delete Failed', 'Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        showErrorNotification('Delete Error', 'An error occurred while deleting the order');
+    }
+}
+
+function printBill(orderId) {
+    // Create a hidden iframe to load and print the bill
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/pos/api/sales/${orderId}/print`;
+    
+    iframe.onload = function() {
+        // The iframe will auto-print when loaded
+        // No need to manually trigger print here
+    };
+    
+    // Listen for print completion message from iframe
+    const messageHandler = function(event) {
+        if (event.data === 'print_completed') {
+            // Clean up
+            document.body.removeChild(iframe);
+            window.removeEventListener('message', messageHandler);
+        }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    document.body.appendChild(iframe);
+    
+    // Fallback cleanup after 10 seconds
+    setTimeout(() => {
+        if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+            window.removeEventListener('message', messageHandler);
+        }
+    }, 10000);
+}
+
+function printLastBill() {
+    const invoiceNo = document.getElementById('invoiceNumber').textContent;
+    if (invoiceNo) {
+        // Find the order by invoice number and print
+        fetch(`/pos/api/sales?search=${invoiceNo}&per_page=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.sales && data.sales.length > 0) {
+                    printBill(data.sales[0].id);
+                }
+            })
+            .catch(error => console.error('Error finding order for print:', error));
+    }
+    closeSuccessModal();
+}
+
+// Modal functions
+function closeEditModal() {
+    document.getElementById('editOrderModal').classList.add('hidden');
+    document.getElementById('editOrderModal').classList.remove('flex');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteOrderModal').classList.add('hidden');
+    document.getElementById('deleteOrderModal').classList.remove('flex');
+    currentOrderId = null;
+}
+
+// Modal functions
+function closeViewModal() {
+    document.getElementById('viewOrderModal').classList.add('hidden');
+    document.getElementById('viewOrderModal').classList.remove('flex');
+}
+
+function printFromView() {
+    if (window.currentViewOrderId) {
+        printBill(window.currentViewOrderId);
+    }
+    closeViewModal();
+}
+
+// Update success modal functions
+function closeUpdateSuccessModal() {
+    document.getElementById('updateSuccessModal').classList.add('hidden');
+    document.getElementById('updateSuccessModal').classList.remove('flex');
+}
+
+function printUpdatedBill() {
+    if (window.updatedOrderId) {
+        printBill(window.updatedOrderId);
+    }
+    closeUpdateSuccessModal();
+}
+
+// Toast Notification System
+function showSuccessNotification(title, message) {
+    showNotification(title, message, 'success');
+}
+
+function showErrorNotification(title, message) {
+    showNotification(title, message, 'error');
+}
+
+function showNotification(title, message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        // Create container if it doesn't exist
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast-notification ${type}`;
+    
+    // Get appropriate icon based on type
+    let icon;
+    switch(type) {
+        case 'success':
+            icon = 'fa-check-circle';
+            break;
+        case 'error':
+            icon = 'fa-exclamation-circle';
+            break;
+        case 'warning':
+            icon = 'fa-exclamation-triangle';
+            break;
+        case 'info':
+            icon = 'fa-info-circle';
+            break;
+        default:
+            icon = 'fa-check-circle';
+    }
+    
+    toast.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mr-3">
+                <i class="fas ${icon} text-lg" style="color: ${getToastIconColor(type)}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-800 mb-1">${title}</p>
+                <p class="text-sm text-gray-600">${message}</p>
+            </div>
+            <button class="toast-close-btn" onclick="removeToast('${toastId}')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        removeToast(toastId);
+    }, 5000);
+}
+
+function showConfirmationToast(title, message, onConfirm, confirmText = 'Confirm', type = 'warning') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast-notification ${type}`;
+    
+    let icon;
+    switch(type) {
+        case 'success': icon = 'fa-check-circle'; break;
+        case 'error': icon = 'fa-exclamation-circle'; break;
+        case 'warning': icon = 'fa-exclamation-triangle'; break;
+        case 'info': icon = 'fa-info-circle'; break;
+        default: icon = 'fa-exclamation-triangle';
+    }
+    
+    toast.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mr-3">
+                <i class="fas ${icon} text-lg" style="color: ${getToastIconColor(type)}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-800 mb-2">${title}</p>
+                <p class="text-sm text-gray-600 mb-3">${message}</p>
+                <div class="flex space-x-2">
+                    <button onclick="removeToast('${toastId}')" class="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="${onConfirm.toString().includes('(') ? onConfirm.toString().replace('function ', '').replace('() => ', '') : onConfirm.name + '()'}; removeToast('${toastId}')" class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+            <button class="toast-close-btn" onclick="removeToast('${toastId}')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Store the callback function globally for the button to access
+    window['confirmAction_' + toastId] = onConfirm;
+    
+    // Update the confirm button to use the stored function
+    const confirmBtn = toast.querySelector('button:last-of-type:not(.toast-close-btn)');
+    if (confirmBtn) {
+        confirmBtn.onclick = () => {
+            onConfirm();
+            removeToast(toastId);
+        };
+    }
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    // Auto remove after 10 seconds for confirmation toasts
+    setTimeout(() => {
+        removeToast(toastId);
+    }, 10000);
+}
+
+function getToastIconColor(type) {
+    switch(type) {
+        case 'success': return '#10b981';
+        case 'error': return '#ef4444';
+        case 'warning': return '#f59e0b';
+        case 'info': return '#3b82f6';
+        default: return '#10b981';
+    }
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+}
+
+// Credit Order Management Functions
+let currentCreditSaleId = null;
+let creditSalesData = [];
+
+async function viewCreditOrder(creditSaleId) {
+    console.log('🔍 Viewing credit order:', creditSaleId);
+    try {
+        const response = await fetch(`/pos/api/credit-sales/${creditSaleId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Credit sale data received:', data);
+        
+        const creditSale = data.credit_sale;
+        
+        // Build detailed credit order view HTML
+        let creditOrderHTML = `
+            <div class="space-y-6">
+                <!-- Credit Order Header -->
+                <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Credit Sale Information</h4>
+                            <p><strong>Invoice:</strong> ${creditSale.invoice_no || 'N/A'}</p>
+                            <p><strong>Date:</strong> ${creditSale.credit_date ? new Date(creditSale.credit_date).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Status:</strong> <span class="capitalize font-semibold ${getStatusColor(creditSale.status)}">${creditSale.status.toUpperCase()}</span></p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Customer Details</h4>
+                            <p><strong>Name:</strong> ${creditSale.customer_name || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${creditSale.customer_phone || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Credit Amount Details -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                    <h4 class="font-semibold text-gray-700 mb-4">Credit Amount Details</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Total Credit Amount:</span>
+                            <span class="font-semibold">₨${parseFloat(creditSale.credit_amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Amount Paid:</span>
+                            <span class="font-semibold text-green-600">₨${parseFloat(creditSale.paid_amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-bold border-t pt-2">
+                            <span>Remaining Amount:</span>
+                            <span class="text-red-600">₨${parseFloat(creditSale.remaining_amount || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes Section -->
+                ${creditSale.notes ? `
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h4 class="font-semibold text-gray-700 mb-2">Notes</h4>
+                    <p class="text-gray-600">${creditSale.notes}</p>
+                </div>
+                ` : ''}
+                
+                <!-- Payment History -->
+                ${creditSale.payments && creditSale.payments.length > 0 ? `
+                <div class="bg-green-50 rounded-xl p-6">
+                    <h4 class="font-semibold text-gray-700 mb-4">Payment History</h4>
+                    <div class="space-y-2">
+                        ${creditSale.payments.map(payment => `
+                            <div class="flex justify-between items-center bg-white p-3 rounded-lg">
+                                <div>
+                                    <span class="font-medium">₨${parseFloat(payment.payment_amount).toFixed(2)}</span>
+                                    <span class="text-sm text-gray-500 ml-2">(${payment.payment_method})</span>
+                                </div>
+                                <span class="text-sm text-gray-500">${new Date(payment.payment_date).toLocaleDateString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>`;
+        
+        // Show the modal
+        document.getElementById('viewCreditOrderContent').innerHTML = creditOrderHTML;
+        document.getElementById('viewCreditOrderModal').classList.remove('hidden');
+        document.getElementById('viewCreditOrderModal').classList.add('flex');
+        
+    } catch (error) {
+        console.error('❌ Error viewing credit order:', error);
+        showErrorNotification('Error', `Failed to load credit order details: ${error.message}`);
+    }
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'pending': 'text-red-600',
+        'partial': 'text-yellow-600',
+        'paid': 'text-green-600'
+    };
+    return colors[status] || 'text-gray-600';
+}
+
+async function editCreditOrder(creditSaleId) {
+    console.log('✏️ Editing credit order:', creditSaleId);
+    try {
+        const response = await fetch(`/pos/api/credit-sales/${creditSaleId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const creditSale = data.credit_sale;
+        
+        // Store current credit sale ID
+        currentCreditSaleId = creditSaleId;
+        
+        // Fill form fields
+        document.getElementById('editCustomerName').value = creditSale.customer_name || '';
+        document.getElementById('editCustomerPhone').value = creditSale.customer_phone || '';
+        document.getElementById('editCreditAmount').value = creditSale.credit_amount || '';
+        document.getElementById('editNotes').value = creditSale.notes || '';
+        
+        // Disable credit amount field if payments have been made
+        const creditAmountField = document.getElementById('editCreditAmount');
+        if (creditSale.paid_amount > 0) {
+            creditAmountField.disabled = true;
+            creditAmountField.title = 'Cannot modify credit amount after payments have been made';
+            creditAmountField.classList.add('bg-gray-100');
+        } else {
+            creditAmountField.disabled = false;
+            creditAmountField.title = '';
+            creditAmountField.classList.remove('bg-gray-100');
+        }
+        
+        // Show the modal
+        document.getElementById('editCreditOrderModal').classList.remove('hidden');
+        document.getElementById('editCreditOrderModal').classList.add('flex');
+        
+    } catch (error) {
+        console.error('❌ Error loading credit order for edit:', error);
+        showErrorNotification('Error', `Failed to load credit order for editing: ${error.message}`);
+    }
+}
+
+async function saveCreditOrderChanges() {
+    if (!currentCreditSaleId) return;
+    
+    const customerName = document.getElementById('editCustomerName').value.trim();
+    const customerPhone = document.getElementById('editCustomerPhone').value.trim();
+    const creditAmount = document.getElementById('editCreditAmount').value;
+    const notes = document.getElementById('editNotes').value.trim();
+    
+    if (!customerName) {
+        showErrorNotification('Validation Error', 'Customer name is required');
+        return;
+    }
+    
+    if (!creditAmount || parseFloat(creditAmount) <= 0) {
+        showErrorNotification('Validation Error', 'Valid credit amount is required');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/pos/api/credit-sales/${currentCreditSaleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                credit_amount: parseFloat(creditAmount),
+                notes: notes
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessNotification('Success', 'Credit order updated successfully');
+            closeEditCreditModal();
+            loadCreditOrders(); // Refresh the list
+        } else {
+            showErrorNotification('Error', result.error || 'Failed to update credit order');
+        }
+    } catch (error) {
+        console.error('Error updating credit order:', error);
+        showErrorNotification('Error', 'An error occurred while updating the credit order');
+    }
+}
+
+let isForceDelete = false;
+
+function deleteCreditSale(creditSaleId, hasPayments = false) {
+    // Find the credit sale data
+    const creditSale = creditSalesData.find(cs => cs.id === creditSaleId);
+    if (!creditSale) {
+        showErrorNotification('Error', 'Credit sale not found');
+        return;
+    }
+    
+    currentCreditSaleId = creditSaleId;
+    isForceDelete = hasPayments;
+    
+    // Populate modal with credit sale details
+    document.getElementById('deleteCreditSaleDetails').innerHTML = `
+        <p><strong>Customer:</strong> ${creditSale.customer_name}</p>
+        <p><strong>Amount:</strong> ₨${creditSale.credit_amount.toFixed(2)}</p>
+        <p><strong>Status:</strong> ${creditSale.status.toUpperCase()}</p>
+        <p><strong>Paid Amount:</strong> ₨${creditSale.paid_amount.toFixed(2)}</p>
+    `;
+    
+    // Show/hide force delete warning
+    const forceDeleteWarning = document.getElementById('forceDeleteWarning');
+    const deleteButtonText = document.getElementById('deleteButtonText');
+    
+    if (hasPayments) {
+        forceDeleteWarning.classList.remove('hidden');
+        deleteButtonText.textContent = 'Force Delete';
+    } else {
+        forceDeleteWarning.classList.add('hidden');
+        deleteButtonText.textContent = 'Delete';
+    }
+    
+    document.getElementById('deleteCreditSaleModal').classList.remove('hidden');
+    document.getElementById('deleteCreditSaleModal').classList.add('flex');
+}
+
+async function confirmDeleteCreditSale() {
+    if (!currentCreditSaleId) return;
+    
+    try {
+        const url = `/pos/api/credit-sales/${currentCreditSaleId}${isForceDelete ? '?force=true' : ''}`;
+        const response = await fetch(url, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessNotification('Success', 'Credit sale deleted successfully');
+            closeDeleteCreditModal();
+            loadCreditOrders(); // Refresh the list
+        } else {
+            showErrorNotification('Error', result.error || 'Failed to delete credit sale');
+        }
+    } catch (error) {
+        console.error('Error deleting credit sale:', error);
+        showErrorNotification('Error', 'An error occurred while deleting the credit sale');
+    }
+}
+
+// Bulk delete functions
+function toggleAllCreditSelection() {
+    const selectAll = document.getElementById('selectAllCredit');
+    const checkboxes = document.querySelectorAll('.credit-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+function showBulkDeleteModal() {
+    const selectedCheckboxes = document.querySelectorAll('.credit-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        showErrorNotification('Selection Required', 'Please select at least one credit order to delete');
+        return;
+    }
+    
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    const selectedCreditSales = creditSalesData.filter(cs => selectedIds.includes(cs.id));
+    
+    const totalAmount = selectedCreditSales.reduce((sum, cs) => sum + cs.credit_amount, 0);
+    const withPayments = selectedCreditSales.filter(cs => cs.paid_amount > 0).length;
+    
+    document.getElementById('bulkDeleteDetails').innerHTML = `
+        <p><strong>Selected:</strong> ${selectedCreditSales.length} credit sales</p>
+        <p><strong>Total Amount:</strong> ₨${totalAmount.toFixed(2)}</p>
+        ${withPayments > 0 ? `<p class="text-orange-600"><strong>With Payments:</strong> ${withPayments} credit sales</p>` : ''}
+    `;
+    
+    document.getElementById('bulkDeleteCreditModal').classList.remove('hidden');
+    document.getElementById('bulkDeleteCreditModal').classList.add('flex');
+}
+
+async function confirmBulkDeleteCreditSales() {
+    const selectedCheckboxes = document.querySelectorAll('.credit-checkbox:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    const forceDelete = document.getElementById('forceDeleteCheck').checked;
+    
+    if (selectedIds.length === 0) {
+        showErrorNotification('Selection Required', 'No credit orders selected');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/pos/api/credit-sales/bulk-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                credit_sale_ids: selectedIds,
+                force: forceDelete
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessNotification('Bulk Delete Complete', result.message);
+            closeBulkDeleteModal();
+            loadCreditOrders(); // Refresh the list
+            
+            // Reset checkboxes
+            document.getElementById('selectAllCredit').checked = false;
+        } else {
+            showErrorNotification('Error', result.error || 'Failed to delete credit sales');
+        }
+    } catch (error) {
+        console.error('Error bulk deleting credit sales:', error);
+        showErrorNotification('Error', 'An error occurred while deleting credit sales');
+    }
+}
+
+function closeBulkDeleteModal() {
+    document.getElementById('bulkDeleteCreditModal').classList.add('hidden');
+    document.getElementById('bulkDeleteCreditModal').classList.remove('flex');
+    document.getElementById('forceDeleteCheck').checked = false;
+}
+
+// Modal close functions
+function closeViewCreditModal() {
+    document.getElementById('viewCreditOrderModal').classList.add('hidden');
+    document.getElementById('viewCreditOrderModal').classList.remove('flex');
+}
+
+function closeEditCreditModal() {
+    document.getElementById('editCreditOrderModal').classList.add('hidden');
+    document.getElementById('editCreditOrderModal').classList.remove('flex');
+    currentCreditSaleId = null;
+}
+
+function closeDeleteCreditModal() {
+    document.getElementById('deleteCreditSaleModal').classList.add('hidden');
+    document.getElementById('deleteCreditSaleModal').classList.remove('flex');
+    currentCreditSaleId = null;
+}
+
+// Generic modal functions removed - now using toast notifications
+</script>
+
+<!-- Clear Cart Confirmation Modal -->
+<div id="clearCartModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
+                <i class="fas fa-shopping-cart text-orange-600 text-2xl"></i>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Clear Cart</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-600 mb-6">Are you sure you want to clear all items from the cart? This action cannot be undone.</p>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button id="cancelClearCartBtn" class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmClearCartBtn" class="flex-1 bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Clear Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Credit Order Modal -->
+<div id="viewCreditOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-2xl mx-4 shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Credit Order Details</h3>
+            <button id="closeViewCreditModal" title="Close Modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="viewCreditOrderContent">
+            <!-- Credit order details will be loaded here -->
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-6">
+            <button id="closeViewCreditBtn" class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Credit Order Modal -->
+<div id="editCreditOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl w-full">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Edit Credit Order</h3>
+            <button id="closeEditCreditModal" title="Close Modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <input type="text" id="editCustomerName" placeholder="Customer Name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            
+            <input type="tel" id="editCustomerPhone" placeholder="Customer Phone" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            
+            <input type="number" id="editCreditAmount" placeholder="Credit Amount" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent" step="0.01" min="0">
+            
+            <textarea id="editNotes" placeholder="Notes (optional)" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent" rows="3"></textarea>
+        </div>
+        
+        <div class="flex space-x-3 mt-6">
+            <button id="cancelEditCreditBtn" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                Cancel
+            </button>
+            <button id="saveCreditOrderBtn" class="flex-1 bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Credit Sale Confirmation Modal -->
+<div id="deleteCreditSaleModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-credit-card text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Delete Credit Sale</h3>
+            <div id="deleteCreditSaleDetails" class="text-gray-600 mb-6">
+                <!-- Credit sale details will be populated here -->
+            </div>
+            <div id="forceDeleteWarning" class="hidden bg-orange-100 border border-orange-300 rounded-lg p-3 mb-4">
+                <p class="text-orange-800 text-sm font-medium">⚠️ This credit sale has payments. Force delete will also remove all payment records.</p>
+            </div>
+            <p class="text-red-600 font-semibold mb-6">⚠️ This action cannot be undone and will permanently delete this credit sale record.</p>
+            <div class="flex space-x-3">
+                <button id="cancelDeleteCreditBtn" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteCreditBtn" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+                    <span id="deleteButtonText">Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Delete Credit Sales Modal -->
+<div id="bulkDeleteCreditModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Bulk Delete Credit Sales</h3>
+            <div id="bulkDeleteDetails" class="text-gray-600 mb-6">
+                <!-- Bulk delete details will be populated here -->
+            </div>
+            <div class="space-y-3 mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" id="forceDeleteCheck" class="rounded border-gray-300 text-red-600 focus:ring-red-500 mr-2">
+                    <span class="text-sm text-gray-700">Force delete (includes credit sales with payments)</span>
+                </label>
+            </div>
+            <p class="text-red-600 font-semibold mb-6">⚠️ This action cannot be undone and will permanently delete selected credit sale records.</p>
+            <div class="flex space-x-3">
+                <button id="cancelBulkDeleteBtn" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkDeleteBtn" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+                    Delete Selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generic error and success modals removed - now using toast notifications -->
+
+<!-- Toast Notification Container -->
+<div id="toast-container"></div>
+
+{% endblock %}

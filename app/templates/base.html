@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TSG Cafe System{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/luxury-styles.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    <!-- Navigation -->
+    {% if current_user.is_authenticated %}
+    <nav class="glass-card border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex-shrink-0">
+                        <a href="{{ url_for('dashboard.index') }}" class="cursor-pointer">
+                            <div class="flex flex-col">
+                                <span class="text-xl font-bold text-gray-800 hover:text-gray-600 transition-colors duration-200">
+                                    {{ get_setting('restaurant_name', 'Sangat Cafe') }}
+                                </span>
+                                <p class="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-200 mt-0.5">
+                                    Powered by Trisync Global
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Navigation Links - Left aligned -->
+                    <div class="hidden md:flex md:space-x-4">
+                        {% set nav_permissions = current_user.get_navigation_permissions() %}
+                        
+                        {% if current_user.has_permission('admin.view') and ('admin' in nav_permissions or not nav_permissions) %}
+                        <div class="relative group">
+                            <button class="nav-link {% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %} flex items-center"
+                                    onclick="toggleDropdown('adminDropdown')">
+                                <i class="fas fa-cog mr-2"></i>Admin
+                                <i class="fas fa-chevron-down ml-1 text-xs transition-transform duration-200 group-hover:rotate-180"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="adminDropdown" class="absolute left-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                                <div class="py-2">
+                                    <a href="{{ url_for('admin.global_settings') }}" 
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+                                        <i class="fas fa-globe mr-2"></i>Global Setting
+                                    </a>
+                                    <a href="{{ url_for('admin.bill_editor') }}" 
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+                                        <i class="fas fa-edit mr-2"></i>Bill Editor
+                                    </a>
+                                    <a href="{{ url_for('admin.index') }}" 
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+                                        <i class="fas fa-users mr-2"></i>User Management
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('pos.view') and ('pos' in nav_permissions or not nav_permissions) %}
+                        <a href="{{ url_for('pos.index') }}" 
+                           class="nav-link {% if request.endpoint == 'pos.index' %}active{% endif %}">
+                            <i class="fas fa-cash-register mr-2"></i>POS
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('menu.view') and ('menu' in nav_permissions or not nav_permissions) %}
+                        <a href="{{ url_for('menu.index') }}" 
+                           class="nav-link {% if request.endpoint == 'menu.index' %}active{% endif %}">
+                            <i class="fas fa-utensils mr-2"></i>Menu
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('inventory.view') and ('inventory' in nav_permissions or not nav_permissions) %}
+                        <a href="{{ url_for('inventory.index') }}" 
+                           class="nav-link {% if request.endpoint == 'inventory.index' %}active{% endif %}">
+                            <i class="fas fa-boxes mr-2"></i>Inventory
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('finance.view') and ('finance' in nav_permissions or not nav_permissions) %}
+                        <a href="{{ url_for('finance.index') }}" 
+                           class="nav-link {% if request.endpoint == 'finance.index' %}active{% endif %}">
+                            <i class="fas fa-chart-line mr-2"></i>Finance
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('reports.view') and ('reports' in nav_permissions or not nav_permissions) %}
+                        <a href="{{ url_for('reports.index') }}" 
+                           class="nav-link {% if request.endpoint == 'reports.index' %}active{% endif %}">
+                            <i class="fas fa-chart-bar mr-2"></i>Reports
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center">
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                onclick="toggleDropdown('userDropdown')">
+                            <div class="flex flex-col text-right">
+                                <span class="text-sm font-medium header-date">Loading...</span>
+                                <span class="text-xs text-gray-500 header-time">Loading...</span>
+                            </div>
+                            {% if current_user.profile_picture %}
+                            <img src="{{ current_user.profile_picture }}" 
+                                 alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">
+                            {% else %}
+                            <i class="fas fa-user-circle text-xl"></i>
+                            {% endif %}
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200 group-hover:rotate-180"></i>
+                        </button>
+                        
+                        <!-- User Dropdown Menu -->
+                        <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                            <div class="py-2">
+                                <button onclick="openChangePasswordModal()" 
+                                       class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+                                    <i class="fas fa-key mr-2"></i>Change Password
+                                </button>
+                                <div class="border-t border-gray-200 my-1"></div>
+                                <a href="{{ url_for('auth.logout') }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-150">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-20 right-4 z-50 space-y-2">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} max-w-sm">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Change Password Modal -->
+    {% if current_user.is_authenticated %}
+    <div id="changePasswordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl w-full">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Change Password</h3>
+                <button onclick="closeChangePasswordModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            
+            <form id="changePasswordForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                    <input type="password" id="currentPassword" title="Enter your current password" placeholder="Current password" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <input type="password" id="newPassword" title="Enter your new password" placeholder="New password" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" title="Confirm your new password" placeholder="Confirm new password" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                {% if current_user.is_protected %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
+                    <input type="text" id="verificationCode" title="Enter verification code for protected user" placeholder="Verification code" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Required for protected users</p>
+                </div>
+                {% endif %}
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+                        Change Password
+                    </button>
+                    <button type="button" onclick="closeChangePasswordModal()" class="flex-1 bg-gray-500 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if current_user.is_authenticated %}pt-4{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+    
+    <!-- Base JavaScript -->
+    <script>
+        // Global configuration
+        window.APP_CONFIG = {
+            apiBase: '/api',
+            currentUser: {{ (current_user.to_dict()|tojson) if current_user.is_authenticated else 'null' }}
+        };
+        
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+        
+        // Dropdown functionality
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const isVisible = dropdown.classList.contains('opacity-100');
+            
+            // Close all dropdowns first
+            document.querySelectorAll('[id$="Dropdown"]').forEach(dd => {
+                dd.classList.remove('opacity-100', 'visible');
+                dd.classList.add('opacity-0', 'invisible', 'scale-95');
+            });
+            
+            // Toggle the clicked dropdown
+            if (!isVisible) {
+                dropdown.classList.remove('opacity-0', 'invisible', 'scale-95');
+                dropdown.classList.add('opacity-100', 'visible', 'scale-100');
+            }
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative.group')) {
+                document.querySelectorAll('[id$="Dropdown"]').forEach(dropdown => {
+                    dropdown.classList.remove('opacity-100', 'visible', 'scale-100');
+                    dropdown.classList.add('opacity-0', 'invisible', 'scale-95');
+                });
+            }
+        });
+        
+        // Password change modal functions
+        function openChangePasswordModal() {
+            const modal = document.getElementById('changePasswordModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('changePasswordForm').reset();
+            }
+        }
+        
+        function closeChangePasswordModal() {
+            const modal = document.getElementById('changePasswordModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+        
+        // Handle password change form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('changePasswordForm');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const currentPassword = document.getElementById('currentPassword').value;
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    const verificationCode = document.getElementById('verificationCode')?.value;
+                    
+                    // Validate passwords match
+                    if (newPassword !== confirmPassword) {
+                        showNotification('New passwords do not match', 'error');
+                        return;
+                    }
+                    
+                    // Validate password strength
+                    if (newPassword.length < 6) {
+                        showNotification('Password must be at least 6 characters long', 'error');
+                        return;
+                    }
+                    
+                    const data = {
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    };
+                    
+                    if (verificationCode) {
+                        data.verification_code = verificationCode;
+                    }
+                    
+                    try {
+                        const response = await fetch('/admin/api/change-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showNotification('Password changed successfully', 'success');
+                            closeChangePasswordModal();
+                        } else {
+                            showNotification(result.error || 'Failed to change password', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error changing password:', error);
+                        showNotification('An error occurred while changing password', 'error');
+                    }
+                });
+            }
+        });
+        
+        // Global notification function
+        function showNotification(message, type = 'info') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+            
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast-notification ${type}`;
+            
+            // Get appropriate icon based on type
+            let icon;
+            switch(type) {
+                case 'success':
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    icon = 'fa-exclamation-circle';
+                    break;
+                case 'warning':
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                case 'info':
+                    icon = 'fa-info-circle';
+                    break;
+                default:
+                    icon = 'fa-info-circle';
+            }
+            
+            const iconColor = getToastIconColor(type);
+            
+            toast.innerHTML = `
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mr-3">
+                        <i class="fas ${icon} text-lg" style="color: ${iconColor}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-700">${message}</p>
+                    </div>
+                    <button class="toast-close-btn" onclick="removeToast('${toastId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                removeToast(toastId);
+            }, 4000);
+        }
+        
+        function getToastIconColor(type) {
+            switch(type) {
+                case 'success': return '#10b981';
+                case 'error': return '#ef4444';
+                case 'warning': return '#f59e0b';
+                case 'info': return '#3b82f6';
+                default: return '#3b82f6';
+            }
+        }
+        
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+        
+        // Real-time header clock update
+        function updateHeaderClock() {
+            const now = new Date();
+            
+            // Fetch global settings for date/time format
+            fetch('/admin/api/global-settings')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const dateFormat = data.date_format || 'DD/MM/YYYY';
+                        const timeFormat = data.time_format || '12';
+                        
+                        // Get day name
+                        const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+                        
+                        // Format date based on global setting
+                        let formattedDate;
+                        if (dateFormat === 'MM/DD/YYYY') {
+                            formattedDate = now.toLocaleDateString('en-US');
+                        } else if (dateFormat === 'YYYY-MM-DD') {
+                            formattedDate = now.toISOString().split('T')[0];
+                        } else {
+                            formattedDate = now.toLocaleDateString('en-GB');
+                        }
+                        
+                        // Format time based on global setting
+                        const timeOptions = timeFormat === '24' ? { hour12: false } : { hour12: true };
+                        const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+                        
+                        // Combine day with date
+                        const dateWithDay = `${dayName}, ${formattedDate}`;
+                        
+                        // Update header date/time
+                        const headerDate = document.querySelector('.header-date');
+                        const headerTime = document.querySelector('.header-time');
+                        if (headerDate) headerDate.textContent = dateWithDay;
+                        if (headerTime) headerTime.textContent = formattedTime;
+                    }
+                })
+                .catch(error => {
+                    // Fallback to simple format if API fails
+                    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+                    const dateWithDay = `${dayName}, ${now.toLocaleDateString()}`;
+                    const formattedTime = now.toLocaleTimeString();
+                    
+                    const headerDate = document.querySelector('.header-date');
+                    const headerTime = document.querySelector('.header-time');
+                    if (headerDate) headerDate.textContent = dateWithDay;
+                    if (headerTime) headerTime.textContent = formattedTime;
+                });
+        }
+        
+        // Initialize header clock and update every second
+        updateHeaderClock();
+        setInterval(updateHeaderClock, 1000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

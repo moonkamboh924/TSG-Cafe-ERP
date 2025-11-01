@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill - {{ bill_data.invoice_no }}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        .bill-container {
+            width: 80mm;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 0 auto;
+            padding: 5mm;
+        }
+        
+        .bill-container.paper-58mm { width: 58mm; }
+        .bill-container.paper-80mm { width: 80mm; }
+        .bill-container.paper-a4 { width: 210mm; }
+        .bill-container.paper-a5 { width: 148mm; }
+        
+        .bill-container.font-small { font-size: 10px; }
+        .bill-container.font-medium { font-size: 12px; }
+        .bill-container.font-large { font-size: 14px; }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 8px;
+        }
+        
+        .logo {
+            margin-bottom: 8px;
+        }
+        
+        .logo img {
+            max-height: 40px;
+            max-width: 60px;
+            object-fit: contain;
+        }
+        
+        .restaurant-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 2px;
+        }
+        
+        .tagline {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .contact-info {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .bill-info {
+            margin: 8px 0;
+            font-size: 0.9em;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 8px;
+        }
+        
+        .bill-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .items {
+            margin: 8px 0;
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            font-size: 0.9em;
+        }
+        
+        .item-name {
+            flex: 1;
+        }
+        
+        .item-qty {
+            width: 30px;
+            text-align: center;
+        }
+        
+        .item-price {
+            width: 60px;
+            text-align: right;
+        }
+        
+        .item-header {
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 5px;
+        }
+        
+        .total-row-margin {
+            margin-top: 8px;
+        }
+        
+        .qr-placeholder {
+            text-align: center;
+            padding: 10px;
+            border: 1px dashed #000;
+        }
+        
+        .totals {
+            border-top: 1px dashed #000;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .grand-total {
+            font-weight: bold;
+            font-size: 1.1em;
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            margin-top: 4px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            border-top: 1px dashed #000;
+            padding-top: 8px;
+            font-size: 0.8em;
+        }
+        
+        .qr-code {
+            margin: 8px 0;
+        }
+        
+        .print-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="bill-container paper-{{ template.paper_size }} font-{{ template.font_size }}">
+        <!-- Header Section -->
+        <div class="header">
+            {% if template.show_logo and template.logo_filename %}
+            <div class="logo">
+                <img src="{{ url_for('static', filename='uploads/logos/' + template.logo_filename) }}" alt="Logo">
+            </div>
+            {% endif %}
+            
+            <div class="restaurant-name">{{ template.header_name }}</div>
+            <div class="tagline">{{ template.header_tagline }}</div>
+            <div class="contact-info">
+                <div>123 Main Street, Lahore</div>
+                <div>Phone: +92 300 1234567</div>
+            </div>
+        </div>
+        
+        <!-- Bill Information -->
+        <div class="bill-info">
+            {% if template.show_order_number %}
+            <div class="bill-info-row">
+                <span>Order #:</span>
+                <span>{{ bill_data.invoice_no }}</span>
+            </div>
+            {% endif %}
+            
+            {% if template.show_table and bill_data.table_number %}
+            <div class="bill-info-row">
+                <span>Table:</span>
+                <span>{{ bill_data.table_number }}</span>
+            </div>
+            {% endif %}
+            
+            {% if template.show_date_time %}
+            <div class="bill-info-row">
+                <span>Date:</span>
+                <span>{{ bill_data.created_at|to_local_time|format_date }}</span>
+            </div>
+            <div class="bill-info-row">
+                <span>Time:</span>
+                <span>{{ bill_data.created_at|to_local_time|format_time }}</span>
+            </div>
+            {% endif %}
+            
+            {% if template.show_cashier %}
+            <div class="bill-info-row">
+                <span>Cashier:</span>
+                <span>{{ bill_data.user.full_name }}</span>
+            </div>
+            {% endif %}
+            
+            {% if bill_data.customer_name %}
+            <div class="bill-info-row">
+                <span>Customer:</span>
+                <span>{{ bill_data.customer_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Items -->
+        <div class="items">
+            <div class="item-row item-header">
+                <span class="item-name">Item</span>
+                <span class="item-qty">Qty</span>
+                <span class="item-price">Price</span>
+            </div>
+            
+            {% for line in bill_data.lines %}
+            <div class="item-row">
+                <span class="item-name">{{ line.item.name }}</span>
+                <span class="item-qty">{{ line.qty|int }}</span>
+                <span class="item-price">PKR {{ "%.0f"|format(line.line_total) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Totals -->
+        <div class="totals">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>PKR {{ "%.0f"|format(bill_data.subtotal) }}</span>
+            </div>
+            
+            {% if template.show_tax %}
+            <div class="total-row">
+                <span>Tax:</span>
+                <span>PKR {{ "%.0f"|format(bill_data.tax) }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="total-row grand-total">
+                <span>Total:</span>
+                <span>PKR {{ "%.0f"|format(bill_data.total) }}</span>
+            </div>
+            
+            <div class="total-row total-row-margin">
+                <span>Payment:</span>
+                <span>{{ bill_data.payment_method.title() }}</span>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        {% if template.footer_message %}
+        <div class="footer">
+            {% for line in template.footer_message.split('\n') %}
+                <div>{{ line }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if template.show_qr_code %}
+        <div class="qr-code">
+            <!-- QR Code would be generated here -->
+            <div class="qr-placeholder">
+                [QR Code for Feedback]
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Print Controls (hidden when printing) -->
+    <div class="print-controls no-print">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print"></i> Print Bill
+        </button>
+        <button class="btn btn-secondary" onclick="window.close()">
+            <i class="fas fa-times"></i> Close
+        </button>
+    </div>
+    
+    <script>
+        // Auto-print when page loads (only if opened in new window)
+        window.onload = function() { 
+            if (window.opener) {
+                window.print(); 
+            }
+        }
+        
+        // Auto-close after printing (only if opened in new window)
+        window.onafterprint = function() {
+            if (window.opener) {
+                window.close();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Management - Sangat Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="container mx-auto px-4 py-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Menu Management</h1>
+                <p class="text-gray-600 mt-2">Manage your menu items and categories</p>
+            </div>
+            <button id="addItemBtn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus mr-2"></i>Add Menu Item
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="categoryFilter" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="statusFilter" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <input type="text" id="searchInput" placeholder="Search items..." class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex items-end">
+                    <button id="resetFilters" class="w-full bg-gray-500 text-white px-4 py-2 rounded-xl hover:bg-gray-600 transition-colors">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Items Grid -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+            <div id="menuGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Menu items will be loaded here -->
+            </div>
+            
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center mt-8">
+                <!-- Pagination will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Menu Item Modal -->
+<div id="itemModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-4xl mx-4 shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-800">Add Menu Item</h3>
+            <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="itemForm" class="space-y-6">
+            <input type="hidden" id="itemId">
+            
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">SKU</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="itemSku" required class="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button type="button" id="generateSkuBtn" class="px-4 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <input type="text" id="itemName" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="itemCategory" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Price (₨)</label>
+                    <input type="number" id="itemPrice" step="0.01" min="0" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="itemActive" checked class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="itemActive" class="ml-2 text-sm text-gray-700">Active</label>
+                </div>
+            </div>
+            
+            <!-- Recipe Builder -->
+            <div class="border-t pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-800">Recipe Builder</h4>
+                    <button type="button" id="addIngredientBtn" class="bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Ingredient
+                    </button>
+                </div>
+                
+                <div id="recipeContainer" class="space-y-3">
+                    <!-- Recipe items will be added here -->
+                </div>
+                
+                <div class="text-sm text-gray-500 mt-2">
+                    Add ingredients from your inventory to create the recipe for this menu item.
+                </div>
+            </div>
+            
+            <div class="flex space-x-3 pt-4 border-t">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+                    Save Item
+                </button>
+                <button type="button" id="cancelBtn" class="flex-1 bg-gray-500 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Menu Item</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-600 mb-2">Are you sure you want to delete this menu item?</p>
+            <p id="deleteItemName" class="font-semibold text-gray-800 mb-6"></p>
+            
+            <!-- Warning Text -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-yellow-600 mt-0.5 mr-3"></i>
+                    <div class="text-left">
+                        <p class="text-sm text-yellow-800 font-medium mb-1">Important:</p>
+                        <p class="text-sm text-yellow-700">This will deactivate the menu item. It will no longer appear in the POS system but historical data will be preserved.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button id="cancelDeleteBtn" class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Delete Item
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let menuItems = [];
+let categories = [];
+let inventoryItems = [];
+let recipeItems = [];
+let currentPage = 1;
+let totalPages = 1;
+let itemToDelete = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+    loadInventoryItems();
+    loadMenuItems();
+    
+    // Event listeners
+    document.getElementById('addItemBtn').addEventListener('click', () => openModal());
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('itemForm').addEventListener('submit', saveItem);
+    document.getElementById('categoryFilter').addEventListener('change', loadMenuItems);
+    document.getElementById('statusFilter').addEventListener('change', loadMenuItems);
+    document.getElementById('searchInput').addEventListener('input', debounce(loadMenuItems, 300));
+    document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    document.getElementById('generateSkuBtn').addEventListener('click', generateSku);
+    document.getElementById('addIngredientBtn').addEventListener('click', addRecipeItem);
+    
+    // Delete modal event listeners
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+});
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/pos/api/categories');
+        categories = await response.json();
+        
+        // Populate filter dropdown
+        const filterSelect = document.getElementById('categoryFilter');
+        const modalSelect = document.getElementById('itemCategory');
+        
+        categories.forEach(category => {
+            const filterOption = document.createElement('option');
+            filterOption.value = category.id;
+            filterOption.textContent = category.name;
+            filterSelect.appendChild(filterOption);
+            
+            const modalOption = document.createElement('option');
+            modalOption.value = category.id;
+            modalOption.textContent = category.name;
+            modalSelect.appendChild(modalOption);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+async function loadInventoryItems() {
+    try {
+        const response = await fetch('/menu/api/inventory-items');
+        const data = await response.json();
+        inventoryItems = data.items;
+    } catch (error) {
+        console.error('Error loading inventory items:', error);
+    }
+}
+
+async function loadMenuItems(page = 1) {
+    try {
+        const categoryId = document.getElementById('categoryFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        const search = document.getElementById('searchInput').value;
+        
+        let url = `/menu/api/items?page=${page}`;
+        if (categoryId) url += `&category_id=${categoryId}`;
+        if (status) url += `&is_active=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        menuItems = data.items;
+        currentPage = data.current_page;
+        totalPages = data.pages;
+        
+        renderMenuItems();
+        renderPagination();
+    } catch (error) {
+        console.error('Error loading menu items:', error);
+    }
+}
+
+function renderMenuItems() {
+    const grid = document.getElementById('menuGrid');
+    
+    if (menuItems.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No menu items found</div>';
+        return;
+    }
+    
+    grid.innerHTML = menuItems.map(item => `
+        <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg text-gray-800 mb-1">${item.name}</h3>
+                    <p class="text-sm text-gray-500 mb-2">SKU: ${item.sku}</p>
+                    <p class="text-sm text-blue-600 font-medium">${item.category || 'No Category'}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-medium ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                    ${item.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-2xl font-bold text-gray-800">₨${parseFloat(item.price).toFixed(2)}</p>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button onclick="editItem(${item.id})" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-xl hover:bg-blue-600 transition-colors text-sm font-medium">
+                    <i class="fas fa-edit mr-1"></i>Edit
+                </button>
+                <button onclick="deleteItem(${item.id})" class="flex-1 bg-red-500 text-white py-2 px-4 rounded-xl hover:bg-red-600 transition-colors text-sm font-medium">
+                    <i class="fas fa-trash mr-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // Previous button
+    if (currentPage > 1) {
+        paginationHTML += `<button onclick="loadMenuItems(${currentPage - 1})" class="px-4 py-2 mx-1 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Previous</button>`;
+    }
+    
+    // Page numbers
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        const isActive = i === currentPage;
+        paginationHTML += `<button onclick="loadMenuItems(${i})" class="px-4 py-2 mx-1 ${isActive ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50'} rounded-lg">${i}</button>`;
+    }
+    
+    // Next button
+    if (currentPage < totalPages) {
+        paginationHTML += `<button onclick="loadMenuItems(${currentPage + 1})" class="px-4 py-2 mx-1 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Next</button>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+async function openModal(item = null) {
+    const modal = document.getElementById('itemModal');
+    const title = document.getElementById('modalTitle');
+    
+    // Reset recipe items
+    recipeItems = [];
+    
+    if (item) {
+        title.textContent = 'Edit Menu Item';
+        document.getElementById('itemId').value = item.id;
+        document.getElementById('itemSku').value = item.sku;
+        document.getElementById('itemName').value = item.name;
+        document.getElementById('itemCategory').value = item.category_id;
+        document.getElementById('itemPrice').value = parseFloat(item.price).toFixed(2);
+        document.getElementById('itemActive').checked = item.is_active;
+        
+        // Load existing recipe
+        try {
+            const response = await fetch(`/menu/api/items/${item.id}/recipe`);
+            const data = await response.json();
+            if (data.success) {
+                recipeItems = data.recipe;
+            }
+        } catch (error) {
+            console.error('Error loading recipe:', error);
+        }
+    } else {
+        title.textContent = 'Add Menu Item';
+        document.getElementById('itemForm').reset();
+        document.getElementById('itemId').value = '';
+        document.getElementById('itemActive').checked = true;
+        
+        // Generate SKU for new items
+        await generateSku();
+    }
+    
+    renderRecipeItems();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeModal() {
+    const modal = document.getElementById('itemModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function saveItem(event) {
+    event.preventDefault();
+    
+    const itemId = document.getElementById('itemId').value;
+    const isEdit = !!itemId;
+    
+    const data = {
+        sku: document.getElementById('itemSku').value,
+        name: document.getElementById('itemName').value,
+        category_id: parseInt(document.getElementById('itemCategory').value),
+        price: parseFloat(document.getElementById('itemPrice').value),
+        is_active: document.getElementById('itemActive').checked,
+        recipe_items: recipeItems.map(item => ({
+            inventory_item_id: item.inventory_item_id,
+            quantity: item.quantity,
+            unit: item.unit
+        }))
+    };
+    
+    try {
+        const url = isEdit ? `/menu/api/items/${itemId}` : '/menu/api/items';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeModal();
+            loadMenuItems(currentPage);
+            showNotification(isEdit ? 'Item updated successfully' : 'Item created successfully', 'success');
+        } else {
+            showNotification(result.error || 'An error occurred', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving item:', error);
+        showNotification('An error occurred while saving', 'error');
+    }
+}
+
+async function editItem(itemId) {
+    const item = menuItems.find(i => i.id === itemId);
+    if (item) {
+        openModal(item);
+    }
+}
+
+async function deleteItem(itemId) {
+    const item = menuItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Store item to delete and show modal
+    itemToDelete = item;
+    document.getElementById('deleteItemName').textContent = item.name;
+    
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex');
+}
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.classList.add('hidden');
+    deleteModal.classList.remove('flex');
+    itemToDelete = null;
+}
+
+async function confirmDelete() {
+    if (!itemToDelete) return;
+    
+    try {
+        const response = await fetch(`/menu/api/items/${itemToDelete.id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            closeDeleteModal();
+            loadMenuItems(currentPage);
+            showNotification('Item deleted successfully', 'success');
+        } else {
+            const result = await response.json();
+            showNotification(result.error || 'Failed to delete item', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        showNotification('An error occurred while deleting', 'error');
+    }
+}
+
+function resetFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    loadMenuItems(1);
+}
+
+function showNotification(message, type = 'info') {
+    // Simple notification - you can enhance this with a proper notification system
+    const color = type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue';
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 bg-${color}-500 text-white px-6 py-3 rounded-xl shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Recipe Builder Functions
+async function generateSku() {
+    try {
+        const response = await fetch('/menu/api/next-sku');
+        const data = await response.json();
+        document.getElementById('itemSku').value = data.sku;
+    } catch (error) {
+        console.error('Error generating SKU:', error);
+    }
+}
+
+function addRecipeItem() {
+    const newItem = {
+        id: Date.now(), // Temporary ID for frontend
+        inventory_item_id: '',
+        inventory_item_name: '',
+        quantity: 1,
+        unit: 'pcs'
+    };
+    
+    recipeItems.push(newItem);
+    renderRecipeItems();
+}
+
+function renderRecipeItems() {
+    const container = document.getElementById('recipeContainer');
+    
+    if (recipeItems.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">No ingredients added yet</div>';
+        return;
+    }
+    
+    container.innerHTML = recipeItems.map((item, index) => `
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ingredient</label>
+                    <select onchange="updateRecipeItem(${index}, 'inventory_item_id', this.value)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Ingredient</option>
+                        ${inventoryItems.map(inv => `
+                            <option value="${inv.id}" ${item.inventory_item_id == inv.id ? 'selected' : ''}>
+                                ${inv.name} (${inv.sku})
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input type="number" 
+                           value="${item.quantity}" 
+                           onchange="updateRecipeItem(${index}, 'quantity', parseFloat(this.value))"
+                           step="0.01" 
+                           min="0.01" 
+                           class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                    <select onchange="updateRecipeItem(${index}, 'unit', this.value)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="pcs" ${item.unit === 'pcs' ? 'selected' : ''}>Pieces</option>
+                        <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>Kilograms</option>
+                        <option value="g" ${item.unit === 'g' ? 'selected' : ''}>Grams</option>
+                        <option value="l" ${item.unit === 'l' ? 'selected' : ''}>Liters</option>
+                        <option value="ml" ${item.unit === 'ml' ? 'selected' : ''}>Milliliters</option>
+                        <option value="cups" ${item.unit === 'cups' ? 'selected' : ''}>Cups</option>
+                        <option value="tbsp" ${item.unit === 'tbsp' ? 'selected' : ''}>Tablespoons</option>
+                        <option value="tsp" ${item.unit === 'tsp' ? 'selected' : ''}>Teaspoons</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button type="button" 
+                            onclick="removeRecipeItem(${index})" 
+                            class="w-full bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateRecipeItem(index, field, value) {
+    if (recipeItems[index]) {
+        recipeItems[index][field] = value;
+        
+        // Update inventory item name when inventory_item_id changes
+        if (field === 'inventory_item_id') {
+            const inventoryItem = inventoryItems.find(item => item.id == value);
+            recipeItems[index].inventory_item_name = inventoryItem ? inventoryItem.name : '';
+        }
+    }
+}
+
+function removeRecipeItem(index) {
+    recipeItems.splice(index, 1);
+    renderRecipeItems();
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>
+{% endblock %}

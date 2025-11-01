@@ -1,0 +1,15 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Migrate
+Flask-WTF
+WTForms
+bcrypt
+python-dotenv
+Werkzeug
+Jinja2
+SQLAlchemy
+alembic
+PyInstaller
+openpyxl
+pytz

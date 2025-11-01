@@ -1,0 +1,1297 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TSG Cafe System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <!-- Main Dashboard Grid -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Top Row - Profile & Activity -->
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-8 mb-8">
+            <!-- Employee Details - Enhanced Luxury Design -->
+            <div class="xl:col-span-2">
+                <div class="luxury-card h-full">
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 backdrop-blur-xl border border-white/20 shadow-2xl h-full flex flex-col">
+                        <!-- Decorative Elements -->
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/8 to-indigo-500/8 rounded-full -translate-y-20 translate-x-20"></div>
+                        <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-400/8 to-pink-500/8 rounded-full translate-y-16 -translate-x-16"></div>
+                        
+                        <div class="relative">
+                            <!-- Header Section -->
+                            <div class="flex items-center justify-between p-8 pb-4">
+                                <div class="flex items-center">
+                                    <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mr-4 shadow-xl">
+                                        <i class="fas fa-user-tie text-white text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent">
+                                            Employee Details
+                                        </h3>
+                                        <p class="text-gray-600 text-sm font-medium">Profile information</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="relative px-8 pb-8 flex-1 flex flex-col justify-between">
+                            <!-- Employee Photo Section -->
+                            <div class="text-center mb-4">
+                                <div class="relative inline-block">
+                                    <!-- Employee Picture -->
+                                    <div class="relative w-24 h-24 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl mb-4 mx-auto overflow-hidden border-4 border-white group">
+                                        {% if current_user.profile_picture %}
+                                            <img src="{{ current_user.profile_picture }}" alt="{{ current_user.username }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <i class="fas fa-user text-white text-3xl"></i>
+                                        {% endif %}
+                                        
+                                        <!-- Upload Button Overlay -->
+                                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer" onclick="document.getElementById('profilePictureInput').click()">
+                                            <i class="fas fa-camera text-white text-lg"></i>
+                                        </div>
+                                        
+                                        <!-- Hidden File Input -->
+                                        <input type="file" id="profilePictureInput" accept="image/*" class="hidden" onchange="uploadProfilePicture(this)" aria-label="Upload profile picture" title="Upload profile picture">
+                                    </div>
+                                </div>
+                                <!-- Employee Name -->
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ current_user.full_name or current_user.username }}</h3>
+                                <!-- Employee Designation -->
+                                <p class="text-indigo-600 font-semibold text-base mb-1">{{ current_user.designation or current_user.role.replace('_', ' ').title() }}</p>
+                                <div class="w-12 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mx-auto"></div>
+                            </div>
+                            
+                            <!-- Employee Details Table -->
+                            <div class="bg-white/60 rounded-2xl p-4 backdrop-blur-sm border border-white/40 shadow-lg flex-1">
+                                
+                                <div class="space-y-3">
+                                    <!-- Employee ID -->
+                                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-hashtag text-blue-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-700 text-sm">Employee ID</span>
+                                        </div>
+                                        <span class="text-gray-800 font-semibold text-sm">{{ current_user.employee_id }}</span>
+                                    </div>
+                                    
+                                    <!-- Department -->
+                                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-building text-purple-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-700 text-sm">Department</span>
+                                        </div>
+                                        <span class="text-gray-800 font-semibold text-sm">{{ current_user.department or 'Management' }}</span>
+                                    </div>
+                                    
+                                    <!-- Contact Number -->
+                                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-phone text-green-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-700 text-sm">Contact</span>
+                                        </div>
+                                        <span class="text-gray-800 font-semibold text-sm">{{ current_user.phone or '+92 300 1234567' }}</span>
+                                    </div>
+                                    
+                                    <!-- Address -->
+                                    <div class="flex items-center justify-between py-2">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-map-marker-alt text-orange-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-700 text-sm">Address</span>
+                                        </div>
+                                        <span class="text-gray-800 font-semibold text-sm text-right max-w-xs">{{ current_user.address or 'Lahore, Punjab, Pakistan' }}</span>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today Performance - Enhanced Layout -->
+            <div class="xl:col-span-3">
+                <!-- Today's Performance - Professional Square Design -->
+                <div class="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/60 to-blue-50/40 rounded-3xl p-8 backdrop-blur-xl border border-white/30 shadow-2xl">
+                    <!-- Decorative Elements -->
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/8 to-indigo-500/8 rounded-full -translate-y-20 translate-x-20"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-400/8 to-pink-500/8 rounded-full translate-y-16 -translate-x-16"></div>
+                    
+                    <div class="relative">
+                        <!-- Header Section -->
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center">
+                                <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mr-4 shadow-xl">
+                                    <i class="fas fa-chart-bar text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent">
+                                        Today's Performance
+                                    </h3>
+                                    <p class="text-gray-600 text-sm font-medium">Real-time business metrics</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200/50">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span class="text-sm font-semibold text-green-700">Live</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Professional KPI Grid -->
+                        <div class="grid grid-cols-2 gap-6">
+                            <!-- Revenue KPI - Professional Square -->
+                            <div class="group relative overflow-hidden bg-gradient-to-br from-white to-blue-50/30 rounded-2xl p-6 backdrop-blur-sm border border-white/40 hover:border-blue-200/60 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 cursor-pointer" onclick="openRevenueModal()">
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas fa-rupee-sign text-white text-lg"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                            <i class="fas fa-external-link-alt text-blue-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-blue-600 text-sm font-bold uppercase tracking-wider">Daily Revenue</p>
+                                        <p class="text-3xl font-black text-blue-800 group-hover:text-blue-900 transition-colors" id="revenue-kpi">₨0.00</p>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium" id="revenue-growth">+0%</span>
+                                            <span class="text-xs text-gray-500">vs yesterday</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Orders KPI - Professional Square -->
+                            <div class="group relative overflow-hidden bg-gradient-to-br from-white to-green-50/30 rounded-2xl p-6 backdrop-blur-sm border border-white/40 hover:border-green-200/60 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 cursor-pointer" onclick="openOrdersModal()">
+                                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas fa-shopping-cart text-white text-lg"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                            <i class="fas fa-external-link-alt text-green-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-green-600 text-sm font-bold uppercase tracking-wider">Orders Today</p>
+                                        <p class="text-3xl font-black text-green-800 group-hover:text-green-900 transition-colors" id="orders-kpi">0</p>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium" id="orders-growth">+0%</span>
+                                            <span class="text-xs text-gray-500">vs yesterday</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Inventory Alerts KPI - Professional Square -->
+                            <div class="group relative overflow-hidden bg-gradient-to-br from-white to-orange-50/30 rounded-2xl p-6 backdrop-blur-sm border border-white/40 hover:border-orange-200/60 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 cursor-pointer" onclick="openInventoryModal()">
+                                <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas fa-exclamation-triangle text-white text-lg"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                                            <i class="fas fa-external-link-alt text-orange-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-orange-600 text-sm font-bold uppercase tracking-wider">Stock Alerts</p>
+                                        <p class="text-3xl font-black text-orange-800 group-hover:text-orange-900 transition-colors" id="alerts-kpi">0</p>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">Critical</span>
+                                            <span class="text-xs text-gray-500">items low</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Active Transactions KPI - Professional Square -->
+                            <div class="group relative overflow-hidden bg-gradient-to-br from-white to-purple-50/30 rounded-2xl p-6 backdrop-blur-sm border border-white/40 hover:border-purple-200/60 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 cursor-pointer" onclick="openExpenseModal()">
+                                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-violet-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div class="relative">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas fa-receipt text-white text-lg"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                            <i class="fas fa-external-link-alt text-purple-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-purple-600 text-sm font-bold uppercase tracking-wider">Expense</p>
+                                        <p class="text-3xl font-black text-purple-800 group-hover:text-purple-900 transition-colors" id="transactions-kpi">0</p>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">Today</span>
+                                            <span class="text-xs text-gray-500">total spent</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weekly Activity - Full Width Luxury Design -->
+        <div class="mt-8">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/50 backdrop-blur-xl border border-white/20 shadow-2xl">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-400/10 to-purple-500/10 rounded-full -translate-y-32 translate-x-32"></div>
+                <div class="relative p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-indigo-800 bg-clip-text text-transparent flex items-center">
+                            <i class="fas fa-calendar-week text-indigo-600 mr-3"></i>
+                            Weekly Activity
+                        </h3>
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium">7-Day Overview</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Performance Metrics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Weekly Sales Chart - Luxury Enhanced -->
+                        <div class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/40 to-indigo-50/60 rounded-2xl p-8 backdrop-blur-lg border border-white/40 shadow-2xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full -translate-y-16 translate-x-16"></div>
+                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-500/10 rounded-full translate-y-12 -translate-x-12"></div>
+                            
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h4 class="text-xl font-bold bg-gradient-to-r from-gray-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                                            <i class="fas fa-chart-area text-white"></i>
+                                        </div>
+                                        Weekly Sales Performance
+                                    </h4>
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+                                            <span class="text-sm font-medium text-gray-600">Revenue Trend</span>
+                                        </div>
+                                        <div class="px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full">
+                                            <span class="text-xs font-semibold text-green-700">Live Data</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative bg-white/80 rounded-xl p-4 backdrop-blur-sm border border-white/50 shadow-inner">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-50/30 rounded-xl"></div>
+                                    <div class="relative h-72">
+                                        <canvas id="weeklySalesChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chart Legend/Stats -->
+                                <div class="mt-4 grid grid-cols-3 gap-4">
+                                    <div class="text-center p-3 bg-white/50 rounded-lg backdrop-blur-sm border border-white/30">
+                                        <div class="text-xs font-medium text-gray-600 mb-1">Peak Day</div>
+                                        <div class="text-sm font-bold text-blue-700" id="peak-day">Monday</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white/50 rounded-lg backdrop-blur-sm border border-white/30">
+                                        <div class="text-xs font-medium text-gray-600 mb-1">Avg Daily</div>
+                                        <div class="text-sm font-bold text-indigo-700" id="avg-daily">$0.00</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white/50 rounded-lg backdrop-blur-sm border border-white/30">
+                                        <div class="text-xs font-medium text-gray-600 mb-1">Trend</div>
+                                        <div class="text-sm font-bold text-green-700" id="trend-direction">↗ +12%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Weekly Summary Stats -->
+                        <div class="bg-white/60 rounded-xl p-6 backdrop-blur-sm border border-white/30">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-pie text-indigo-600 mr-2"></i>
+                                Weekly Summary
+                            </h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-rupee-sign text-white"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-700">Total Revenue</span>
+                                    </div>
+                                    <span class="text-xl font-bold text-green-700" id="weekly-revenue">₨0.00</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-shopping-bag text-white"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-700">Total Orders</span>
+                                    </div>
+                                    <span class="text-xl font-bold text-blue-700" id="weekly-orders">0</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg border border-purple-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-users text-white"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-700">Avg Daily Orders</span>
+                                    </div>
+                                    <span class="text-xl font-bold text-purple-700" id="weekly-avg-orders">0</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-trending-up text-white"></i>
+                                        </div>
+                                        <span class="font-medium text-gray-700">Growth Rate</span>
+                                    </div>
+                                    <span class="text-xl font-bold text-orange-700" id="weekly-growth">+0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let weeklySalesChart;
+
+async function loadDashboardData() {
+    try {
+        // Load KPIs
+        const kpiResponse = await fetch('/api/dashboard/kpis/today');
+        const kpiData = await kpiResponse.json();
+        
+        document.getElementById('revenue-kpi').textContent = `₨${(kpiData.revenue || 0).toFixed(2)}`;
+        document.getElementById('orders-kpi').textContent = kpiData.orders || 0;
+        document.getElementById('alerts-kpi').textContent = kpiData.alerts || 0;
+        document.getElementById('transactions-kpi').textContent = '₨' + (kpiData.expenses || 0).toLocaleString();
+        
+        // Update revenue growth percentage
+        const revenueGrowthElement = document.getElementById('revenue-growth');
+        if (revenueGrowthElement && kpiData.revenue_growth !== undefined) {
+            const sign = kpiData.revenue_growth >= 0 ? '+' : '';
+            revenueGrowthElement.textContent = `${sign}${kpiData.revenue_growth}%`;
+        }
+        
+        // Update orders growth percentage
+        const ordersGrowthElement = document.getElementById('orders-growth');
+        if (ordersGrowthElement && kpiData.orders_growth !== undefined) {
+            const sign = kpiData.orders_growth >= 0 ? '+' : '';
+            ordersGrowthElement.textContent = `${sign}${kpiData.orders_growth}%`;
+        }
+        
+        // Load weekly sales chart
+        const salesResponse = await fetch('/api/dashboard/weekly-sales');
+        const weeklyData = await salesResponse.json();
+        
+        // Load weekly summary data
+        try {
+            const summaryResponse = await fetch('/api/dashboard/weekly-summary');
+            if (summaryResponse.ok) {
+                const summaryData = await summaryResponse.json();
+                console.log('Weekly summary data:', summaryData);
+                
+                // Update weekly summary display
+                if (summaryData.success) {
+                    document.getElementById('weekly-revenue').textContent = `₨${summaryData.total_revenue.toLocaleString()}`;
+                    document.getElementById('weekly-orders').textContent = summaryData.total_orders;
+                    document.getElementById('weekly-avg-orders').textContent = summaryData.avg_daily_orders;
+                    document.getElementById('weekly-growth').textContent = summaryData.growth_rate > 0 ? `+${summaryData.growth_rate}%` : `${summaryData.growth_rate}%`;
+                    
+                    // Update peak day, avg daily, and trend in chart section
+                    const peakDayElement = document.getElementById('peak-day');
+                    if (peakDayElement) {
+                        peakDayElement.textContent = summaryData.peak_day || 'N/A';
+                    }
+                    
+                    const avgDailyElement = document.getElementById('avg-daily');
+                    if (avgDailyElement) {
+                        avgDailyElement.textContent = `₨${summaryData.avg_daily_revenue.toLocaleString()}`;
+                    }
+                    
+                    const trendElement = document.getElementById('trend-direction');
+                    if (trendElement) {
+                        const arrow = summaryData.growth_rate >= 0 ? '↗' : '↘';
+                        trendElement.textContent = `${arrow} ${summaryData.trend || '+0%'}`;
+                    }
+                } else {
+                    console.error('Weekly summary API error:', summaryData.error);
+                }
+            } else {
+                console.error('Weekly summary API response not ok:', summaryResponse.status);
+            }
+        } catch (error) {
+            console.error('Error fetching weekly summary:', error);
+        }
+        
+        // Destroy existing chart if it exists
+        if (weeklySalesChart) {
+            weeklySalesChart.destroy();
+        }
+        
+        const weeklySalesCtx = document.getElementById('weeklySalesChart').getContext('2d');
+        
+        // Create gradient for the chart
+        const gradient = weeklySalesCtx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.4)');
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+        
+        const borderGradient = weeklySalesCtx.createLinearGradient(0, 0, 0, 400);
+        borderGradient.addColorStop(0, 'rgba(59, 130, 246, 1)');
+        borderGradient.addColorStop(1, 'rgba(99, 102, 241, 0.8)');
+        
+        weeklySalesChart = new Chart(weeklySalesCtx, {
+            type: 'line',
+            data: {
+                labels: weeklyData.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Daily Revenue',
+                    data: weeklyData.data || [0, 0, 0, 0, 0, 0, 0],
+                    borderColor: borderGradient,
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: 'rgba(59, 130, 246, 1)',
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 3,
+                    shadowOffsetX: 3,
+                    shadowOffsetY: 3,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(0, 0, 0, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1f2937',
+                        bodyColor: '#374151',
+                        borderColor: 'rgba(59, 130, 246, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 12,
+                        displayColors: false,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                return 'Revenue: ₨' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(59, 130, 246, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            callback: function(value) {
+                                return '₨' + value.toLocaleString();
+                            },
+                            padding: 10
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            padding: 10
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 8
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+        
+        // Update chart legend stats
+        const salesData = [1200, 1900, 3000, 5000, 2000, 3000, 4500];
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const maxSales = Math.max(...salesData);
+        const peakDayIndex = salesData.indexOf(maxSales);
+        const avgDaily = salesData.reduce((a, b) => a + b, 0) / salesData.length;
+        
+        // Use API data for weekly summary instead of chart calculations
+        const summaryResponse = await fetch('/api/dashboard/weekly-summary');
+        const summaryData = await summaryResponse.json();
+        
+        if (summaryData.success) {
+            document.getElementById('peak-day').textContent = summaryData.peak_day || 'N/A';
+            document.getElementById('avg-daily').textContent = '₨' + (summaryData.avg_daily_revenue || 0).toLocaleString();
+            
+            const trendElement = document.getElementById('trend-direction');
+            const growthRate = summaryData.growth_rate || 0;
+            
+            if (growthRate > 0) {
+                trendElement.textContent = `↗ +${growthRate}%`;
+                trendElement.className = 'text-sm font-bold text-green-700';
+            } else if (growthRate < 0) {
+                trendElement.textContent = `↘ ${growthRate}%`;
+                trendElement.className = 'text-sm font-bold text-red-700';
+            } else {
+                trendElement.textContent = `→ ${growthRate}%`;
+                trendElement.className = 'text-sm font-bold text-gray-700';
+            }
+        }
+        
+        // Load recent activities
+        const activitiesResponse = await fetch('/api/dashboard/activities');
+        const activities = await activitiesResponse.json();
+        
+        const activitiesContainer = document.getElementById('recent-activities');
+        if (activitiesContainer) {
+            if (activities.length === 0) {
+                activitiesContainer.innerHTML = `
+                <div class="text-center text-gray-600 py-8">
+                    <i class="fas fa-history text-2xl mb-2"></i>
+                    <p>No recent activities</p>
+                </div>
+            `;
+        } else {
+            activitiesContainer.innerHTML = activities.slice(0, 10).map(activity => `
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-gray-800 text-sm">
+                            <span class="font-medium">${activity.user}</span> 
+                            ${activity.action} ${activity.entity}
+                            ${activity.entity_id ? `#${activity.entity_id}` : ''}
+                        </p>
+                        <p class="text-gray-600 text-xs">
+                            ${new Date(activity.created_at).toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
+}
+
+// Modal Functions
+function openRevenueModal() {
+    document.getElementById('revenueModal').classList.remove('hidden');
+    loadRevenueDetails();
+}
+
+function openOrdersModal() {
+    document.getElementById('ordersModal').classList.remove('hidden');
+    loadOrdersDetails();
+}
+
+function openInventoryModal() {
+    document.getElementById('inventoryModal').classList.remove('hidden');
+    loadInventoryDetails();
+}
+
+function openExpenseModal() {
+    document.getElementById('expenseModal').classList.remove('hidden');
+    loadExpenseDetails();
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modals = ['revenueModal', 'ordersModal', 'inventoryModal', 'expenseModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            closeModal(modalId);
+        }
+    });
+});
+
+// Load modal data functions
+async function loadRevenueDetails() {
+    try {
+        const response = await fetch('/api/dashboard/revenue-details');
+        const data = await response.json();
+        
+        const totalRevenue = data.total_revenue || 0;
+        const cashSales = data.cash_sales || 0;
+        const accountSales = data.account_sales || 0;
+        const creditSales = data.credit_sales || 0;
+        const creditPayments = data.credit_payments || 0;
+        const creditPaymentsCash = data.credit_payments_cash || 0;
+        const creditPaymentsOnline = data.credit_payments_online || 0;
+        const outstandingCredit = data.outstanding_credit || 0;
+        
+        document.getElementById('modal-total-revenue').textContent = `₨${totalRevenue.toFixed(2)}`;
+        document.getElementById('modal-cash-sales').textContent = `₨${cashSales.toFixed(2)}`;
+        document.getElementById('modal-card-sales').textContent = `₨${accountSales.toFixed(2)}`;
+        document.getElementById('modal-credit-sales').textContent = `₨${creditSales.toFixed(2)}`;
+        // Update credit payments with breakdown
+        if (creditPaymentsCash > 0 || creditPaymentsOnline > 0) {
+            document.getElementById('modal-credit-payments').innerHTML = `
+                ₨${creditPayments.toFixed(2)}<br>
+                <small class="text-gray-500">
+                    Cash: ₨${creditPaymentsCash.toFixed(2)} | Online: ₨${creditPaymentsOnline.toFixed(2)}
+                </small>
+            `;
+        } else {
+            document.getElementById('modal-credit-payments').textContent = `₨${creditPayments.toFixed(2)}`;
+        }
+        document.getElementById('modal-outstanding-credit').textContent = `₨${outstandingCredit.toFixed(2)}`;
+        
+        // Update growth percentage in revenue modal
+        const revenueGrowthElement = document.getElementById('revenue-growth-text');
+        if (revenueGrowthElement && data.growth_percentage !== undefined) {
+            const sign = data.growth_percentage >= 0 ? '+' : '';
+            revenueGrowthElement.textContent = `${sign}${data.growth_percentage}% from yesterday`;
+        }
+        
+        // Calculate and update percentages
+        if (totalRevenue > 0) {
+            const cashPercentage = Math.round((cashSales / totalRevenue) * 100);
+            const accountPercentage = Math.round((accountSales / totalRevenue) * 100);
+            const creditPercentage = Math.round((creditSales / totalRevenue) * 100);
+            
+            document.getElementById('cash-percentage').textContent = `${cashPercentage}% of total`;
+            document.getElementById('account-percentage').textContent = `${accountPercentage}% of total`;
+            document.getElementById('credit-percentage').textContent = `${creditPercentage}% of total`;
+        } else {
+            document.getElementById('cash-percentage').textContent = '0% of total';
+            document.getElementById('account-percentage').textContent = '0% of total';
+            document.getElementById('credit-percentage').textContent = '0% of total';
+        }
+        
+        const transactionsContainer = document.getElementById('revenue-transactions');
+        if (transactionsContainer) {
+            transactionsContainer.innerHTML = (data.recent_transactions || []).map(transaction => `
+            <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-receipt text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${transaction.description}</p>
+                        <p class="text-sm text-gray-500">${transaction.time}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-green-600">₨${(transaction.amount || 0).toFixed(2)}</p>
+                    <p class="text-xs text-gray-500">${transaction.payment_method}</p>
+                </div>
+            </div>
+        `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading revenue details:', error);
+    }
+}
+
+async function loadOrdersDetails() {
+    try {
+        const response = await fetch('/api/dashboard/orders-details');
+        const data = await response.json();
+        
+        document.getElementById('modal-total-orders').textContent = data.total_orders || 0;
+        document.getElementById('modal-completed-orders').textContent = data.completed_orders || 0;
+        document.getElementById('modal-pending-orders').textContent = data.pending_orders || 0;
+        
+        // Update growth percentage
+        const growthElement = document.getElementById('orders-growth-text');
+        if (growthElement && data.growth_percentage !== undefined) {
+            const sign = data.growth_percentage >= 0 ? '+' : '';
+            growthElement.textContent = `${sign}${data.growth_percentage}% from yesterday`;
+        }
+        
+        // Update completion rate
+        const completionElement = document.getElementById('orders-completion-text');
+        if (completionElement && data.completion_rate !== undefined) {
+            completionElement.textContent = `${data.completion_rate}% completion rate`;
+        }
+        
+        // Update pending rate
+        const pendingElement = document.getElementById('orders-pending-text');
+        if (pendingElement && data.pending_rate !== undefined) {
+            pendingElement.textContent = `${data.pending_rate}% pending`;
+        }
+        
+        const ordersContainer = document.getElementById('recent-orders');
+        if (ordersContainer) {
+            ordersContainer.innerHTML = (data.recent_orders || []).map(order => `
+            <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shopping-bag text-green-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Order #${order.id}</p>
+                        <p class="text-sm text-gray-500">${order.customer}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-gray-900">₨${(order.total || 0).toFixed(2)}</p>
+                    <span class="text-xs px-2 py-1 rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">${order.status}</span>
+                </div>
+            </div>
+        `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading orders details:', error);
+    }
+}
+
+async function loadInventoryDetails() {
+    try {
+        const response = await fetch('/api/dashboard/inventory-details');
+        const data = await response.json();
+        
+        document.getElementById('modal-critical-items').textContent = data.critical_items || 0;
+        document.getElementById('modal-low-stock').textContent = data.low_stock || 0;
+        document.getElementById('modal-well-stocked').textContent = data.well_stocked || 0;
+        
+        const alertsContainer = document.getElementById('alert-items');
+        if (alertsContainer) {
+            alertsContainer.innerHTML = (data.alert_items || []).map(item => `
+            <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 ${item.level === 'critical' ? 'bg-red-100' : 'bg-orange-100'} rounded-lg flex items-center justify-center">
+                        <i class="fas fa-box ${item.level === 'critical' ? 'text-red-600' : 'text-orange-600'}"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${item.name}</p>
+                        <p class="text-sm text-gray-500">Category: ${item.category}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-gray-900">${item.current_stock} units</p>
+                    <span class="text-xs px-2 py-1 rounded-full ${item.level === 'critical' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}">${item.level}</span>
+                </div>
+            </div>
+        `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading inventory details:', error);
+    }
+}
+
+async function loadExpenseDetails() {
+    try {
+        const response = await fetch('/api/dashboard/expense-details');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update total expenses
+            document.getElementById('modal-total-expenses').textContent = `₨${data.total_expenses.toFixed(2)}`;
+            
+            // Update expense statistics
+            document.getElementById('modal-expense-categories').textContent = data.categories ? data.categories.length : 0;
+            document.getElementById('modal-expense-transactions').textContent = data.recent_expenses ? data.recent_expenses.length : 0;
+            
+            // Update growth percentage
+            const growthElement = document.getElementById('expense-growth-text');
+            if (growthElement && data.growth_percentage !== undefined) {
+                const sign = data.growth_percentage >= 0 ? '+' : '';
+                growthElement.textContent = `${sign}${data.growth_percentage}% from yesterday`;
+            }
+            
+            // Update category breakdown
+            const categoriesContainer = document.getElementById('expense-categories');
+            if (categoriesContainer && data.categories) {
+                categoriesContainer.innerHTML = data.categories.map(category => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-tag text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">${category.name}</p>
+                            <p class="text-sm text-gray-500">${category.count} expenses</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-purple-600">₨${category.total.toFixed(2)}</p>
+                    </div>
+                </div>
+                `).join('');
+            }
+            
+            // Update recent expenses
+            const expensesContainer = document.getElementById('recent-expenses');
+            if (expensesContainer && data.recent_expenses) {
+                expensesContainer.innerHTML = data.recent_expenses.map(expense => `
+            <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-receipt text-purple-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${expense.category}</p>
+                        <p class="text-sm text-gray-500">${expense.description}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-purple-600">₨${expense.amount.toFixed(2)}</p>
+                    <p class="text-xs text-gray-500">${expense.user}</p>
+                </div>
+            </div>
+            `).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading expense details:', error);
+    }
+}
+
+// Profile picture upload functionality
+async function uploadProfilePicture(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Please select a valid image file (JPG, PNG, GIF, WebP)', 'error');
+        input.value = ''; // Clear the input
+        return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('File size must be less than 5MB', 'error');
+        input.value = ''; // Clear the input
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    
+    // Show loading state
+    const dashboardContainer = document.querySelector('.w-24.h-24');
+    const originalContent = dashboardContainer.innerHTML;
+    dashboardContainer.innerHTML = '<i class="fas fa-spinner fa-spin text-white text-2xl"></i>';
+    
+    try {
+        const response = await fetch('/profile/api/profile/upload-picture', {
+            method: 'POST',
+            body: formData
+        });
+    
+        const result = await response.json();
+    
+        if (result.success) {
+            // Update dashboard profile picture
+            dashboardContainer.innerHTML = `
+                <img src="${result.profile_picture_url}?t=${Date.now()}" alt="Profile Picture" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer" onclick="document.getElementById('profilePictureInput').click()">
+                    <i class="fas fa-camera text-white text-lg"></i>
+                </div>
+                <input type="file" id="profilePictureInput" accept="image/*" class="hidden" onchange="uploadProfilePicture(this)" aria-label="Upload profile picture" title="Upload profile picture">
+            `;
+            
+            // Update header profile picture
+            const headerImg = document.querySelector('nav img[alt="Profile"]');
+            const headerUserIcon = document.querySelector('nav .fas.fa-user-circle');
+            
+            if (headerImg) {
+                // Update existing image
+                headerImg.src = result.profile_picture_url + '?t=' + Date.now();
+            } else if (headerUserIcon) {
+                // Replace icon with image
+                headerUserIcon.outerHTML = `<img src="${result.profile_picture_url}?t=${Date.now()}" alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm">`;
+            }
+            
+            // Show success message
+            showNotification('Profile picture updated successfully!', 'success');
+        } else {
+            // Restore original content on error
+            dashboardContainer.innerHTML = originalContent;
+            showNotification(result.message || 'Failed to upload profile picture', 'error');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        // Restore original content on error
+        dashboardContainer.innerHTML = originalContent;
+        showNotification('Network error. Please check your connection and try again.', 'error');
+    }
+    
+    // Clear the input to allow re-uploading the same file
+    input.value = '';
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transition-all duration-300 transform translate-x-full`;
+    
+    if (type === 'success') {
+        notification.classList.add('bg-green-500');
+    } else if (type === 'error') {
+        notification.classList.add('bg-red-500');
+    } else {
+        notification.classList.add('bg-blue-500');
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Animate out and remove
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Load dashboard data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+});
+
+// Refresh data every 30 seconds
+setInterval(loadDashboardData, 30000);
+</script>
+
+<!-- Modal Containers -->
+<!-- Revenue Details Modal -->
+<div id="revenueModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-rupee-sign text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Revenue Details</h3>
+                            <p class="text-blue-100">Today's financial performance</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('revenueModal')" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-blue-800">Total Revenue</h4>
+                            <i class="fas fa-chart-line text-blue-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-900" id="modal-total-revenue">₨0.00</p>
+                        <p class="text-sm text-blue-600 mt-2" id="revenue-growth-text">+0% from yesterday</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-green-800">Cash Sales</h4>
+                            <i class="fas fa-money-bill text-green-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-green-900" id="modal-cash-sales">₨0.00</p>
+                        <p class="text-sm text-green-600 mt-2" id="cash-percentage">0% of total</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-purple-800">Account</h4>
+                            <i class="fas fa-university text-purple-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-purple-900" id="modal-card-sales">₨0.00</p>
+                        <p class="text-sm text-purple-600 mt-2" id="account-percentage">0% of total</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-orange-800">Credit Sales</h4>
+                            <i class="fas fa-credit-card text-orange-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-orange-900" id="modal-credit-sales">₨0.00</p>
+                        <p class="text-sm text-orange-600 mt-2" id="credit-percentage">0% of total</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-teal-800">Credit Payments Today</h4>
+                            <i class="fas fa-hand-holding-usd text-teal-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-teal-900" id="modal-credit-payments">₨0.00</p>
+                        <p class="text-sm text-teal-600 mt-2">Payments received today</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-rose-800">Outstanding Credit</h4>
+                            <i class="fas fa-clock text-rose-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-rose-900" id="modal-outstanding-credit">₨0.00</p>
+                        <p class="text-sm text-rose-600 mt-2">Pending payments</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-2xl p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Recent Transactions</h4>
+                    <div class="space-y-3" id="revenue-transactions">
+                        <!-- Transactions will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Details Modal -->
+<div id="ordersModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-shopping-cart text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Orders Details</h3>
+                            <p class="text-green-100">Today's order performance</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('ordersModal')" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-green-800">Total Orders</h4>
+                            <i class="fas fa-list text-green-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-green-900" id="modal-total-orders">0</p>
+                        <p class="text-sm text-green-600 mt-2" id="orders-growth-text">+0% from yesterday</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-blue-800">Completed</h4>
+                            <i class="fas fa-check-circle text-blue-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-900" id="modal-completed-orders">0</p>
+                        <p class="text-sm text-blue-600 mt-2" id="orders-completion-text">100% completion rate</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-orange-800">Pending</h4>
+                            <i class="fas fa-clock text-orange-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-orange-900" id="modal-pending-orders">0</p>
+                        <p class="text-sm text-orange-600 mt-2" id="orders-pending-text">0% pending</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-2xl p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Recent Orders</h4>
+                    <div class="space-y-3" id="recent-orders">
+                        <!-- Orders will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Alerts Modal -->
+<div id="inventoryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-600 to-red-700 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Inventory Alerts</h3>
+                            <p class="text-orange-100">Stock management overview</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('inventoryModal')" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-red-800">Critical Items</h4>
+                            <i class="fas fa-exclamation-circle text-red-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-red-900" id="modal-critical-items">0</p>
+                        <p class="text-sm text-red-600 mt-2">Immediate attention needed</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-orange-800">Low Stock</h4>
+                            <i class="fas fa-exclamation-triangle text-orange-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-orange-900" id="modal-low-stock">0</p>
+                        <p class="text-sm text-orange-600 mt-2">Reorder soon</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-green-800">Well Stocked</h4>
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-green-900" id="modal-well-stocked">0</p>
+                        <p class="text-sm text-green-600 mt-2">Adequate inventory</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-2xl p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Alert Items</h4>
+                    <div class="space-y-3" id="alert-items">
+                        <!-- Alert items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Modal -->
+<div id="expenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-600 to-violet-700 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-receipt text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Expense Details</h3>
+                            <p class="text-purple-100">Today's expense breakdown</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('expenseModal')" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-purple-800">Total Expenses</h4>
+                            <i class="fas fa-money-bill-wave text-purple-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-purple-900" id="modal-total-expenses">₨0.00</p>
+                        <p class="text-sm text-purple-600 mt-2" id="expense-growth-text">+0% from yesterday</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-blue-800">Categories</h4>
+                            <i class="fas fa-tags text-blue-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-900" id="modal-expense-categories">0</p>
+                        <p class="text-sm text-blue-600 mt-2">Active categories</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-green-800">Transactions</h4>
+                            <i class="fas fa-list text-green-600"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-green-900" id="modal-expense-transactions">0</p>
+                        <p class="text-sm text-green-600 mt-2">Today's count</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-2xl p-6 mb-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Category Breakdown</h4>
+                    <div class="space-y-3" id="expense-categories">
+                        <!-- Category breakdown will be loaded here -->
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-2xl p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Recent Expenses</h4>
+                    <div class="space-y-3" id="recent-expenses">
+                        <!-- Recent expenses will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

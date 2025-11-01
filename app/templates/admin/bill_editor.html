@@ -1,0 +1,980 @@
+{% extends "base.html" %}
+
+{% block title %}Bill Editor - Sangat Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Bill Editor</h1>
+                <p class="text-gray-600">Customize receipt and invoice templates</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="previewBill()" class="btn-secondary">
+                    <i class="fas fa-eye mr-2"></i>Preview
+                </button>
+                <button onclick="saveBillTemplate()" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Bill Template Editor -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-edit mr-2 text-blue-600"></i>Template Editor
+            </h2>
+            
+            <!-- Template Selection -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Template Type</label>
+                <select id="templateType" onchange="loadTemplate()" title="Select template type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="receipt" selected>Receipt</option>
+                    <option value="invoice">Invoice</option>
+                    <option value="kitchen">Kitchen Order</option>
+                </select>
+            </div>
+
+            <!-- Header Settings -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Header Settings</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
+                        <input type="text" id="headerName" value="{{ get_setting('restaurant_name', 'Sangat Cafe') }}" 
+                               title="Restaurant name for bill header" placeholder="Restaurant Name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+                        <input type="text" id="headerTagline" value="{{ get_setting('restaurant_subtitle', 'Authentic Pakistani Cuisine') }}" 
+                               title="Restaurant tagline or subtitle" placeholder="Tagline or Subtitle"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <!-- Logo Upload Section -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                        <div class="space-y-3">
+                            <!-- Current Logo Display -->
+                            <div id="currentLogoContainer" class="hidden">
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <img id="currentLogo" src="" alt="Current Logo" class="h-12 w-12 object-contain">
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-600">Current logo</p>
+                                        <p id="currentLogoName" class="text-xs text-gray-500"></p>
+                                    </div>
+                                    <button type="button" onclick="removeLogo()" class="text-red-600 hover:text-red-800" title="Remove logo">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Logo Upload -->
+                            <div class="flex items-center space-x-3">
+                                <input type="file" id="logoFile" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+                                <button type="button" onclick="document.getElementById('logoFile').click()" 
+                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-upload mr-2"></i>Upload Logo
+                                </button>
+                                <span class="text-xs text-gray-500">PNG, JPG, GIF, SVG (Max 2MB)</span>
+                            </div>
+                            
+                            <!-- Show Logo Checkbox -->
+                            <div class="flex items-center">
+                                <input type="checkbox" id="showLogo" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="showLogo" class="ml-2 block text-sm text-gray-700">Show Logo in Bill</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Settings -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Content Settings</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showOrderNumber" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showOrderNumber" class="ml-2 block text-sm text-gray-700">Show Order Number</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showDateTime" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showDateTime" class="ml-2 block text-sm text-gray-700">Show Date & Time</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showCashier" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showCashier" class="ml-2 block text-sm text-gray-700">Show Cashier Name</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showTable" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showTable" class="ml-2 block text-sm text-gray-700">Show Table Number</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showTax" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showTax" class="ml-2 block text-sm text-gray-700">Show Tax Breakdown</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Settings -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Footer Settings</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Footer Message</label>
+                        <textarea id="footerMessage" rows="3" title="Footer message for bill" placeholder="Thank you for your visit!" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="updatePreview()" oninput="updatePreview()"></textarea>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="showQRCode" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="showQRCode" class="ml-2 block text-sm text-gray-700">Show QR Code for Feedback</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print Settings -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Print Settings</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Paper Size</label>
+                        <input type="text" id="paperSize" title="Select paper size for printing" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+                        <select id="fontSize" title="Select font size for bill text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="autoCut" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="autoCut" class="ml-2 block text-sm text-gray-700">Auto Cut Paper</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-eye mr-2 text-green-600"></i>Live Preview
+            </h2>
+            
+            <div id="billPreview" class="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 font-mono text-sm">
+                <!-- Bill preview will be generated here -->
+                <div class="text-center mb-4">
+                    <div id="previewLogo" class="mb-2 hidden">
+                        <img src="" alt="Logo" class="h-16 w-auto mx-auto">
+                    </div>
+                    <div id="previewHeaderName" class="text-lg font-bold">{{ get_setting('restaurant_name', 'SANGAT CAFE') }}</div>
+                    <div id="previewHeaderTagline" class="text-xs text-gray-600">{{ get_setting('restaurant_subtitle', 'Authentic Pakistani Cuisine') }}</div>
+                    <div id="previewAddress" class="text-xs mt-1">{{ get_setting('restaurant_address', '123 Main Street, Lahore') }}</div>
+                    <div id="previewPhone" class="text-xs">Phone: {{ get_setting('restaurant_phone', '+92 300 1234567') }}</div>
+                </div>
+                
+                <div id="previewOrderInfo" class="border-t border-b border-gray-400 py-2 mb-2">
+                    <div id="previewOrderNumber" class="flex justify-between text-xs">
+                        <span>Order #: 001234</span>
+                        <span id="previewTableNumber">Table: 5</span>
+                    </div>
+                    <div id="previewDateTime" class="flex justify-between text-xs">
+                        <span id="previewDate">Date: 05/09/2025</span>
+                        <span id="previewTime">Time: 4:37 PM</span>
+                    </div>
+                    <div id="previewCashier" class="text-xs">Cashier: Muhammad Mamoon</div>
+                </div>
+                
+                <div class="mb-2">
+                    <div class="flex justify-between">
+                        <span>Chicken Karahi</span>
+                        <span>PKR 850</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Naan (2x)</span>
+                        <span>PKR 120</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Lassi</span>
+                        <span>PKR 180</span>
+                    </div>
+                </div>
+                
+                <div id="previewTotals" class="border-t border-gray-400 pt-2">
+                    <div class="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>PKR 1,150</span>
+                    </div>
+                    <div id="previewTaxRow" class="flex justify-between">
+                        <span>Tax ({{ get_setting('tax_rate', '17') }}%):</span>
+                        <span id="previewTaxAmount">PKR 196</span>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span>Total:</span>
+                        <span>PKR 1,346</span>
+                    </div>
+                </div>
+                
+                <div id="previewFooter" class="text-center mt-4 text-xs">
+                    <div>Thank you for dining with us!</div>
+                    <div>Visit us again soon.</div>
+                    <div>Follow us on social media @sangatcafe</div>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex space-x-2">
+                <button onclick="testPrint()" class="btn-secondary flex-1">
+                    <i class="fas fa-print mr-2"></i>Test Print
+                </button>
+                <button onclick="exportTemplate()" class="btn-secondary flex-1">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTemplate = null;
+
+function loadTemplate() {
+    const templateType = document.getElementById('templateType').value;
+    
+    fetch(`/admin/api/bill-template/${templateType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentTemplate = data.template;
+                populateForm(currentTemplate);
+                updatePreview();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading template:', error);
+        });
+}
+
+function populateForm(template) {
+    document.getElementById('headerName').value = template.header_name || 'Sangat Cafe';
+    document.getElementById('headerTagline').value = template.header_tagline || 'Authentic Pakistani Cuisine';
+    document.getElementById('showLogo').checked = template.show_logo;
+    document.getElementById('showOrderNumber').checked = template.show_order_number;
+    document.getElementById('showDateTime').checked = template.show_date_time;
+    document.getElementById('showCashier').checked = template.show_cashier;
+    document.getElementById('showTable').checked = template.show_table;
+    document.getElementById('showTax').checked = template.show_tax;
+    document.getElementById('footerMessage').value = template.footer_message || '';
+    document.getElementById('showQRCode').checked = template.show_qr_code;
+    document.getElementById('paperSize').value = template.paper_size || '80mm';
+    document.getElementById('fontSize').value = template.font_size || 'medium';
+    document.getElementById('autoCut').checked = template.auto_cut;
+    
+    // Display current logo if exists
+    if (template.logo_filename) {
+        displayCurrentLogo(template.logo_filename);
+    } else {
+        hideCurrentLogo();
+    }
+}
+
+function displayCurrentLogo(filename) {
+    const logoUrl = `/static/uploads/logos/${filename}`;
+    document.getElementById('currentLogo').src = logoUrl;
+    document.getElementById('currentLogoName').textContent = filename;
+    document.getElementById('currentLogoContainer').classList.remove('hidden');
+}
+
+function hideCurrentLogo() {
+    document.getElementById('currentLogoContainer').classList.add('hidden');
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+        showNotification('File size must be less than 2MB', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('logo', file);
+    formData.append('template_type', document.getElementById('templateType').value);
+    
+    // Show loading state
+    const uploadBtn = event.target.parentElement.querySelector('button');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+    uploadBtn.disabled = true;
+    
+    fetch('/admin/api/upload-logo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayCurrentLogo(data.logo_filename);
+            updatePreview();
+            showNotification('Logo uploaded successfully!', 'success');
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading logo:', error);
+        showNotification('Error uploading logo. Please try again.', 'error');
+    })
+    .finally(() => {
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+        event.target.value = ''; // Reset file input
+    });
+}
+
+function removeLogo() {
+    // Show remove logo confirmation modal
+    document.getElementById('removeLogoModal').classList.remove('hidden');
+    document.getElementById('removeLogoModal').classList.add('flex');
+}
+
+function closeRemoveLogoModal() {
+    document.getElementById('removeLogoModal').classList.add('hidden');
+    document.getElementById('removeLogoModal').classList.remove('flex');
+}
+
+function confirmRemoveLogo() {
+    const templateType = document.getElementById('templateType').value;
+    
+    fetch('/admin/api/remove-logo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            template_type: templateType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideCurrentLogo();
+            updatePreview();
+            closeRemoveLogoModal();
+            showNotification('Logo removed successfully!', 'success');
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing logo:', error);
+        showNotification('Error removing logo', 'error');
+    });
+}
+
+function updatePreview() {
+    const headerName = document.getElementById('headerName').value;
+    const headerTagline = document.getElementById('headerTagline').value;
+    const showLogo = document.getElementById('showLogo').checked;
+    const footerMessage = document.getElementById('footerMessage').value;
+    
+    // Update preview header
+    document.getElementById('previewHeaderName').textContent = headerName;
+    document.getElementById('previewHeaderTagline').textContent = headerTagline;
+    
+    // Update preview footer
+    const previewFooter = document.getElementById('previewFooter');
+    if (previewFooter) {
+        if (footerMessage) {
+            previewFooter.innerHTML = footerMessage.split('\n').map(line => `<div>${line}</div>`).join('');
+        } else {
+            previewFooter.innerHTML = '';
+        }
+    }
+    
+    // Update preview logo
+    const previewLogo = document.getElementById('previewLogo');
+    const currentLogo = document.getElementById('currentLogo');
+    
+    if (showLogo && currentLogo.src && !document.getElementById('currentLogoContainer').classList.contains('hidden')) {
+        previewLogo.querySelector('img').src = currentLogo.src;
+        previewLogo.classList.remove('hidden');
+    } else {
+        previewLogo.classList.add('hidden');
+    }
+    
+    // Update visibility based on checkboxes
+    updatePreviewVisibility();
+    
+    // Update tax rate from global settings
+    updateTaxPreview();
+    
+    // Update date and time formatting
+    updateDateTimePreview();
+}
+
+function updatePreviewVisibility() {
+    // Show/hide elements based on checkbox states
+    const showOrderNumber = document.getElementById('showOrderNumber').checked;
+    const showDateTime = document.getElementById('showDateTime').checked;
+    const showCashier = document.getElementById('showCashier').checked;
+    const showTable = document.getElementById('showTable').checked;
+    const showTax = document.getElementById('showTax').checked;
+    
+    // Toggle visibility
+    document.getElementById('previewOrderNumber').style.display = showOrderNumber ? 'flex' : 'none';
+    document.getElementById('previewDateTime').style.display = showDateTime ? 'flex' : 'none';
+    document.getElementById('previewCashier').style.display = showCashier ? 'block' : 'none';
+    document.getElementById('previewTableNumber').style.display = showTable ? 'inline' : 'none';
+    document.getElementById('previewTaxRow').style.display = showTax ? 'flex' : 'none';
+    
+    // Hide entire order info section if all are unchecked
+    const orderInfoVisible = showOrderNumber || showDateTime || showCashier;
+    document.getElementById('previewOrderInfo').style.display = orderInfoVisible ? 'block' : 'none';
+}
+
+function updateDateTimePreview() {
+    // Get current date and time with proper formatting
+    const now = new Date();
+    
+    // Fetch global settings for date/time format
+    fetch('/admin/api/global-settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const dateFormat = data.date_format || 'DD/MM/YYYY';
+                const timeFormat = data.time_format || '12';
+                
+                // Get day name
+                const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+                
+                // Format date based on global setting
+                let formattedDate;
+                if (dateFormat === 'MM/DD/YYYY') {
+                    formattedDate = now.toLocaleDateString('en-US');
+                } else if (dateFormat === 'YYYY-MM-DD') {
+                    formattedDate = now.toISOString().split('T')[0];
+                } else {
+                    formattedDate = now.toLocaleDateString('en-GB');
+                }
+                
+                // Format time based on global setting
+                const timeOptions = timeFormat === '24' ? { hour12: false } : { hour12: true };
+                const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+                
+                // Combine day with date
+                const dateWithDay = `${dayName}, ${formattedDate}`;
+                
+                // Update preview
+                document.getElementById('previewDate').textContent = `Date: ${dateWithDay}`;
+                document.getElementById('previewTime').textContent = `Time: ${formattedTime}`;
+            }
+        })
+        .catch(error => console.error('Error fetching date/time format:', error));
+}
+
+// Function to update real-time clock
+function updateRealTimeClock() {
+    const now = new Date();
+    
+    // Fetch global settings for date/time format
+    fetch('/admin/api/global-settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const dateFormat = data.date_format || 'DD/MM/YYYY';
+                const timeFormat = data.time_format || '12';
+                
+                // Get day name
+                const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+                
+                // Format date based on global setting
+                let formattedDate;
+                if (dateFormat === 'MM/DD/YYYY') {
+                    formattedDate = now.toLocaleDateString('en-US');
+                } else if (dateFormat === 'YYYY-MM-DD') {
+                    formattedDate = now.toISOString().split('T')[0];
+                } else {
+                    formattedDate = now.toLocaleDateString('en-GB');
+                }
+                
+                // Format time based on global setting
+                const timeOptions = timeFormat === '24' ? { hour12: false } : { hour12: true };
+                const formattedTime = now.toLocaleTimeString('en-US', timeOptions);
+                
+                // Combine day with date
+                const dateWithDay = `${dayName}, ${formattedDate}`;
+                
+                // Update both preview and header
+                const previewDate = document.getElementById('previewDate');
+                const previewTime = document.getElementById('previewTime');
+                if (previewDate) previewDate.textContent = `Date: ${dateWithDay}`;
+                if (previewTime) previewTime.textContent = `Time: ${formattedTime}`;
+                
+                // Update header date/time if elements exist
+                const headerDate = document.querySelector('.header-date');
+                const headerTime = document.querySelector('.header-time');
+                if (headerDate) headerDate.textContent = dateWithDay;
+                if (headerTime) headerTime.textContent = formattedTime;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching date/time format:', error);
+            // Fallback to simple format if API fails
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const dateWithDay = `${dayName}, ${now.toLocaleDateString()}`;
+            const formattedTime = now.toLocaleTimeString();
+            
+            const previewDate = document.getElementById('previewDate');
+            const previewTime = document.getElementById('previewTime');
+            if (previewDate) previewDate.textContent = `Date: ${dateWithDay}`;
+            if (previewTime) previewTime.textContent = `Time: ${formattedTime}`;
+            
+            const headerDate = document.querySelector('.header-date');
+            const headerTime = document.querySelector('.header-time');
+            if (headerDate) headerDate.textContent = dateWithDay;
+            if (headerTime) headerTime.textContent = formattedTime;
+        });
+}
+
+function updateTaxPreview() {
+    // Get tax rate from global settings (this would be loaded from server)
+    fetch('/admin/api/global-settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const taxRate = parseFloat(data.tax_rate || 17);
+                const subtotal = 1150; // Sample subtotal
+                const taxAmount = (subtotal * taxRate / 100);
+                const total = subtotal + taxAmount;
+                
+                // Update preview tax display
+                const taxLabel = document.querySelector('.border-t .flex:nth-child(2) span:first-child');
+                const taxAmountSpan = document.getElementById('previewTaxAmount');
+                const totalSpan = document.querySelector('.font-bold span:last-child');
+                
+                if (taxLabel) taxLabel.textContent = `Tax (${taxRate}%):`;
+                if (taxAmountSpan) taxAmountSpan.textContent = `PKR ${Math.round(taxAmount)}`;
+                if (totalSpan) totalSpan.textContent = `PKR ${Math.round(total)}`;
+            }
+        })
+        .catch(error => console.error('Error fetching global settings:', error));
+}
+
+function previewBill() {
+    // Get current template settings
+    const templateData = {
+        template_type: document.getElementById('templateType').value,
+        header_name: document.getElementById('headerName').value,
+        header_tagline: document.getElementById('headerTagline').value,
+        show_logo: document.getElementById('showLogo').checked,
+        show_order_number: document.getElementById('showOrderNumber').checked,
+        show_date_time: document.getElementById('showDateTime').checked,
+        show_cashier: document.getElementById('showCashier').checked,
+        show_table: document.getElementById('showTable').checked,
+        show_tax: document.getElementById('showTax').checked,
+        footer_message: document.getElementById('footerMessage').value,
+        show_qr_code: document.getElementById('showQRCode').checked,
+        paper_size: document.getElementById('paperSize').value,
+        font_size: document.getElementById('fontSize').value,
+        auto_cut: document.getElementById('autoCut').checked,
+        logo_filename: currentTemplate?.logo_filename || null
+    };
+    
+    // Build URL parameters
+    const params = new URLSearchParams(templateData);
+    
+    // Open preview in new window using dedicated route
+    const previewUrl = `/admin/bill-preview?${params.toString()}`;
+    window.open(previewUrl, 'billPreview', 'width=800,height=1000,scrollbars=yes,resizable=yes');
+}
+
+function saveBillTemplate() {
+    const saveBtn = document.querySelector('button[onclick="saveBillTemplate()"]');
+    const originalText = saveBtn.innerHTML;
+    
+    // Show loading state
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    saveBtn.disabled = true;
+    
+    const templateData = {
+        template_type: document.getElementById('templateType').value,
+        header_name: document.getElementById('headerName').value,
+        header_tagline: document.getElementById('headerTagline').value,
+        show_logo: document.getElementById('showLogo').checked,
+        show_order_number: document.getElementById('showOrderNumber').checked,
+        show_date_time: document.getElementById('showDateTime').checked,
+        show_cashier: document.getElementById('showCashier').checked,
+        show_table: document.getElementById('showTable').checked,
+        show_tax: document.getElementById('showTax').checked,
+        footer_message: document.getElementById('footerMessage').value,
+        show_qr_code: document.getElementById('showQRCode').checked,
+        paper_size: document.getElementById('paperSize').value,
+        font_size: document.getElementById('fontSize').value,
+        auto_cut: document.getElementById('autoCut').checked
+    };
+    
+    fetch('/admin/api/bill-template', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(templateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Bill template saved successfully!', 'success');
+            currentTemplate = data.template;
+            updatePreview();
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving template:', error);
+        showNotification('Network error. Please try again.', 'error');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function testPrint() {
+    showInfoModal('Test Print', 'Sending test print to default printer...');
+}
+
+function exportTemplate() {
+    if (currentTemplate) {
+        const dataStr = JSON.stringify(currentTemplate, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `bill_template_${currentTemplate.template_type}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    } else {
+        showNotification('No template data to export', 'error');
+    }
+}
+
+function generatePreviewHTML(templateData) {
+    const logoHTML = templateData.show_logo && templateData.logo_filename ? 
+        `<div class="text-center mb-2">
+            <img src="/static/uploads/logos/${templateData.logo_filename}" alt="Logo" style="height: 60px; width: auto; margin: 0 auto;">
+        </div>` : '';
+    
+    const orderNumberHTML = templateData.show_order_number ? 
+        `<div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span>Order #: 001234</span>
+            ${templateData.show_table ? '<span>Table: 5</span>' : ''}
+        </div>` : '';
+    
+    const dateTimeHTML = templateData.show_date_time ? 
+        `<div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span>Date: ${new Date().toLocaleDateString()}</span>
+            <span>Time: ${new Date().toLocaleTimeString()}</span>
+        </div>` : '';
+    
+    const cashierHTML = templateData.show_cashier ? 
+        `<div style="font-size: 12px;">Cashier: Muhammad Mamoon</div>` : '';
+    
+    const taxHTML = templateData.show_tax ? 
+        `<div style="display: flex; justify-content: space-between;">
+            <span>Tax (17%):</span>
+            <span>PKR 196</span>
+        </div>` : '';
+    
+    const qrCodeHTML = templateData.show_qr_code ? 
+        `<div style="text-center; margin-top: 15px;">
+            <div style="width: 80px; height: 80px; border: 2px solid #000; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px;">QR Code</div>
+            <div style="font-size: 10px; margin-top: 5px;">Scan for feedback</div>
+        </div>` : '';
+    
+    const paperWidth = templateData.paper_size === '58mm' ? '220px' : 
+                      templateData.paper_size === '80mm' ? '300px' : 
+                      templateData.paper_size === 'A4' ? '595px' : '420px';
+    
+    const fontSize = templateData.font_size === 'small' ? '11px' : 
+                    templateData.font_size === 'large' ? '15px' : '13px';
+    
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Bill Preview - ${templateData.template_type}</title>
+        <style>
+            body {
+                font-family: 'Courier New', monospace;
+                margin: 20px;
+                background: #f5f5f5;
+            }
+            .bill-container {
+                width: ${paperWidth};
+                margin: 0 auto;
+                background: white;
+                padding: 15px;
+                border: 1px solid #ddd;
+                font-size: ${fontSize};
+                line-height: 1.4;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 10px;
+            }
+            .header-name {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .header-tagline {
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 5px;
+            }
+            .order-info {
+                border-bottom: 1px solid #000;
+                padding: 10px 0;
+                margin-bottom: 10px;
+            }
+            .items {
+                margin-bottom: 10px;
+            }
+            .item-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+            }
+            .totals {
+                border-top: 1px solid #000;
+                padding-top: 10px;
+            }
+            .total-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+            }
+            .total-row.final {
+                font-weight: bold;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+                margin-top: 5px;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 15px;
+                font-size: 11px;
+                border-top: 1px solid #000;
+                padding-top: 10px;
+            }
+            @media print {
+                body { margin: 0; background: white; }
+                .bill-container { border: none; margin: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="bill-container">
+            <div class="header">
+                ${logoHTML}
+                <div class="header-name">${templateData.header_name.toUpperCase()}</div>
+                <div class="header-tagline">${templateData.header_tagline}</div>
+                <div style="font-size: 11px;">123 Main Street, Lahore</div>
+                <div style="font-size: 11px;">Phone: +92 300 1234567</div>
+            </div>
+            
+            <div class="order-info">
+                ${orderNumberHTML}
+                ${dateTimeHTML}
+                ${cashierHTML}
+            </div>
+            
+            <div class="items">
+                <div class="item-row">
+                    <span>Chicken Karahi</span>
+                    <span>PKR 850</span>
+                </div>
+                <div class="item-row">
+                    <span>Naan (2x)</span>
+                    <span>PKR 120</span>
+                </div>
+                <div class="item-row">
+                    <span>Lassi</span>
+                    <span>PKR 180</span>
+                </div>
+            </div>
+            
+            <div class="totals">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>PKR 1,150</span>
+                </div>
+                ${taxHTML}
+                <div class="total-row final">
+                    <span>Total:</span>
+                    <span>PKR 1,346</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                ${templateData.footer_message ? templateData.footer_message.split('\n').map(line => `<div>${line}</div>`).join('') : ''}
+                ${qrCodeHTML}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #666;">
+            <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Print Preview
+            </button>
+            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                Close
+            </button>
+        </div>
+    </body>
+    </html>`;
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transition-all duration-300 transform translate-x-full`;
+    
+    if (type === 'success') {
+        notification.classList.add('bg-green-500');
+    } else if (type === 'error') {
+        notification.classList.add('bg-red-500');
+    } else {
+        notification.classList.add('bg-blue-500');
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Animate out and remove
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load default template
+    loadTemplate();
+    
+    // Load initial tax preview
+    updateTaxPreview();
+    
+    // Add event listeners for real-time preview updates
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('change', updatePreview);
+        input.addEventListener('input', updatePreview);
+    });
+    
+    // Add event listeners to checkboxes
+    document.getElementById('showLogo').addEventListener('change', updatePreview);
+    
+    // Remove logo modal event listeners
+    const cancelRemoveLogoBtn = document.getElementById('cancelRemoveLogoBtn');
+    const confirmRemoveLogoBtn = document.getElementById('confirmRemoveLogoBtn');
+    if (cancelRemoveLogoBtn) cancelRemoveLogoBtn.addEventListener('click', closeRemoveLogoModal);
+    if (confirmRemoveLogoBtn) confirmRemoveLogoBtn.addEventListener('click', confirmRemoveLogo);
+    document.getElementById('showOrderNumber').addEventListener('change', updatePreview);
+    document.getElementById('showDateTime').addEventListener('change', updatePreview);
+    document.getElementById('showCashier').addEventListener('change', updatePreview);
+    document.getElementById('showTable').addEventListener('change', updatePreview);
+    document.getElementById('showTax').addEventListener('change', updatePreview);
+    
+    // Initialize preview visibility on page load
+    updatePreview();
+    
+    // Start real-time clock updates
+    updateRealTimeClock();
+    setInterval(updateRealTimeClock, 1000); // Update every second
+    
+    // Listen for global settings changes (via localStorage or custom events)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'globalSettingsUpdated') {
+            updateTaxPreview();
+            updateDateTimePreview();
+        }
+    });
+});
+
+// Generic Modal Functions
+function showInfoModal(title, message) {
+    document.getElementById('infoModalTitle').textContent = title;
+    document.getElementById('infoModalMessage').textContent = message;
+    document.getElementById('infoModal').classList.remove('hidden');
+    document.getElementById('infoModal').classList.add('flex');
+}
+
+function closeInfoModal() {
+    document.getElementById('infoModal').classList.add('hidden');
+    document.getElementById('infoModal').classList.remove('flex');
+}
+</script>
+
+<!-- Generic Info Modal -->
+<div id="infoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-info text-blue-600 text-2xl"></i>
+            </div>
+            <h3 id="infoModalTitle" class="text-2xl font-bold text-gray-800 mb-2">Information</h3>
+            <p id="infoModalMessage" class="text-gray-600 mb-6">Information message.</p>
+            <button onclick="closeInfoModal()" class="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Logo Confirmation Modal -->
+<div id="removeLogoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <i class="fas fa-image text-red-600 text-2xl"></i>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Remove Logo</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-600 mb-6">Are you sure you want to remove the logo from your bill template? This action cannot be undone.</p>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button id="cancelRemoveLogoBtn" class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmRemoveLogoBtn" class="flex-1 bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Remove Logo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

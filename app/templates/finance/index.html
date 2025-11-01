@@ -1,0 +1,1199 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Management - Sangat Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="container mx-auto px-4 py-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Financial Management</h1>
+                <p class="text-gray-600 mt-2">Track expenses and manage daily closings</p>
+            </div>
+            <div class="flex space-x-3">
+                <button id="addExpenseBtn" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus mr-2"></i>Add Expense
+                </button>
+                <button id="dailyClosingBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-calculator mr-2"></i>Daily Closing
+                </button>
+            </div>
+        </div>
+
+        <!-- Financial Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Today's Revenue</p>
+                        <p class="text-3xl font-bold text-green-600" id="todayRevenue">₨0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Today's Expenses</p>
+                        <p class="text-3xl font-bold text-red-600" id="todayExpenses">₨0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-receipt text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Net Profit</p>
+                        <p class="text-3xl font-bold text-blue-600" id="netProfit">₨0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-coins text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Month Revenue</p>
+                        <p class="text-3xl font-bold text-purple-600" id="monthRevenue">₨0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-calendar text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg mb-6">
+            <div class="flex border-b border-gray-200">
+                <button id="expensesTab" class="px-6 py-4 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                    Expenses
+                </button>
+                <button id="closingsTab" class="px-6 py-4 font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+                    Daily Closings
+                </button>
+            </div>
+        </div>
+
+        <!-- Expenses Tab -->
+        <div id="expensesContent" class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+            <!-- Expense Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="expenseCategoryFilter" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                        <option value="Food & Ingredients">Food & Ingredients</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                    <input type="date" id="expenseDateFrom" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                    <input type="date" id="expenseDateTo" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex items-end">
+                    <button id="resetExpenseFilters" class="w-full bg-gray-500 text-white px-4 py-2 rounded-xl hover:bg-gray-600 transition-colors">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expenses Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Category</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Description</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Amount</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">User</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        <!-- Expenses will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Daily Closings Tab -->
+        <div id="closingsContent" class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hidden">
+            <!-- Daily Closings Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Opening Cash</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Sales Total</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Expense Total</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Closing Cash</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">User</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="closingsTableBody">
+                        <!-- Daily closings will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div id="expenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl w-full">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Add Expense</h3>
+            <button id="closeExpenseModal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="expenseForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select id="expenseCategory" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Select Category</option>
+                    <option value="Food & Ingredients">Food & Ingredients</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₨)</label>
+                <input type="number" id="expenseAmount" step="0.01" min="0" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="expenseNote" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="datetime-local" id="expenseDate" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div class="flex space-x-3 pt-4">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300">
+                    Add Expense
+                </button>
+                <button type="button" id="cancelExpenseBtn" class="flex-1 bg-gray-500 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Daily Closing Modal -->
+<div id="closingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-lg mx-4 shadow-2xl w-full">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Daily Closing</h3>
+            <button id="closeClosingModal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <form id="closingForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="closingDate" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opening Cash (₨)</label>
+                <input type="number" id="openingCash" step="0.01" min="0" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sales Total</label>
+                    <input type="text" id="salesTotal" readonly class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Expense Total</label>
+                    <input type="text" id="expenseTotal" readonly class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Closing Cash (₨)</label>
+                <input type="number" id="closingCash" step="0.01" min="0" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <textarea id="closingNotes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+            
+            <div class="flex space-x-3 pt-4">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300">
+                    Complete Closing
+                </button>
+                <button type="button" id="cancelClosingBtn" class="flex-1 bg-gray-500 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Expense Confirmation Modal -->
+<div id="deleteExpenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Expense</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-600 mb-2">Are you sure you want to delete this expense?</p>
+            <div id="deleteExpenseDetails" class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Category:</span>
+                        <span id="deleteExpenseCategory" class="text-sm font-medium text-gray-800"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Amount:</span>
+                        <span id="deleteExpenseAmount" class="text-sm font-medium text-red-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Date:</span>
+                        <span id="deleteExpenseDate" class="text-sm font-medium text-gray-800"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Warning Text -->
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-red-600 mt-0.5 mr-3"></i>
+                    <div class="text-left">
+                        <p class="text-sm text-red-800 font-medium mb-1">Warning:</p>
+                        <p class="text-sm text-red-700">This action cannot be undone. The expense record will be permanently deleted from the system.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button id="cancelDeleteExpenseBtn" class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmDeleteExpenseBtn" class="flex-1 bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Delete Expense
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let expenses = [];
+let closings = [];
+let expenseToDelete = null;
+let closingToDelete = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadFinancialSummary();
+    loadExpenses();
+    loadClosings();
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('closingDate').value = today;
+    
+    // Tab switching
+    document.getElementById('expensesTab').addEventListener('click', () => switchTab('expenses'));
+    document.getElementById('closingsTab').addEventListener('click', () => switchTab('closings'));
+    
+    // Modal events
+    document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
+    document.getElementById('dailyClosingBtn').addEventListener('click', openClosingModal);
+    document.getElementById('closeExpenseModal').addEventListener('click', closeExpenseModal);
+    document.getElementById('closeClosingModal').addEventListener('click', closeClosingModal);
+    document.getElementById('cancelExpenseBtn').addEventListener('click', closeExpenseModal);
+    document.getElementById('cancelClosingBtn').addEventListener('click', closeClosingModal);
+    
+    // Form events
+    document.getElementById('expenseForm').addEventListener('submit', submitExpense);
+    document.getElementById('closingForm').addEventListener('submit', submitClosing);
+    document.getElementById('closingDate').addEventListener('change', loadClosingData);
+    
+    // Filter events
+    document.getElementById('expenseCategoryFilter').addEventListener('change', loadExpenses);
+    document.getElementById('expenseDateFrom').addEventListener('change', loadExpenses);
+    document.getElementById('expenseDateTo').addEventListener('change', loadExpenses);
+    document.getElementById('resetExpenseFilters').addEventListener('click', resetExpenseFilters);
+    
+    // Delete expense modal events
+    document.getElementById('cancelDeleteExpenseBtn').addEventListener('click', closeDeleteExpenseModal);
+    document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', confirmDeleteExpense);
+    
+    // Delete closing modal events
+    document.getElementById('cancelDeleteClosingBtn').addEventListener('click', closeDeleteClosingModal);
+    document.getElementById('confirmDeleteClosingBtn').addEventListener('click', confirmDeleteClosing);
+    
+    // Set default expense date to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('expenseDate').value = now.toISOString().slice(0, 16);
+});
+
+async function loadFinancialSummary() {
+    try {
+        const response = await fetch('/finance/api/summary');
+        const data = await response.json();
+        
+        document.getElementById('todayRevenue').textContent = `₨${parseFloat(data.today_revenue).toFixed(2)}`;
+        document.getElementById('todayExpenses').textContent = `₨${parseFloat(data.today_expenses).toFixed(2)}`;
+        document.getElementById('netProfit').textContent = `₨${parseFloat(data.net_profit).toFixed(2)}`;
+        document.getElementById('monthRevenue').textContent = `₨${parseFloat(data.month_revenue).toFixed(2)}`;
+    } catch (error) {
+        console.error('Error loading financial summary:', error);
+    }
+}
+
+async function loadExpenses() {
+    try {
+        const category = document.getElementById('expenseCategoryFilter').value;
+        const dateFrom = document.getElementById('expenseDateFrom').value;
+        const dateTo = document.getElementById('expenseDateTo').value;
+        
+        let url = '/finance/api/expenses';
+        const params = new URLSearchParams();
+        if (category) params.append('category', category);
+        if (dateFrom) params.append('start_date', dateFrom);
+        if (dateTo) params.append('end_date', dateTo);
+        
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            expenses = data.expenses;
+            renderExpensesTable();
+        } else {
+            console.error('Failed to load expenses:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading expenses:', error);
+    }
+}
+
+function renderExpensesTable() {
+    const tbody = document.getElementById('expensesTableBody');
+    
+    if (expenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No expenses found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = expenses.map(expense => `
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="py-3 px-4 text-gray-600">${new Date(expense.incurred_at).toLocaleDateString()}</td>
+            <td class="py-3 px-4">
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    ${expense.category}
+                </span>
+            </td>
+            <td class="py-3 px-4 text-gray-600">${expense.note || 'No description'}</td>
+            <td class="py-3 px-4 font-semibold text-red-600">₨${parseFloat(expense.amount).toFixed(2)}</td>
+            <td class="py-3 px-4 text-gray-600">${expense.user}</td>
+            <td class="py-3 px-4">
+                <button onclick="viewExpense(${expense.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm mr-2">
+                    View
+                </button>
+                <button onclick="editExpense(${expense.id})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition-colors text-sm mr-2">
+                    Edit
+                </button>
+                <button onclick="deleteExpense(${expense.id})" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadClosings() {
+    try {
+        const response = await fetch('/finance/api/daily-closing');
+        const data = await response.json();
+        
+        if (data.success) {
+            closings = data.closings;
+            renderClosingsTable();
+        } else {
+            console.error('Failed to load closings:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading closings:', error);
+    }
+}
+
+function renderClosingsTable() {
+    const tbody = document.getElementById('closingsTableBody');
+    
+    if (closings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No daily closings found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = closings.map(closing => `
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="py-3 px-4 font-semibold text-gray-800">${new Date(closing.date).toLocaleDateString()}</td>
+            <td class="py-3 px-4 text-gray-600">₨${parseFloat(closing.opening_cash).toFixed(2)}</td>
+            <td class="py-3 px-4 text-green-600 font-semibold">₨${parseFloat(closing.sales_total).toFixed(2)}</td>
+            <td class="py-3 px-4 text-red-600 font-semibold">₨${parseFloat(closing.expense_total).toFixed(2)}</td>
+            <td class="py-3 px-4 text-gray-600">₨${parseFloat(closing.closing_cash).toFixed(2)}</td>
+            <td class="py-3 px-4 text-gray-600">${closing.user}</td>
+            <td class="py-3 px-4">
+                <button onclick="viewClosing(${closing.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm mr-2">
+                    View
+                </button>
+                <button onclick="editClosing(${closing.id})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition-colors text-sm mr-2">
+                    Edit
+                </button>
+                <button onclick="deleteClosing(${closing.id})" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function switchTab(tab) {
+    // Update tab buttons
+    document.getElementById('expensesTab').className = tab === 'expenses' 
+        ? 'px-6 py-4 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+        : 'px-6 py-4 font-semibold text-gray-600 hover:text-blue-600 transition-colors';
+    
+    document.getElementById('closingsTab').className = tab === 'closings'
+        ? 'px-6 py-4 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+        : 'px-6 py-4 font-semibold text-gray-600 hover:text-blue-600 transition-colors';
+    
+    // Show/hide content
+    document.getElementById('expensesContent').classList.toggle('hidden', tab !== 'expenses');
+    document.getElementById('closingsContent').classList.toggle('hidden', tab !== 'closings');
+}
+
+function openExpenseModal() {
+    document.getElementById('expenseModal').classList.remove('hidden');
+    document.getElementById('expenseModal').classList.add('flex');
+}
+
+function closeExpenseModal() {
+    document.getElementById('expenseModal').classList.add('hidden');
+    document.getElementById('expenseModal').classList.remove('flex');
+    document.getElementById('expenseForm').reset();
+    
+    // Reset default date
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('expenseDate').value = now.toISOString().slice(0, 16);
+}
+
+function openClosingModal() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('closingDate').value = today;
+    loadClosingData();
+    
+    document.getElementById('closingModal').classList.remove('hidden');
+    document.getElementById('closingModal').classList.add('flex');
+}
+
+function closeClosingModal() {
+    document.getElementById('closingModal').classList.add('hidden');
+    document.getElementById('closingModal').classList.remove('flex');
+    document.getElementById('closingForm').reset();
+}
+
+async function loadClosingData() {
+    const date = document.getElementById('closingDate').value;
+    if (!date) return;
+    
+    try {
+        const response = await fetch(`/finance/api/closing-data?date=${date}`);
+        const data = await response.json();
+        
+        document.getElementById('salesTotal').value = `₨${parseFloat(data.sales_total).toFixed(2)}`;
+        document.getElementById('expenseTotal').value = `₨${parseFloat(data.expense_total).toFixed(2)}`;
+    } catch (error) {
+        console.error('Error loading closing data:', error);
+    }
+}
+
+async function submitExpense(event) {
+    event.preventDefault();
+    
+    const data = {
+        category: document.getElementById('expenseCategory').value,
+        amount: parseFloat(document.getElementById('expenseAmount').value),
+        note: document.getElementById('expenseNote').value,
+        incurred_at: document.getElementById('expenseDate').value
+    };
+    
+    try {
+        const response = await fetch('/finance/api/expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeExpenseModal();
+            loadExpenses();
+            loadFinancialSummary();
+            showNotification('Expense added successfully', 'success');
+        } else {
+            showNotification(result.error || 'Failed to add expense', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding expense:', error);
+        showNotification('An error occurred while adding expense', 'error');
+    }
+}
+
+async function submitClosing(event) {
+    event.preventDefault();
+    
+    const data = {
+        date: document.getElementById('closingDate').value,
+        opening_cash: parseFloat(document.getElementById('openingCash').value),
+        closing_cash: parseFloat(document.getElementById('closingCash').value),
+        notes: document.getElementById('closingNotes').value
+    };
+    
+    try {
+        const response = await fetch('/finance/api/daily-closing', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeClosingModal();
+            loadClosings();
+            loadFinancialSummary();
+            showNotification('Daily closing completed successfully', 'success');
+        } else {
+            showNotification(result.error || 'Failed to complete closing', 'error');
+        }
+    } catch (error) {
+        console.error('Error completing closing:', error);
+        showNotification('An error occurred while completing closing', 'error');
+    }
+}
+
+async function deleteExpense(expenseId) {
+    const expense = expenses.find(e => e.id === expenseId);
+    if (!expense) return;
+    
+    // Store expense to delete and show modal
+    expenseToDelete = expense;
+    document.getElementById('deleteExpenseCategory').textContent = expense.category;
+    document.getElementById('deleteExpenseAmount').textContent = `₨${parseFloat(expense.amount).toFixed(2)}`;
+    document.getElementById('deleteExpenseDate').textContent = new Date(expense.incurred_at).toLocaleDateString();
+    
+    const deleteModal = document.getElementById('deleteExpenseModal');
+    deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex');
+}
+
+function closeDeleteExpenseModal() {
+    const deleteModal = document.getElementById('deleteExpenseModal');
+    deleteModal.classList.add('hidden');
+    deleteModal.classList.remove('flex');
+    expenseToDelete = null;
+}
+
+async function confirmDeleteExpense() {
+    if (!expenseToDelete) return;
+    
+    try {
+        const response = await fetch(`/finance/api/expenses/${expenseToDelete.id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            closeDeleteExpenseModal();
+            loadExpenses();
+            loadFinancialSummary();
+            showNotification('Expense deleted successfully', 'success');
+        } else {
+            const result = await response.json();
+            showNotification(result.error || 'Failed to delete expense', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting expense:', error);
+        showNotification('An error occurred while deleting expense', 'error');
+    }
+}
+
+function resetExpenseFilters() {
+    document.getElementById('expenseCategoryFilter').value = '';
+    document.getElementById('expenseDateFrom').value = '';
+    document.getElementById('expenseDateTo').value = '';
+    loadExpenses();
+}
+
+function showNotification(message, type = 'info') {
+    const color = type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue';
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 bg-${color}-500 text-white px-6 py-3 rounded-xl shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// View expense functionality
+async function viewExpense(expenseId) {
+    try {
+        const response = await fetch(`/finance/api/expenses/${expenseId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const expense = data.expense;
+            document.getElementById('viewExpenseDate').textContent = new Date(expense.incurred_at).toLocaleDateString();
+            document.getElementById('viewExpenseCategory').textContent = expense.category;
+            document.getElementById('viewExpenseAmount').textContent = `₨${parseFloat(expense.amount).toFixed(2)}`;
+            document.getElementById('viewExpenseNote').textContent = expense.note || 'No description';
+            document.getElementById('viewExpenseUser').textContent = expense.user;
+            
+            document.getElementById('viewExpenseModal').classList.remove('hidden');
+        } else {
+            showNotification('Failed to load expense details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading expense:', error);
+        showNotification('Error loading expense details', 'error');
+    }
+}
+
+function closeViewExpenseModal() {
+    document.getElementById('viewExpenseModal').classList.add('hidden');
+}
+
+// Edit expense functionality
+let currentEditExpenseId = null;
+
+async function editExpense(expenseId) {
+    try {
+        const response = await fetch(`/finance/api/expenses/${expenseId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const expense = data.expense;
+            currentEditExpenseId = expenseId;
+            
+            document.getElementById('editExpenseCategory').value = expense.category;
+            document.getElementById('editExpenseAmount').value = expense.amount;
+            document.getElementById('editExpenseDate').value = expense.incurred_at.split('T')[0];
+            document.getElementById('editExpenseNote').value = expense.note || '';
+            
+            document.getElementById('editExpenseModal').classList.remove('hidden');
+        } else {
+            showNotification('Failed to load expense details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading expense:', error);
+        showNotification('Error loading expense details', 'error');
+    }
+}
+
+function closeEditExpenseModal() {
+    document.getElementById('editExpenseModal').classList.add('hidden');
+    currentEditExpenseId = null;
+}
+
+async function updateExpense(event) {
+    event.preventDefault();
+    
+    if (!currentEditExpenseId) return;
+    
+    const data = {
+        category: document.getElementById('editExpenseCategory').value,
+        amount: parseFloat(document.getElementById('editExpenseAmount').value),
+        incurred_at: document.getElementById('editExpenseDate').value,
+        note: document.getElementById('editExpenseNote').value
+    };
+    
+    try {
+        const response = await fetch(`/finance/api/expenses/${currentEditExpenseId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification('Expense updated successfully', 'success');
+            closeEditExpenseModal();
+            loadExpenses();
+            loadFinancialSummary();
+        } else {
+            showNotification(result.error || 'Failed to update expense', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating expense:', error);
+        showNotification('Error updating expense', 'error');
+    }
+}
+
+
+// Daily closing functionality
+async function viewClosing(closingId) {
+    try {
+        const response = await fetch(`/finance/api/daily-closing/${closingId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const closing = data.closing;
+            document.getElementById('viewClosingDate').textContent = new Date(closing.date).toLocaleDateString();
+            document.getElementById('viewClosingOpeningCash').textContent = `₨${parseFloat(closing.opening_cash).toFixed(2)}`;
+            document.getElementById('viewClosingSalesTotal').textContent = `₨${parseFloat(closing.sales_total).toFixed(2)}`;
+            document.getElementById('viewClosingExpenseTotal').textContent = `₨${parseFloat(closing.expense_total || 0).toFixed(2)}`;
+            document.getElementById('viewClosingClosingCash').textContent = `₨${parseFloat(closing.closing_cash).toFixed(2)}`;
+            document.getElementById('viewClosingUser').textContent = closing.user;
+            
+            document.getElementById('viewClosingModal').classList.remove('hidden');
+        } else {
+            showNotification('Failed to load closing details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading closing:', error);
+        showNotification('Error loading closing details', 'error');
+    }
+}
+
+function closeViewClosingModal() {
+    document.getElementById('viewClosingModal').classList.add('hidden');
+}
+
+let currentEditClosingId = null;
+
+async function editClosing(closingId) {
+    try {
+        const response = await fetch(`/finance/api/daily-closing/${closingId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const closing = data.closing;
+            currentEditClosingId = closingId;
+            
+            document.getElementById('editClosingDate').value = closing.date;
+            document.getElementById('editClosingOpeningCash').value = closing.opening_cash;
+            document.getElementById('editClosingSalesTotal').value = closing.sales_total;
+            document.getElementById('editClosingClosingCash').value = closing.closing_cash;
+            
+            document.getElementById('editClosingModal').classList.remove('hidden');
+        } else {
+            showNotification('Failed to load closing details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading closing:', error);
+        showNotification('Error loading closing details', 'error');
+    }
+}
+
+function closeEditClosingModal() {
+    document.getElementById('editClosingModal').classList.add('hidden');
+    currentEditClosingId = null;
+}
+
+async function updateClosing(event) {
+    event.preventDefault();
+    
+    if (!currentEditClosingId) return;
+    
+    const data = {
+        date: document.getElementById('editClosingDate').value,
+        opening_cash: parseFloat(document.getElementById('editClosingOpeningCash').value),
+        sales_total: parseFloat(document.getElementById('editClosingSalesTotal').value),
+        closing_cash: parseFloat(document.getElementById('editClosingClosingCash').value)
+    };
+    
+    try {
+        const response = await fetch(`/finance/api/daily-closing/${currentEditClosingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification('Daily closing updated successfully', 'success');
+            closeEditClosingModal();
+            loadClosings();
+            loadFinancialSummary();
+        } else {
+            showNotification(result.error || 'Failed to update closing', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating closing:', error);
+        showNotification('Error updating closing', 'error');
+    }
+}
+
+function deleteClosing(closingId) {
+    const closing = closings.find(c => c.id === closingId);
+    if (!closing) return;
+    
+    closingToDelete = closingId;
+    
+    // Populate modal with closing details
+    document.getElementById('deleteClosingDate').textContent = new Date(closing.date).toLocaleDateString();
+    document.getElementById('deleteClosingSalesTotal').textContent = `Rs ${parseFloat(closing.sales_total).toFixed(2)}`;
+    document.getElementById('deleteClosingExpenseTotal').textContent = `Rs ${parseFloat(closing.expense_total).toFixed(2)}`;
+    document.getElementById('deleteClosingCash').textContent = `Rs ${parseFloat(closing.closing_cash).toFixed(2)}`;
+    
+    // Show modal
+    document.getElementById('deleteClosingModal').classList.remove('hidden');
+    document.getElementById('deleteClosingModal').classList.add('flex');
+}
+
+function closeDeleteClosingModal() {
+    document.getElementById('deleteClosingModal').classList.add('hidden');
+    document.getElementById('deleteClosingModal').classList.remove('flex');
+    closingToDelete = null;
+}
+
+async function confirmDeleteClosing() {
+    if (!closingToDelete) return;
+    
+    try {
+        const response = await fetch(`/finance/api/daily-closing/${closingToDelete}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification('Daily closing deleted successfully', 'success');
+            loadClosings();
+            loadFinancialSummary();
+            closeDeleteClosingModal();
+        } else {
+            showNotification(result.error || 'Failed to delete closing', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting closing:', error);
+        showNotification('Error deleting closing', 'error');
+    }
+}
+</script>
+
+<!-- View Expense Modal -->
+<div id="viewExpenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Expense Details</h3>
+                    <button onclick="closeViewExpenseModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date</label>
+                        <p id="viewExpenseDate" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <p id="viewExpenseCategory" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Amount</label>
+                        <p id="viewExpenseAmount" class="mt-1 text-sm text-gray-900 font-semibold"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <p id="viewExpenseNote" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Added by</label>
+                        <p id="viewExpenseUser" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div id="editExpenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Edit Expense</h3>
+                    <button onclick="closeEditExpenseModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="editExpenseForm" onsubmit="updateExpense(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="editExpenseCategory" class="block text-sm font-medium text-gray-700">Category</label>
+                            <select id="editExpenseCategory" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="Staff">Staff</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Supplies">Supplies</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="editExpenseAmount" class="block text-sm font-medium text-gray-700">Amount (₨)</label>
+                            <input type="number" id="editExpenseAmount" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="editExpenseDate" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="editExpenseDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="editExpenseNote" class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea id="editExpenseNote" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeEditExpenseModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Update Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Daily Closing Modal -->
+<div id="viewClosingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Daily Closing Details</h3>
+                    <button onclick="closeViewClosingModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date</label>
+                        <p id="viewClosingDate" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Opening Cash</label>
+                        <p id="viewClosingOpeningCash" class="mt-1 text-sm text-gray-900 font-semibold"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sales Total</label>
+                        <p id="viewClosingSalesTotal" class="mt-1 text-sm text-green-600 font-semibold"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Expense Total</label>
+                        <p id="viewClosingExpenseTotal" class="mt-1 text-sm text-red-600 font-semibold"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Closing Cash</label>
+                        <p id="viewClosingClosingCash" class="mt-1 text-sm text-gray-900 font-semibold"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Processed by</label>
+                        <p id="viewClosingUser" class="mt-1 text-sm text-gray-900"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Daily Closing Modal -->
+<div id="editClosingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Edit Daily Closing</h3>
+                    <button onclick="closeEditClosingModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="editClosingForm" onsubmit="updateClosing(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="editClosingDate" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="editClosingDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="editClosingOpeningCash" class="block text-sm font-medium text-gray-700">Opening Cash (₨)</label>
+                            <input type="number" id="editClosingOpeningCash" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="editClosingSalesTotal" class="block text-sm font-medium text-gray-700">Sales Total (₨)</label>
+                            <input type="number" id="editClosingSalesTotal" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="editClosingClosingCash" class="block text-sm font-medium text-gray-700">Closing Cash (₨)</label>
+                            <input type="number" id="editClosingClosingCash" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeEditClosingModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Update Closing
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Daily Closing Confirmation Modal -->
+<div id="deleteClosingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Daily Closing</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-600 mb-2">Are you sure you want to delete this daily closing record?</p>
+            <div id="deleteClosingDetails" class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Date:</span>
+                        <span id="deleteClosingDate" class="text-sm font-medium text-gray-800"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Sales Total:</span>
+                        <span id="deleteClosingSalesTotal" class="text-sm font-medium text-green-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Expense Total:</span>
+                        <span id="deleteClosingExpenseTotal" class="text-sm font-medium text-red-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Closing Cash:</span>
+                        <span id="deleteClosingCash" class="text-sm font-medium text-gray-800"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Warning Text -->
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-red-600 mt-0.5 mr-3"></i>
+                    <div class="text-left">
+                        <p class="text-sm text-red-800 font-medium mb-1">Critical Warning:</p>
+                        <p class="text-sm text-red-700">This action cannot be undone. Deleting this daily closing will permanently remove all financial records for this date, affecting your accounting and audit trail.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button id="cancelDeleteClosingBtn" class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="confirmDeleteClosingBtn" class="flex-1 bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Delete Closing
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

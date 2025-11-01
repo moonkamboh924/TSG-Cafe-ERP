@@ -1,0 +1,827 @@
+{% extends "base.html" %}
+
+{% block title %}Global Settings - TSG Cafe System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Global Settings</h1>
+                <p class="text-gray-600">Configure system-wide settings and preferences</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="saveSettings()" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- General Settings -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-cog mr-2 text-blue-600"></i>General Settings
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                    <input type="text" id="restaurantName" value="{{ get_setting('restaurant_name', 'Sangat Cafe') }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Enter business name">
+                    <p class="text-xs text-gray-500 mt-1">This appears in the navigation header and throughout the application</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <textarea id="restaurantAddress" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter restaurant address">{{ get_setting('restaurant_address', '123 Main Street, Lahore, Punjab, Pakistan') }}</textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input type="tel" id="restaurantPhone" value="{{ get_setting('restaurant_phone', '+92 300 1234567') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="restaurantEmail" value="{{ get_setting('restaurant_email', 'info@sangatcafe.com') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Currency & Tax Settings -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-money-bill-wave mr-2 text-green-600"></i>Currency & Tax
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                    <select id="currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="PKR" {% if get_setting('currency', 'PKR') == 'PKR' %}selected{% endif %}>Pakistani Rupee (PKR)</option>
+                        <option value="USD" {% if get_setting('currency', 'PKR') == 'USD' %}selected{% endif %}>US Dollar (USD)</option>
+                        <option value="EUR" {% if get_setting('currency', 'PKR') == 'EUR' %}selected{% endif %}>Euro (EUR)</option>
+                        <option value="GBP" {% if get_setting('currency', 'PKR') == 'GBP' %}selected{% endif %}>British Pound (GBP)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tax Rate (%)</label>
+                    <input type="number" id="taxRate" value="{{ get_setting('tax_rate', '17') }}" step="0.01" min="0" max="100"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Charge (%)</label>
+                    <input type="number" id="serviceCharge" value="{{ get_setting('service_charge', '10') }}" step="0.01" min="0" max="100"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="autoTax" {% if get_setting('auto_tax', 'True') in ['True', 'true', '1', 'yes'] %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="autoTax" class="ml-2 block text-sm text-gray-700">
+                        Automatically apply tax to all orders
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Preferences -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-desktop mr-2 text-purple-600"></i>System Preferences
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
+                    <select id="dateFormat" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="DD/MM/YYYY" {% if get_setting('date_format', 'DD/MM/YYYY') == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY</option>
+                        <option value="MM/DD/YYYY" {% if get_setting('date_format', 'DD/MM/YYYY') == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY</option>
+                        <option value="YYYY-MM-DD" {% if get_setting('date_format', 'DD/MM/YYYY') == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Time Format</label>
+                    <select id="timeFormat" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="12" {% if get_setting('time_format', '12') == '12' %}selected{% endif %}>12 Hour (AM/PM)</option>
+                        <option value="24" {% if get_setting('time_format', '12') == '24' %}selected{% endif %}>24 Hour</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">System Timezone</label>
+                    <select id="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Loading timezones...</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">This timezone will be used for all system timestamps and reports</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                    <select id="language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="en" {% if get_setting('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                        <option value="ur" {% if get_setting('language', 'en') == 'ur' %}selected{% endif %}>Urdu</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="notifications" {% if get_setting('notifications', 'True') in ['True', 'true', '1', 'yes'] %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="notifications" class="ml-2 block text-sm text-gray-700">
+                        Enable system notifications
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Security -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-shield-alt mr-2 text-red-600"></i>Backup & Security
+            </h2>
+            
+            <div class="space-y-4">
+                <!-- Database Information -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Database Information</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Database Size:</span>
+                            <span id="databaseSize" class="font-medium text-gray-900">Loading...</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Total Records:</span>
+                            <span id="totalRecords" class="font-medium text-gray-900">Loading...</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Backup Count:</span>
+                            <span id="backupCount" class="font-medium text-gray-900">Loading...</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Backup Size:</span>
+                            <span id="totalBackupSize" class="font-medium text-gray-900">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Auto Backup Frequency</label>
+                    <select id="backupFrequency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="daily" {% if get_setting('backup_frequency', 'daily') == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if get_setting('backup_frequency', 'daily') == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if get_setting('backup_frequency', 'daily') == 'monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="disabled" {% if get_setting('backup_frequency', 'daily') == 'disabled' %}selected{% endif %}>Disabled</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
+                    <input type="number" id="sessionTimeout" value="{{ get_setting('session_timeout', '60') }}" min="5" max="480"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="createBackup()" class="btn-secondary flex-1">
+                        <i class="fas fa-download mr-2"></i>Create Backup
+                    </button>
+                    <button onclick="restoreBackup()" class="btn-secondary flex-1">
+                        <i class="fas fa-upload mr-2"></i>Restore Backup
+                    </button>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="showBackupHistory()" class="btn-outline flex-1">
+                        <i class="fas fa-history mr-2"></i>Backup History
+                    </button>
+                    <button onclick="cleanupBackups()" class="btn-outline flex-1">
+                        <i class="fas fa-trash-alt mr-2"></i>Cleanup Old Backups
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveSettings() {
+    try {
+        // Collect all form data
+        const settings = {
+            restaurantName: document.getElementById('restaurantName').value,
+            restaurantSubtitle: 'Powered by Trisync Global',  // Fixed value
+            copyrightCompany: 'Trisync Global',  // Fixed value
+            restaurantAddress: document.getElementById('restaurantAddress').value,
+            restaurantPhone: document.getElementById('restaurantPhone').value,
+            restaurantEmail: document.getElementById('restaurantEmail').value,
+            currency: document.getElementById('currency').value,
+            taxRate: document.getElementById('taxRate').value,
+            serviceCharge: document.getElementById('serviceCharge').value,
+            autoTax: document.getElementById('autoTax').checked,
+            dateFormat: document.getElementById('dateFormat').value,
+            timeFormat: document.getElementById('timeFormat').value,
+            timezone: document.getElementById('timezone').value,
+            language: document.getElementById('language').value,
+            notifications: document.getElementById('notifications').checked,
+            backupFrequency: document.getElementById('backupFrequency').value,
+            sessionTimeout: document.getElementById('sessionTimeout').value
+        };
+        
+        // Save settings via API
+        fetch('/admin/api/save-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update navigation header immediately with business name
+                updateNavigationHeader(settings.restaurantName);
+                
+                // Show success notification
+                showNotification('Settings saved successfully!', 'success');
+                
+                // Reload page after 1 second to reflect changes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+                
+                // Notify other windows/tabs about settings update
+                localStorage.setItem('globalSettingsUpdated', Date.now());
+            } else {
+                showNotification('Failed to save settings: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving settings:', error);
+            showNotification('Error saving settings. Please try again.', 'error');
+        });
+    } catch (error) {
+        console.error('Error in saveSettings function:', error);
+        showNotification('Error processing settings. Please try again.', 'error');
+    }
+}
+
+function updateNavigationHeader(newName) {
+    // Find and update the business name in the navigation
+    const nameElement = document.querySelector('nav span.text-xl');
+    if (nameElement) {
+        nameElement.textContent = newName;
+    }
+    // Subtitle is fixed as "Powered by Trisync Global" and doesn't need updating
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } transform translate-x-full transition-transform duration-300`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+function createBackup() {
+    fetch('/admin/api/create-backup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Backup created successfully: ' + (data.backup_info?.filename || 'Unknown'), 'success');
+            loadBackupInfo(); // Refresh backup info
+        } else {
+            showNotification('Backup failed: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error creating backup:', error);
+        showNotification('Error creating backup: ' + error.message, 'error');
+    });
+}
+
+function restoreBackup() {
+    // Show file input dialog
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Store the file for later use and show confirmation modal
+            window.selectedBackupFile = file;
+            showRestoreConfirmModal();
+        }
+    };
+    input.click();
+}
+
+function uploadAndRestoreBackup(file) {
+    const formData = new FormData();
+    formData.append('backup_file', file);
+    
+    fetch('/admin/api/restore-backup', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Backup restored successfully. Please refresh the page.', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showNotification('Restore failed: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error restoring backup:', error);
+        showNotification('Error restoring backup. Please try again.', 'error');
+    });
+}
+
+function loadBackupInfo() {
+    fetch('/admin/api/backup-info')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const backupInfo = data.backup_info || {};
+                const dbStats = data.database_stats || {};
+                
+                // Update database information with safe defaults
+                const dbSizeElement = document.getElementById('databaseSize');
+                const backupCountElement = document.getElementById('backupCount');
+                const totalBackupSizeElement = document.getElementById('totalBackupSize');
+                const totalRecordsElement = document.getElementById('totalRecords');
+                
+                if (dbSizeElement) dbSizeElement.textContent = (backupInfo.database_size_mb || 0) + ' MB';
+                if (backupCountElement) backupCountElement.textContent = backupInfo.backup_count || 0;
+                if (totalBackupSizeElement) totalBackupSizeElement.textContent = (backupInfo.total_backup_size_mb || 0) + ' MB';
+                
+                // Calculate total records safely
+                let totalRecords = 0;
+                if (dbStats.table_counts && typeof dbStats.table_counts === 'object') {
+                    totalRecords = Object.values(dbStats.table_counts).reduce((sum, count) => sum + (count || 0), 0);
+                }
+                if (totalRecordsElement) totalRecordsElement.textContent = totalRecords.toLocaleString();
+            } else {
+                console.error('Error loading backup info:', data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading backup info:', error);
+        });
+}
+
+function showBackupHistory() {
+    fetch('/admin/api/backup-info')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const backups = data.backup_info?.backup_files || [];
+                let historyHtml = '<div class="space-y-2">';
+                
+                if (backups.length === 0) {
+                    historyHtml += '<p class="text-gray-500">No backups found.</p>';
+                } else {
+                    backups.forEach(backup => {
+                        const date = new Date(backup.created_at).toLocaleString();
+                        historyHtml += `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium">${backup.filename}</div>
+                                    <div class="text-sm text-gray-500">${date} • ${backup.size_mb} MB</div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="downloadBackup('${backup.filename}')" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button onclick="deleteBackupFile('${backup.filename}')" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                historyHtml += '</div>';
+                
+                showModal('Backup History', historyHtml);
+            } else {
+                showNotification('Error loading backup history: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading backup history:', error);
+            showNotification('Error loading backup history: ' + error.message, 'error');
+        });
+}
+
+function downloadBackup(filename) {
+    window.open(`/admin/api/download-backup/${filename}`, '_blank');
+}
+
+function deleteBackupFile(filename) {
+    // Store filename for later use and show confirmation modal
+    window.selectedBackupFilename = filename;
+    document.getElementById('deleteConfirmMessage').textContent = `Are you sure you want to delete backup: ${filename}?`;
+    showDeleteConfirmModal();
+}
+
+function cleanupBackups() {
+    showCleanupInputModal();
+}
+
+function showModal(title, content) {
+    document.getElementById('infoModalTitle').textContent = title;
+    document.getElementById('infoModalMessage').innerHTML = content;
+    document.getElementById('infoModal').classList.remove('hidden');
+    document.getElementById('infoModal').classList.add('flex');
+}
+
+function showRestoreConfirmModal() {
+    document.getElementById('restoreConfirmModal').classList.remove('hidden');
+    document.getElementById('restoreConfirmModal').classList.add('flex');
+}
+
+function closeRestoreConfirmModal() {
+    document.getElementById('restoreConfirmModal').classList.add('hidden');
+    document.getElementById('restoreConfirmModal').classList.remove('flex');
+}
+
+function confirmRestoreBackup() {
+    uploadAndRestoreBackup(window.selectedBackupFile);
+    closeRestoreConfirmModal();
+}
+
+function showDeleteConfirmModal() {
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    document.getElementById('deleteConfirmModal').classList.add('flex');
+}
+
+function closeDeleteConfirmModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+    document.getElementById('deleteConfirmModal').classList.remove('flex');
+}
+
+function confirmDeleteBackup() {
+    fetch('/admin/api/delete-backup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filename: window.selectedBackupFilename })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Backup deleted successfully.', 'success');
+            loadBackupInfo();
+        } else {
+            showNotification('Delete failed: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting backup:', error);
+        showNotification('Error deleting backup. Please try again.', 'error');
+    });
+    closeDeleteConfirmModal();
+}
+
+function showCleanupInputModal() {
+    document.getElementById('cleanupInputModal').classList.remove('hidden');
+    document.getElementById('cleanupInputModal').classList.add('flex');
+}
+
+function closeCleanupInputModal() {
+    document.getElementById('cleanupInputModal').classList.add('hidden');
+    document.getElementById('cleanupInputModal').classList.remove('flex');
+}
+
+function confirmCleanupBackups() {
+    const keepCount = parseInt(document.getElementById('keepCountInput').value);
+    if (keepCount && !isNaN(keepCount) && keepCount > 0) {
+        fetch('/admin/api/cleanup-backups', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keep_count: keepCount })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Cleanup completed. Deleted ${data.deleted_count} old backups.`, 'success');
+                loadBackupInfo();
+            } else {
+                showNotification('Cleanup failed: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error during cleanup:', error);
+            showNotification('Error during cleanup.', 'error');
+        });
+    }
+    closeCleanupInputModal();
+}
+
+function showInfoModal(title, message) {
+    document.getElementById('infoModalTitle').textContent = title;
+    document.getElementById('infoModalMessage').textContent = message;
+    document.getElementById('infoModal').classList.remove('hidden');
+    document.getElementById('infoModal').classList.add('flex');
+}
+
+// Load timezones and backup info when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadTimezones();
+    loadBackupInfo();
+});
+
+function loadTimezones() {
+    fetch('/admin/api/timezones')
+        .then(response => response.json())
+        .then(data => {
+            const timezoneSelect = document.getElementById('timezone');
+            const currentTimezone = '{{ get_setting("timezone", "Asia/Karachi") }}';
+            
+            // Clear existing options
+            timezoneSelect.innerHTML = '';
+            
+            // Add common timezones group
+            const commonGroup = document.createElement('optgroup');
+            commonGroup.label = 'Common Timezones';
+            data.common_timezones.forEach(tz => {
+                const option = document.createElement('option');
+                option.value = tz.value;
+                option.textContent = tz.label;
+                if (tz.value === currentTimezone) {
+                    option.selected = true;
+                }
+                commonGroup.appendChild(option);
+            });
+            timezoneSelect.appendChild(commonGroup);
+            
+            // Add separator
+            const separator = document.createElement('option');
+            separator.disabled = true;
+            separator.textContent = '──────────────────────';
+            timezoneSelect.appendChild(separator);
+            
+            // Add all timezones group
+            const allGroup = document.createElement('optgroup');
+            allGroup.label = 'All Timezones';
+            data.all_timezones.forEach(tz => {
+                const option = document.createElement('option');
+                option.value = tz.value;
+                option.textContent = tz.label;
+                if (tz.value === currentTimezone) {
+                    option.selected = true;
+                }
+                allGroup.appendChild(option);
+            });
+            timezoneSelect.appendChild(allGroup);
+        })
+        .catch(error => {
+            console.error('Error loading timezones:', error);
+            const timezoneSelect = document.getElementById('timezone');
+            timezoneSelect.innerHTML = '<option value="Asia/Karachi">Asia/Karachi (Default)</option>';
+        });
+}
+
+// Generic Modal Functions
+function showInfoModal(title, message) {
+    document.getElementById('infoModalTitle').textContent = title;
+    document.getElementById('infoModalMessage').textContent = message;
+    document.getElementById('infoModal').classList.remove('hidden');
+    document.getElementById('infoModal').classList.add('flex');
+}
+
+function closeInfoModal() {
+    document.getElementById('infoModal').classList.add('hidden');
+    document.getElementById('infoModal').classList.remove('flex');
+}
+
+// Modal control functions
+function showRestoreConfirmModal() {
+    document.getElementById('restoreConfirmModal').classList.remove('hidden');
+    document.getElementById('restoreConfirmModal').classList.add('flex');
+}
+
+function closeRestoreConfirmModal() {
+    document.getElementById('restoreConfirmModal').classList.add('hidden');
+    document.getElementById('restoreConfirmModal').classList.remove('flex');
+}
+
+function confirmRestoreBackup() {
+    if (window.selectedBackupFile) {
+        uploadAndRestoreBackup(window.selectedBackupFile);
+    }
+    closeRestoreConfirmModal();
+}
+
+function showDeleteConfirmModal() {
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    document.getElementById('deleteConfirmModal').classList.add('flex');
+}
+
+function closeDeleteConfirmModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+    document.getElementById('deleteConfirmModal').classList.remove('flex');
+}
+
+function confirmDeleteBackup() {
+    if (window.selectedBackupFilename) {
+        fetch(`/admin/api/delete-backup/${window.selectedBackupFilename}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Backup deleted successfully.', 'success');
+                loadBackupInfo();
+                showBackupHistory(); // Refresh the modal if open
+            } else {
+                showNotification('Delete failed: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting backup:', error);
+            showNotification('Error deleting backup: ' + error.message, 'error');
+        });
+    }
+    closeDeleteConfirmModal();
+}
+
+function showCleanupInputModal() {
+    document.getElementById('cleanupInputModal').classList.remove('hidden');
+    document.getElementById('cleanupInputModal').classList.add('flex');
+}
+
+function closeCleanupInputModal() {
+    document.getElementById('cleanupInputModal').classList.add('hidden');
+    document.getElementById('cleanupInputModal').classList.remove('flex');
+}
+
+function confirmCleanupBackups() {
+    const keepCount = parseInt(document.getElementById('keepCountInput').value);
+    if (keepCount && !isNaN(keepCount) && keepCount > 0) {
+        fetch('/admin/api/cleanup-backups', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keep_count: keepCount })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Cleanup completed. Deleted ${data.deleted_count || 0} old backups.`, 'success');
+                loadBackupInfo();
+            } else {
+                showNotification('Cleanup failed: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error during cleanup:', error);
+            showNotification('Error during cleanup: ' + error.message, 'error');
+        });
+    }
+    closeCleanupInputModal();
+}
+</script>
+
+<!-- Generic Info Modal -->
+<div id="infoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-info text-blue-600 text-2xl"></i>
+            </div>
+            <h3 id="infoModalTitle" class="text-2xl font-bold text-gray-800 mb-2">Information</h3>
+            <p id="infoModalMessage" class="text-gray-600 mb-6">Information message.</p>
+            <button onclick="closeInfoModal()" class="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Restore Confirmation Modal -->
+<div id="restoreConfirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Restore Backup</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to restore from this backup? This will replace all current data.</p>
+            <div class="flex space-x-4">
+                <button onclick="closeRestoreConfirmModal()" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmRestoreBackup()" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+                    Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Delete Backup</h3>
+            <p id="deleteConfirmMessage" class="text-gray-600 mb-6">Are you sure you want to delete this backup?</p>
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteConfirmModal()" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDeleteBackup()" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Cleanup Input Modal -->
+<div id="cleanupInputModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-broom text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Cleanup Old Backups</h3>
+            <p class="text-gray-600 mb-4">How many recent backups do you want to keep?</p>
+            <input type="number" id="keepCountInput" value="10" min="1" max="100" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6 text-center text-lg">
+            <div class="flex space-x-4">
+                <button onclick="closeCleanupInputModal()" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmCleanupBackups()" class="flex-1 bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors">
+                    Cleanup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
