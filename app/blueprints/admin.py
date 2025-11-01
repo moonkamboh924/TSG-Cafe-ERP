@@ -1117,8 +1117,75 @@ def cleanup_backups():
             'message': message,
             'deleted_count': deleted_count
         })
+    
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': str(e)
+            'message': f'Error cleaning up backups: {str(e)}'
         }), 500
+
+@bp.route('/password-reset-requests')
+@login_required
+@require_permissions('admin.view')
+def password_reset_requests():
+    """View all password reset requests"""
+    from app.models import PasswordResetRequest
+    requests = PasswordResetRequest.query.order_by(PasswordResetRequest.requested_at.desc()).all()
+    return render_template('admin/password_reset_requests.html', requests=requests)
+
+@bp.route('/api/approve-password-reset', methods=['POST'])
+@login_required
+@require_permissions('admin.edit')
+def approve_password_reset():
+    """Approve password reset request and set new password"""
+    try:
+        from app.models import PasswordResetRequest, User
+        
+        request_id = request.form.get('request_id')
+        new_password = request.form.get('new_password')
+        admin_notes = request.form.get('admin_notes', '')
+        
+        if not request_id or not new_password:
+            flash('Request ID and new password are required.', 'error')
+            return redirect(url_for('admin.password_reset_requests'))
+        
+        # Get the reset request
+        reset_request = PasswordResetRequest.query.get_or_404(request_id)
+        
+        if reset_request.status != 'pending':
+            flash('This request has already been processed.', 'error')
+            return redirect(url_for('admin.password_reset_requests'))
+        
+        # Get the user
+        user = User.query.get(reset_request.user_id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('admin.password_reset_requests'))
+        
+        # Set new password
+        user.set_password(new_password)
+        user.requires_password_change = True  # Force password change on first login
+        
+        # Update reset request
+        reset_request.status = 'approved'
+        reset_request.new_password_set = True
+        reset_request.approved_at = datetime.now(timezone.utc)
+        reset_request.approved_by_id = current_user.id
+        reset_request.admin_notes = admin_notes
+        reset_request.user_notified = True  # Mark as notified (user will see on login)
+        
+        db.session.commit()
+        
+        log_audit('approve_password_reset', 'password_reset_request', reset_request.id, {
+            'user_id': user.id,
+            'user_email': user.email,
+            'approved_by': current_user.full_name
+        })
+        
+        flash(f'Password reset approved for {user.full_name}. New temporary password has been set.', 'success')
+        return redirect(url_for('admin.password_reset_requests'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error approving password reset: {str(e)}', 'error')
+        return redirect(url_for('admin.password_reset_requests'))

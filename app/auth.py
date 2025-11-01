@@ -294,3 +294,58 @@ def register():
     # GET request - show registration form
     erp_name = SystemSetting.get_setting('restaurant_name', 'My Business')
     return render_template('auth/register.html', erp_name=erp_name)
+
+@bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Handle forgot password requests"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        
+        if not email:
+            flash('Please enter your email address.', 'error')
+            return render_template('auth/forgot_password.html')
+        
+        # Check if user exists
+        from app.models import User, PasswordResetRequest
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            # Don't reveal if email exists or not for security
+            flash('If this email is registered, you will receive a notification within 12-24 hours.', 'success')
+            log_audit('password_reset_request', 'user', meta={'email': email, 'status': 'email_not_found'})
+            return render_template('auth/forgot_password.html')
+        
+        # Check if there's already a pending request
+        existing_request = PasswordResetRequest.query.filter_by(
+            user_id=user.id,
+            status='pending'
+        ).first()
+        
+        if existing_request:
+            flash('You already have a pending password reset request. Please wait for admin approval.', 'error')
+            return render_template('auth/forgot_password.html')
+        
+        try:
+            # Create password reset request
+            reset_request = PasswordResetRequest(
+                user_id=user.id,
+                status='pending'
+            )
+            db.session.add(reset_request)
+            db.session.commit()
+            
+            log_audit('password_reset_request', 'user', user.id, {
+                'email': email,
+                'request_id': reset_request.id
+            })
+            
+            flash('Your password reset request has been submitted successfully! You will receive a notification within 12-24 hours.', 'success')
+            return redirect(url_for('auth.login'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'An error occurred: {str(e)}', 'error')
+            return render_template('auth/forgot_password.html')
+    
+    # GET request - show forgot password form
+    return render_template('auth/forgot_password.html')

@@ -633,3 +633,42 @@ class CreditPayment(db.Model):
             'notes': self.notes,
             'received_by': self.receiver.full_name if self.receiver else None
         }
+
+class PasswordResetRequest(db.Model):
+    """Password reset requests - admin manually approves and sets new password"""
+    __tablename__ = 'password_reset_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Request details
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, completed
+    requested_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    # Admin response
+    admin_notes = db.Column(db.Text)
+    new_password_set = db.Column(db.Boolean, default=False, nullable=False)
+    approved_at = db.Column(db.DateTime)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Notification for user
+    user_notified = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='password_requests', foreign_keys=[user_id])
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_email': self.user.email if self.user else None,
+            'user_name': self.user.full_name if self.user else None,
+            'status': self.status,
+            'requested_at': self.requested_at.isoformat(),
+            'admin_notes': self.admin_notes,
+            'new_password_set': self.new_password_set,
+            'user_notified': self.user_notified,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'approved_by': self.approved_by.full_name if self.approved_by else None
+        }

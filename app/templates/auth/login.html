@@ -73,8 +73,15 @@
                 </button>
             </form>
             
+            <!-- Forgot Password Link -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('auth.forgot_password') }}" class="text-purple-400 hover:text-purple-300 text-sm font-medium">
+                    <i class="fas fa-key mr-1"></i>Forgot Password?
+                </a>
+            </div>
+
             <!-- Registration Link -->
-            <div class="mt-6 text-center">
+            <div class="text-center mt-6">
                 <p class="text-white/60 text-sm">
                     Don't have an account? 
                     <a href="{{ url_for('auth.register') }}" class="text-purple-400 hover:text-purple-300 font-semibold">
