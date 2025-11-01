@@ -80,30 +80,35 @@ def seed_database(default_business_name=None):
             )
             db.session.add(category)
     
-    # Inventory Units (always check individually)
-    print("Adding inventory units...")
-    units = [
-        ('kg', 'Kilogram'),
-        ('g', 'Gram'),
-        ('L', 'Liter'),
-        ('ml', 'Milliliter'),
-        ('pcs', 'Pieces'),
-        ('dozen', 'Dozen'),
-        ('pack', 'Pack'),
-        ('box', 'Box'),
+    # Sample Inventory Items with different categories and units
+    print("Adding sample inventory items...")
+    sample_items = [
+        # (SKU, Name, Category, Unit, Min Stock, Unit Cost)
+        ('INV001', 'Flour', 'Raw Materials', 'kg', 10, 50),
+        ('INV002', 'Sugar', 'Raw Materials', 'kg', 5, 60),
+        ('INV003', 'Salt', 'Raw Materials', 'kg', 2, 30),
+        ('INV004', 'Cooking Oil', 'Raw Materials', 'L', 5, 200),
+        ('INV005', 'Milk', 'Raw Materials', 'L', 10, 80),
+        ('INV006', 'Eggs', 'Raw Materials', 'dozen', 5, 150),
+        ('INV007', 'Chicken', 'Raw Materials', 'kg', 10, 300),
+        ('INV008', 'Rice', 'Raw Materials', 'kg', 20, 100),
+        ('INV009', 'Disposable Cups', 'Packaging', 'pack', 10, 50),
+        ('INV010', 'Napkins', 'Packaging', 'pack', 5, 30),
     ]
     
-    for unit_name, unit_desc in units:
-        # Check if unit already exists
-        existing = InventoryItem.query.filter_by(unit=unit_name, category='Units').first()
+    for sku, name, category, unit, min_stock, unit_cost in sample_items:
+        # Check if item already exists
+        existing = InventoryItem.query.filter_by(sku=sku).first()
         if not existing:
             item = InventoryItem(
-                name=f'{unit_name} (Unit)',
-                unit=unit_name,
-                category='Units',
+                sku=sku,
+                name=name,
+                category=category,
+                unit=unit,
                 current_stock=0,
-                minimum_stock=0,
-                cost_per_unit=0,
+                min_stock_level=min_stock,
+                max_stock_level=min_stock * 3,
+                unit_cost=unit_cost,
                 is_active=True
             )
             db.session.add(item)
@@ -148,14 +153,14 @@ def seed_database(default_business_name=None):
         print("=" * 50)
         print(f"Added:")
         if needs_settings:
-            print(f"  ✓ System Settings")
+            print(f"  ✓ System Settings (7)")
         if needs_categories:
             print(f"  ✓ Menu Categories (4)")
+        print(f"  ✓ Sample Inventory Items (10)")
         if needs_suppliers:
             print(f"  ✓ Suppliers (2)")
         if needs_template:
             print(f"  ✓ Bill Template")
-        print(f"  ✓ Inventory Units (8)")
         print("=" * 50)
     except Exception as e:
         db.session.rollback()
