@@ -117,7 +117,7 @@ def login():
             log_audit('login_failed', 'user', meta={'email': email, 'reason': 'user_not_found'})
     
     # Get ERP name from settings
-    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
     return render_template('auth/login.html', erp_name=erp_name)
 
 @bp.route('/logout')
