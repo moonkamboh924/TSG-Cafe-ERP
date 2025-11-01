@@ -19,23 +19,45 @@ def migrate_to_multitenant():
         print("=" * 60)
         
         try:
-            # Step 1: Add business_id columns to all tables
+            # Step 1: Create businesses table if it doesn't exist
+            print("\n🏢 Creating businesses table...")
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS businesses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    business_name VARCHAR(200) UNIQUE NOT NULL,
+                    owner_email VARCHAR(120) UNIQUE NOT NULL,
+                    owner_id INTEGER,
+                    subscription_plan VARCHAR(20) DEFAULT 'free' NOT NULL,
+                    is_active BOOLEAN DEFAULT 1 NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            db.session.commit()
+            print("  ✓ Businesses table ready")
+            
+            # Step 2: Add business_id columns to all tables
             tables_to_migrate = [
                 'users',
                 'menu_categories',
                 'menu_items',
                 'inventory_items',
+                'menu_recipes',
                 'suppliers',
                 'purchase_orders',
+                'purchase_order_lines',
+                'inventory_lots',
                 'sales',
+                'sale_lines',
                 'expenses',
                 'daily_closings',
                 'bill_templates',
                 'system_settings',
-                'credit_sales'
+                'credit_sales',
+                'credit_payments'
             ]
             
-            print("\n📋 Step 1: Adding business_id columns...")
+            print("\n📋 Step 3: Adding business_id columns...")
             for table in tables_to_migrate:
                 try:
                     # Check if column already exists
@@ -52,8 +74,8 @@ def migrate_to_multitenant():
                     print(f"  ⚠️ Error with {table}: {str(e)}")
                     db.session.rollback()
             
-            # Step 2: Create default business
-            print("\n🏢 Step 2: Creating default business...")
+            # Step 4: Create default business
+            print("\n🏢 Step 4: Creating default business...")
             result = db.session.execute(text("SELECT COUNT(*) FROM businesses"))
             business_count = result.scalar()
             
@@ -67,8 +89,25 @@ def migrate_to_multitenant():
             else:
                 print(f"  ✓ Businesses already exist ({business_count})")
             
-            # Step 3: Update all existing records with business_id = 1
-            print("\n🔄 Step 3: Updating existing records...")
+            # Step 5: Add is_owner column to users table
+            print("\n👤 Step 5: Adding is_owner column to users...")
+            try:
+                result = db.session.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result]
+                
+                if 'is_owner' not in columns:
+                    print("  Adding is_owner to users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN is_owner BOOLEAN DEFAULT 0 NOT NULL"))
+                    db.session.commit()
+                    print("  ✓ is_owner column added")
+                else:
+                    print("  ✓ users already has is_owner")
+            except Exception as e:
+                print(f"  ⚠️ Error: {str(e)}")
+                db.session.rollback()
+            
+            # Step 6: Update all existing records with business_id = 1
+            print("\n🔄 Step 6: Updating existing records...")
             for table in tables_to_migrate:
                 try:
                     result = db.session.execute(text(f"SELECT COUNT(*) FROM {table} WHERE business_id IS NULL"))
@@ -83,6 +122,30 @@ def migrate_to_multitenant():
                 except Exception as e:
                     print(f"  ⚠️ Error updating {table}: {str(e)}")
                     db.session.rollback()
+            
+            # Step 7: Set first system_administrator as owner
+            print("\n👑 Step 7: Setting business owner...")
+            try:
+                result = db.session.execute(text("""
+                    SELECT id FROM users 
+                    WHERE role = 'system_administrator' 
+                    AND business_id = 1 
+                    ORDER BY id ASC 
+                    LIMIT 1
+                """))
+                owner_row = result.fetchone()
+                
+                if owner_row:
+                    owner_id = owner_row[0]
+                    db.session.execute(text(f"UPDATE users SET is_owner = 1 WHERE id = {owner_id}"))
+                    db.session.execute(text(f"UPDATE businesses SET owner_id = {owner_id} WHERE id = 1"))
+                    db.session.commit()
+                    print(f"  ✓ Set user ID {owner_id} as business owner")
+                else:
+                    print("  ⚠️ No system administrator found")
+            except Exception as e:
+                print(f"  ⚠️ Error: {str(e)}")
+                db.session.rollback()
             
             # Step 4: Add unique constraints for multi-tenant
             print("\n🔒 Step 4: Adding multi-tenant constraints...")
