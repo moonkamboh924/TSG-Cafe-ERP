@@ -585,14 +585,15 @@ def print_sale_bill(sale_id):
 def print_bill(sale_id):
     sale = Sale.query.get_or_404(sale_id)
     
-    # Get bill template settings
-    from ..models import BillTemplate
+    # Get bill template settings and business name from global settings
+    from ..models import BillTemplate, SystemSetting
     template = BillTemplate.query.filter_by(template_type='receipt').first()
+    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
     
     template_data = {
         'sale': sale.to_dict(),
         'template_type': 'receipt',
-        'header_name': template.header_name if template else 'SANGAT CAFE',
+        'header_name': template.header_name if template else business_name,
         'show_logo': template.show_logo if template else False,
         'logo_path': template.logo_path if template and template.logo_path else None,
         'footer_text': template.footer_text if template else 'Thank you for your visit!',
