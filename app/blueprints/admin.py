@@ -96,8 +96,16 @@ def create_user():
         }), 403
     
     try:
-        # Generate next employee ID
+        # Check if email already exists
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 400
+        
+        # Generate next employee ID (ensure uniqueness)
         employee_id = User.generate_next_employee_id()
+        while User.query.filter_by(employee_id=employee_id).first():
+            # If duplicate, increment and try again
+            num = int(employee_id[3:]) + 1
+            employee_id = f"EMP{num:03d}"
         
         # Extract first and last names
         first_name = data.get('first_name', '').strip()
@@ -112,6 +120,14 @@ def create_user():
         username = data.get('username')
         if not username and first_name and last_name:
             username = User.generate_username(first_name, last_name, employee_id)
+        
+        # Ensure username is unique
+        if User.query.filter_by(username=username).first():
+            # Add a number suffix if duplicate
+            counter = 1
+            while User.query.filter_by(username=f"{username}{counter}").first():
+                counter += 1
+            username = f"{username}{counter}"
         
         # Set default password if not provided
         password = data.get('password', '1234@1234')
