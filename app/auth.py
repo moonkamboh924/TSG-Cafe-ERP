@@ -63,7 +63,7 @@ def login():
         
         if not email or not password:
             flash('Please enter both email and password.', 'error')
-            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
             return render_template('auth/login.html', erp_name=erp_name)
         
         user = User.query.filter_by(email=email).first()
@@ -74,7 +74,7 @@ def login():
                 minutes_left = int((user.account_locked_until - datetime.now(timezone.utc)).total_seconds() / 60)
                 flash(f'Account is locked due to multiple failed login attempts. Please try again in {minutes_left} minutes.', 'error')
                 log_audit('login_failed', 'user', meta={'email': email, 'reason': 'account_locked'})
-                erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+                erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
                 return render_template('auth/login.html', erp_name=erp_name)
             
             # Check password
@@ -83,7 +83,7 @@ def login():
                 if not user.is_active:
                     flash('Your account has been deactivated. Please contact the administrator.', 'error')
                     log_audit('login_failed', 'user', meta={'email': email, 'reason': 'account_inactive'})
-                    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+                    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
                     return render_template('auth/login.html', erp_name=erp_name)
                 
                 # Successful login - reset failed attempts
@@ -197,7 +197,7 @@ def register():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
             return render_template('auth/register.html', erp_name=erp_name)
         
         try:
@@ -288,9 +288,9 @@ def register():
         except Exception as e:
             db.session.rollback()
             flash(f'An error occurred during registration: {str(e)}', 'error')
-            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+            erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
             return render_template('auth/register.html', erp_name=erp_name)
     
     # GET request - show registration form
-    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe ERP')
+    erp_name = SystemSetting.get_setting('restaurant_name', 'Sangat Cafe')
     return render_template('auth/register.html', erp_name=erp_name)
