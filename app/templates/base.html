@@ -66,11 +66,13 @@
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
                                         <i class="fas fa-users mr-2"></i>User Management
                                     </a>
+                                    {% if current_user.role == 'system_administrator' %}
                                     <div class="border-t border-gray-200 my-1"></div>
                                     <a href="{{ url_for('admin.password_reset_requests') }}" 
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
                                         <i class="fas fa-key mr-2"></i>Password Reset Requests
                                     </a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

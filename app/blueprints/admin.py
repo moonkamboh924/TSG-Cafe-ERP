@@ -1129,7 +1129,12 @@ def cleanup_backups():
 @login_required
 @require_permissions('admin.view')
 def password_reset_requests():
-    """View all password reset requests"""
+    """View all password reset requests - System Administrator only"""
+    # Only system administrators can access password reset requests
+    if current_user.role != 'system_administrator':
+        flash('Access denied. Only System Administrators can manage password reset requests.', 'error')
+        return redirect(url_for('dashboard.index'))
+    
     from app.models import PasswordResetRequest
     requests = PasswordResetRequest.query.order_by(PasswordResetRequest.requested_at.desc()).all()
     return render_template('admin/password_reset_requests.html', requests=requests)
@@ -1138,7 +1143,12 @@ def password_reset_requests():
 @login_required
 @require_permissions('admin.edit')
 def approve_password_reset():
-    """Approve password reset request and set new password"""
+    """Approve password reset request and set new password - System Administrator only"""
+    # Only system administrators can approve password resets
+    if current_user.role != 'system_administrator':
+        flash('Access denied. Only System Administrators can approve password resets.', 'error')
+        return redirect(url_for('dashboard.index'))
+    
     try:
         from app.models import PasswordResetRequest, User
         

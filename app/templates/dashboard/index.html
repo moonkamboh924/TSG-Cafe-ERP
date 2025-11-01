@@ -56,8 +56,10 @@
                                 </div>
                                 <!-- Employee Name -->
                                 <h3 class="text-xl font-bold text-gray-800 mb-1">{{ current_user.full_name or current_user.username }}</h3>
-                                <!-- Employee Designation -->
-                                <p class="text-indigo-600 font-semibold text-base mb-1">{{ current_user.designation or current_user.role.replace('_', ' ').title() }}</p>
+                                <!-- Employee Designation (NOT Role) -->
+                                <p class="text-indigo-600 font-semibold text-base mb-1">
+                                    {{ current_user.designation or 'No Designation Set' }}
+                                </p>
                                 <div class="w-12 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mx-auto"></div>
                             </div>
                             
