@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Bill Editor - Sangat Cafe ERP{% endblock %}
+{% block title %}Bill Editor - {{ get_setting('restaurant_name', 'ERP') }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
@@ -260,7 +260,7 @@ function loadTemplate() {
 }
 
 function populateForm(template) {
-    document.getElementById('headerName').value = template.header_name || 'Sangat Cafe';
+    document.getElementById('headerName').value = template.header_name || '{{ get_setting("restaurant_name", "Business Name") }}';
     document.getElementById('headerTagline').value = template.header_tagline || 'Authentic Pakistani Cuisine';
     document.getElementById('showLogo').checked = template.show_logo;
     document.getElementById('showOrderNumber').checked = template.show_order_number;

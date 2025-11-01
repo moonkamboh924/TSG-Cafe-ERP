@@ -1,5 +1,5 @@
 """
-Utility functions for the Sangat Cafe ERP system
+Utility functions for the ERP system
 """
 from decimal import Decimal
 

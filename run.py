@@ -14,9 +14,13 @@ with app.app_context():
     # Seed initial data
     try:
         from seed_data import seed_database
+        print("Starting seed data initialization...")
         seed_database()
+        print("Seed data initialization completed!")
     except Exception as e:
-        print(f"Note: Seed data initialization: {str(e)}")
+        print(f"ERROR: Seed data initialization failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
     
     # Create/update default admin user
     try:
