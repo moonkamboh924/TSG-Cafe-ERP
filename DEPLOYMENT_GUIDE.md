@@ -33,7 +33,7 @@ This system is now **100% production-ready** with complete multi-tenant data iso
 
 ## 📦 Deployment Options
 
-### **Option 1: Render.com (Recommended - Free Tier)**
+### **Option 1: Railway.app (Recommended - $5/month)**
 
 #### **Step 1: Prepare Repository**
 ```bash
@@ -41,36 +41,30 @@ This system is now **100% production-ready** with complete multi-tenant data iso
 # Repository: https://github.com/moonkamboh924/TSG-Cafe-ERP
 ```
 
-#### **Step 2: Create Render Account**
-1. Go to https://render.com
+#### **Step 2: Create Railway Account**
+1. Go to https://railway.app
 2. Sign up with GitHub account
-3. Authorize Render to access your repositories
+3. Authorize Railway to access your repositories
 
-#### **Step 3: Create Web Service**
-1. Click "New +" → "Web Service"
-2. Connect your GitHub repository: `moonkamboh924/TSG-Cafe-ERP`
-3. Configure:
-   - **Name:** tsg-cafe-erp
-   - **Region:** Choose closest to Pakistan (Singapore recommended)
-   - **Branch:** main
-   - **Runtime:** Python 3
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `python run.py`
-   - **Instance Type:** Free
+#### **Step 3: Create New Project**
+1. Click "New Project"
+2. Select "Deploy from GitHub repo"
+3. Choose repository: `moonkamboh924/TSG-Cafe-ERP`
+4. Railway will automatically detect Python and deploy
 
 #### **Step 4: Environment Variables**
-Add these in Render dashboard:
+Add these in Railway dashboard (Variables tab):
 ```
 FLASK_ENV=production
 SECRET_KEY=your-super-secret-key-change-this-in-production
-DATABASE_URL=sqlite:///instance/erp.db
+PYTHONUNBUFFERED=1
 ```
 
 #### **Step 5: Deploy**
-- Click "Create Web Service"
-- Render will automatically deploy
-- Wait 5-10 minutes for first deployment
-- Your app will be live at: `https://tsg-cafe-erp.onrender.com`
+- Railway automatically deploys on push
+- Wait 3-5 minutes for first deployment
+- Your app will be live at: `https://your-app.up.railway.app`
+- Click "Generate Domain" to get your URL
 
 ---
 

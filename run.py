@@ -169,4 +169,15 @@ if __name__ == '__main__':
                 print(f"Fallback failed: {str(fallback_error)}")
                 db.session.rollback()
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Get port from environment variable (Railway provides this)
+    port = int(os.environ.get('PORT', 5000))
+    
+    # Check if running in production
+    is_production = os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RAILWAY_ENVIRONMENT') is not None
+    
+    if is_production:
+        # Production mode
+        app.run(debug=False, host='0.0.0.0', port=port)
+    else:
+        # Development mode
+        app.run(debug=True, host='0.0.0.0', port=port)
