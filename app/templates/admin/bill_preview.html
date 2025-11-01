@@ -144,7 +144,14 @@
         <div class="header">
             {% if show_logo and logo_filename %}
             <div class="logo">
-                <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo" onerror="this.parentElement.style.display='none'">
+                <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo" 
+                     onerror="console.error('Logo failed to load:', this.src); this.parentElement.style.display='none';"
+                     onload="console.log('Logo loaded successfully:', this.src);">
+            </div>
+            {% elif show_logo %}
+            <!-- Logo checkbox is checked but no logo_filename -->
+            <div class="logo" style="color: red; font-size: 10px;">
+                [Logo enabled but no file uploaded]
             </div>
             {% endif %}
             <div class="header-name">{{ header_name.upper() }}</div>

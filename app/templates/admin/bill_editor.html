@@ -260,7 +260,8 @@ function loadTemplate() {
 }
 
 function populateForm(template) {
-    document.getElementById('headerName').value = template.header_name || '{{ business_name }}';
+    // ALWAYS use current business name from global settings, ignore saved template value
+    document.getElementById('headerName').value = '{{ business_name }}';
     document.getElementById('headerTagline').value = template.header_tagline || 'Authentic Pakistani Cuisine';
     document.getElementById('showLogo').checked = template.show_logo;
     document.getElementById('showOrderNumber').checked = template.show_order_number;
