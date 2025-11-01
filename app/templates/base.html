@@ -52,7 +52,7 @@
                             </button>
                             
                             <!-- Dropdown Menu -->
-                            <div id="adminDropdown" class="absolute left-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
+                            <div id="adminDropdown" class="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 opacity-0 invisible transform scale-95 transition-all duration-200 z-50">
                                 <div class="py-2">
                                     <a href="{{ url_for('admin.global_settings') }}" 
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
@@ -65,6 +65,11 @@
                                     <a href="{{ url_for('admin.index') }}" 
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
                                         <i class="fas fa-users mr-2"></i>User Management
+                                    </a>
+                                    <div class="border-t border-gray-200 my-1"></div>
+                                    <a href="{{ url_for('admin.password_reset_requests') }}" 
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+                                        <i class="fas fa-key mr-2"></i>Password Reset Requests
                                     </a>
                                 </div>
                             </div>
