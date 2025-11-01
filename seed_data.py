@@ -66,17 +66,16 @@ def seed_database(default_business_name=None):
     if needs_categories:
         print("Adding menu categories...")
         categories = [
-            ('Beverages', 'Hot and cold drinks', 1),
-            ('Food', 'Main dishes and snacks', 2),
-            ('Desserts', 'Sweet items', 3),
-            ('Breakfast', 'Morning items', 4),
+            ('Beverages', 1),
+            ('Food', 2),
+            ('Desserts', 3),
+            ('Breakfast', 4),
         ]
         
-        for name, description, sort_order in categories:
+        for name, order_index in categories:
             category = MenuCategory(
                 name=name,
-                description=description,
-                sort_order=sort_order,
+                order_index=order_index,
                 is_active=True
             )
             db.session.add(category)
