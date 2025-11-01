@@ -131,6 +131,16 @@
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                           placeholder="Add any notes about this decision..."></textarea>
             </div>
+            
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="finalConfirmCheck" 
+                           class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <span class="text-sm text-red-900">
+                        <strong>I confirm</strong> that I want to permanently delete this user account and all associated data. This action cannot be undone.
+                    </span>
+                </label>
+            </div>
 
             <div class="flex gap-3">
                 <button type="button" onclick="submitDeletion('approve')"
@@ -166,12 +176,52 @@ function closeDeletionModal() {
 
 function submitDeletion(action) {
     if (action === 'approve') {
-        if (!confirm('Are you absolutely sure you want to PERMANENTLY DELETE this user account? This cannot be undone!')) {
+        // Show final confirmation for approval
+        const userName = document.getElementById('modalUserName').textContent;
+        if (!document.getElementById('finalConfirmCheck')) {
+            showNotification('Please check the confirmation box to proceed with deletion.', 'error');
+            return;
+        }
+        if (!document.getElementById('finalConfirmCheck').checked) {
+            showNotification('You must confirm that you understand this action is permanent.', 'error');
             return;
         }
     }
     document.getElementById('actionInput').value = action;
     document.getElementById('deletionForm').submit();
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-20 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center gap-3">
+            <i class="fas ${
+                type === 'success' ? 'fa-check-circle' :
+                type === 'error' ? 'fa-exclamation-circle' :
+                type === 'warning' ? 'fa-exclamation-triangle' :
+                'fa-info-circle'
+            } text-xl"></i>
+            <p class="flex-1">${message}</p>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
 }
 
 // Close modal on escape key
