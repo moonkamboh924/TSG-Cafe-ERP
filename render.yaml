@@ -14,7 +14,7 @@ services:
       - key: FLASK_ENV
         value: production
       - key: ERP_NAME
-        value: Sangat Cafe
+        value: TSG Cafe ERP
       - key: ERP_SUBTITLE
         value: Powered by Trisyns Global
       - key: TIMEZONE

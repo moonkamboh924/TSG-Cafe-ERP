@@ -48,7 +48,7 @@ if __name__ == '__main__':
                     admin = User(
                         employee_id='EMP001',
                         username='MM001',
-                        email='muhammad.mamoon@sangat-cafe.com',
+                        email='muhammad.mamoon@tsgcafe.com',
                         first_name='Muhammad',
                         last_name='Mamoon',
                         full_name='Muhammad Mamoon',

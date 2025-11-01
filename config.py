@@ -9,7 +9,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # ERP Configuration
-    ERP_NAME = os.environ.get('ERP_NAME') or 'Sangat Cafe'
+    ERP_NAME = os.environ.get('ERP_NAME') or 'TSG Cafe ERP'
     ERP_SUBTITLE = os.environ.get('ERP_SUBTITLE') or 'Powered by Trisyns Global'
     TIMEZONE = os.environ.get('TIMEZONE') or 'Asia/Karachi'
     CURRENCY = os.environ.get('CURRENCY') or 'PKR'
