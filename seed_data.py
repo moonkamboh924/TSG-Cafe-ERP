@@ -10,19 +10,33 @@ from datetime import datetime, timezone
 def seed_database():
     """Add initial seed data to the database"""
     
-    print("Checking database for initial data...")
+    print("=" * 50)
+    print("SEED DATABASE - Starting initialization...")
+    print("=" * 50)
     
     # Check if we need to seed each type of data
-    needs_settings = SystemSetting.query.first() is None
-    needs_categories = MenuCategory.query.first() is None
-    needs_suppliers = Supplier.query.first() is None
-    needs_template = BillTemplate.query.first() is None
+    settings_count = SystemSetting.query.count()
+    categories_count = MenuCategory.query.count()
+    suppliers_count = Supplier.query.count()
+    template_count = BillTemplate.query.count()
+    
+    print(f"Current database state:")
+    print(f"  - System Settings: {settings_count}")
+    print(f"  - Menu Categories: {categories_count}")
+    print(f"  - Suppliers: {suppliers_count}")
+    print(f"  - Bill Templates: {template_count}")
+    
+    needs_settings = settings_count == 0
+    needs_categories = categories_count == 0
+    needs_suppliers = suppliers_count == 0
+    needs_template = template_count == 0
     
     if not (needs_settings or needs_categories or needs_suppliers or needs_template):
-        print("Database already has all seed data, skipping...")
+        print("✅ Database already has all seed data, skipping...")
+        print("=" * 50)
         return
     
-    print("Seeding database with initial data...")
+    print("\n🌱 Seeding database with initial data...")
     
     # System Settings
     if needs_settings:
@@ -123,8 +137,25 @@ def seed_database():
     # Commit all changes
     try:
         db.session.commit()
-        print("✅ Database seeded successfully!")
+        print("\n" + "=" * 50)
+        print("✅ DATABASE SEEDED SUCCESSFULLY!")
+        print("=" * 50)
+        print(f"Added:")
+        if needs_settings:
+            print(f"  ✓ System Settings")
+        if needs_categories:
+            print(f"  ✓ Menu Categories (4)")
+        if needs_suppliers:
+            print(f"  ✓ Suppliers (2)")
+        if needs_template:
+            print(f"  ✓ Bill Template")
+        print(f"  ✓ Inventory Units (8)")
+        print("=" * 50)
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error seeding database: {str(e)}")
+        print("\n" + "=" * 50)
+        print(f"❌ ERROR SEEDING DATABASE: {str(e)}")
+        print("=" * 50)
+        import traceback
+        traceback.print_exc()
         raise
