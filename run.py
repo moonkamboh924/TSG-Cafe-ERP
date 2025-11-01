@@ -11,6 +11,13 @@ app = create_app()
 with app.app_context():
     db.create_all()
     
+    # Seed initial data
+    try:
+        from seed_data import seed_database
+        seed_database()
+    except Exception as e:
+        print(f"Note: Seed data initialization: {str(e)}")
+    
     # Create/update default admin user
     try:
         # Use secure credential system instead of environment variables
