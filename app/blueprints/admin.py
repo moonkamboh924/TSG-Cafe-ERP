@@ -175,6 +175,11 @@ def update_user(user_id):
             }), 403
         
         try:
+            # Delete any pending account deletion requests for this user first
+            from app.models import AccountDeletionRequest, PasswordResetRequest
+            AccountDeletionRequest.query.filter_by(user_id=user.id).delete()
+            PasswordResetRequest.query.filter_by(user_id=user.id).delete()
+            
             # Log the deletion before removing
             log_audit('delete', 'user', user.id, {
                 'username': user.username,
@@ -1330,22 +1335,21 @@ def approve_account_deletion():
             # Approve and delete the account
             user_name = user.full_name
             user_email = user.email
+            user_id = user.id
             
-            # Update request status
-            deletion_request.status = 'approved'
-            deletion_request.approved_at = datetime.now(timezone.utc)
-            deletion_request.approved_by_id = current_user.id
-            deletion_request.admin_notes = admin_notes
-            
-            # Log the deletion
-            log_audit('approve_account_deletion', 'user', user.id, {
+            # Log the deletion before removing
+            log_audit('approve_account_deletion', 'user', user_id, {
                 'user_name': user_name,
                 'user_email': user_email,
                 'approved_by': current_user.full_name,
                 'reason': deletion_request.reason
             })
             
-            # Delete the user (this will cascade delete related data)
+            # Delete all related requests first to avoid foreign key constraints
+            PasswordResetRequest.query.filter_by(user_id=user_id).delete()
+            AccountDeletionRequest.query.filter_by(user_id=user_id).delete()
+            
+            # Delete the user (this will cascade delete other related data)
             db.session.delete(user)
             db.session.commit()
             
