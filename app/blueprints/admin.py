@@ -52,7 +52,9 @@ def get_global_settings():
 @login_required
 @require_permissions('admin.view')
 def bill_editor():
-    return render_template('admin/bill_editor.html')
+    from app.models import SystemSetting
+    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
+    return render_template('admin/bill_editor.html', business_name=business_name)
 
 @bp.route('/api/users')
 @login_required
