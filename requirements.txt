@@ -10,6 +10,7 @@ Werkzeug
 Jinja2
 SQLAlchemy
 alembic
-PyInstaller
 openpyxl
 pytz
+gunicorn
+psycopg2-binary
