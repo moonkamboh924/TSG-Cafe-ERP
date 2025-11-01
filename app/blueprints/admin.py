@@ -64,7 +64,15 @@ def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
-    users = User.query.order_by(User.id.desc()).paginate(
+    # System administrators can see all users
+    # Other users cannot see system administrators
+    if current_user.role == 'system_administrator':
+        users_query = User.query
+    else:
+        # Hide system administrators from regular users
+        users_query = User.query.filter(User.role != 'system_administrator')
+    
+    users = users_query.order_by(User.id.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     
@@ -80,6 +88,12 @@ def list_users():
 @require_permissions('admin.create')
 def create_user():
     data = request.get_json()
+    
+    # Prevent non-system administrators from creating system administrator accounts
+    if data.get('role') == 'system_administrator' and current_user.role != 'system_administrator':
+        return jsonify({
+            'error': 'Access denied. Only System Administrators can create system administrator accounts.'
+        }), 403
     
     try:
         # Generate next employee ID
@@ -147,6 +161,12 @@ def create_user():
 def update_user(user_id):
     user = User.query.get_or_404(user_id)
     
+    # Non-system administrators cannot view/edit/delete system administrators
+    if user.role == 'system_administrator' and current_user.role != 'system_administrator':
+        return jsonify({
+            'error': 'Access denied. You do not have permission to access this user account.'
+        }), 403
+    
     # Handle GET request - return user details
     if request.method == 'GET':
         return jsonify(user.to_dict())
@@ -207,6 +227,12 @@ def update_user(user_id):
     if not user.can_be_edited_by(current_user):
         return jsonify({
             'error': 'You do not have permission to edit this protected user'
+        }), 403
+    
+    # Prevent non-system administrators from changing role to system_administrator
+    if data.get('role') == 'system_administrator' and current_user.role != 'system_administrator':
+        return jsonify({
+            'error': 'Access denied. Only System Administrators can assign the system administrator role.'
         }), 403
     
     try:
