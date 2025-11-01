@@ -1,15 +1,30 @@
 import os
+import sys
 import hashlib
 from app import create_app
 from app.models import db, User
 from app.utils.security_utils import SecureCredentials
 from werkzeug.security import generate_password_hash
 
-app = create_app()
+print("=" * 60)
+print("Starting TSG Cafe ERP System...")
+print("=" * 60)
+
+try:
+    app = create_app()
+    print("✓ Flask app created successfully")
+except Exception as e:
+    print(f"✗ ERROR creating Flask app: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 # Initialize database tables on startup (for production deployment)
-with app.app_context():
-    db.create_all()
+print("Initializing database...")
+try:
+    with app.app_context():
+        db.create_all()
+        print("✓ Database tables created")
     
     # Seed initial data
     try:
@@ -78,6 +93,14 @@ with app.app_context():
     except Exception as e:
         print(f"Error creating/updating admin user: {str(e)}")
         db.session.rollback()
+        
+    print("✓ Database initialization complete")
+    
+except Exception as e:
+    print(f"✗ FATAL ERROR during startup: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 # User loader is defined in app/__init__.py to avoid duplication
 
