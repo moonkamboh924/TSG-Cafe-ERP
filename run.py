@@ -15,7 +15,9 @@ with app.app_context():
     try:
         from seed_data import seed_database
         print("Starting seed data initialization...")
-        seed_database()
+        # Pass 'Sangat Cafe' as default for this deployment
+        # Users can change it in Global Settings after login
+        seed_database(default_business_name='Sangat Cafe')
         print("Seed data initialization completed!")
     except Exception as e:
         print(f"ERROR: Seed data initialization failed: {str(e)}")

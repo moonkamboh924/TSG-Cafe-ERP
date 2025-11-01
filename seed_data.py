@@ -6,8 +6,9 @@ from app.models import (
     BillTemplate, db
 )
 from datetime import datetime, timezone
+import os
 
-def seed_database():
+def seed_database(default_business_name=None):
     """Add initial seed data to the database"""
     
     print("=" * 50)
@@ -38,11 +39,17 @@ def seed_database():
     
     print("\n🌱 Seeding database with initial data...")
     
+    # Get business name from environment variable or parameter or use generic default
+    if default_business_name is None:
+        default_business_name = os.environ.get('DEFAULT_BUSINESS_NAME', 'My Business')
+    
+    print(f"Using business name: {default_business_name}")
+    
     # System Settings
     if needs_settings:
         print("Adding system settings...")
         settings = [
-            ('restaurant_name', 'Sangat Cafe', 'Restaurant/Business Name'),
+            ('restaurant_name', default_business_name, 'Restaurant/Business Name'),
             ('restaurant_subtitle', 'Powered by Trisyns Global', 'Restaurant Subtitle'),
             ('currency', 'PKR', 'Currency Symbol'),
             ('timezone', 'Asia/Karachi', 'System Timezone'),
@@ -125,7 +132,7 @@ def seed_database():
         print("Adding default bill template...")
         bill_template = BillTemplate(
             name='Default Template',
-            header_text='Sangat Cafe',
+            header_text=default_business_name,
             footer_text='Thank you for your business!',
             show_logo=True,
             show_tax=False,
