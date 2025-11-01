@@ -144,7 +144,7 @@
         <div class="header">
             {% if show_logo and logo_filename %}
             <div class="logo">
-                <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo">
+                <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo" onerror="this.parentElement.style.display='none'">
             </div>
             {% endif %}
             <div class="header-name">{{ header_name.upper() }}</div>
@@ -241,7 +241,14 @@
                 dateElement.textContent = now.toLocaleDateString('en-GB');
             }
             if (timeElement) {
-                timeElement.textContent = now.toLocaleTimeString('en-GB', {hour12: false});
+                // Get time format from global settings (12 or 24 hour)
+                const timeFormat = '{{ get_setting("time_format", "12") }}';
+                const use12Hour = timeFormat === '12';
+                timeElement.textContent = now.toLocaleTimeString('en-US', {
+                    hour12: use12Hour,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
             }
         });
     </script>
