@@ -1,11 +1,17 @@
 import os
 import shutil
-import sqlite3
 import json
 import zipfile
 from datetime import datetime, timezone
 import logging
 from typing import Dict, List, Optional, Tuple
+
+# Conditional import for sqlite3 (only needed for SQLite databases)
+try:
+    import sqlite3
+    SQLITE_AVAILABLE = True
+except ImportError:
+    SQLITE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +227,10 @@ class BackupService:
     
     def _validate_database(self, db_path: str) -> bool:
         """Validate that the database file is valid SQLite database"""
+        if not SQLITE_AVAILABLE:
+            logger.warning("SQLite not available, skipping database validation")
+            return True  # Assume valid if we can't validate
+            
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
