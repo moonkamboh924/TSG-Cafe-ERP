@@ -833,14 +833,9 @@ def remove_logo():
 @require_permissions('admin.view')
 def bill_preview():
     """Generate bill preview page"""
-    # Get business name and tax rate from settings
-    from app.models import SystemSetting
-    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
-    tax_rate = float(SystemSetting.get_setting('tax_rate', '0'))
-    
     # Get template data from query parameters
     template_type = request.args.get('template_type', 'receipt')
-    header_name = request.args.get('header_name', business_name)
+    header_name = request.args.get('header_name', 'SANGAT CAFE')
     header_tagline = request.args.get('header_tagline', 'Authentic Pakistani Cuisine')
     show_logo = request.args.get('show_logo', 'false') == 'true'
     show_order_number = request.args.get('show_order_number', 'true') == 'true'
@@ -873,8 +868,7 @@ def bill_preview():
         'show_qr_code': show_qr_code,
         'paper_size': paper_size,
         'font_size': font_size,
-        'logo_filename': logo_filename,
-        'tax_rate': tax_rate
+        'logo_filename': logo_filename
     }
     
     return render_template('admin/bill_preview.html', **template_data)
