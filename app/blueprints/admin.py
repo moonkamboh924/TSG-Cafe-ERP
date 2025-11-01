@@ -678,16 +678,17 @@ def save_settings():
             'backupFrequency': 'backup_frequency',
             'sessionTimeout': 'session_timeout'
         }
-        
-        # Save each setting
+
+        # MULTI-TENANT: Save each setting with business_id
         for frontend_key, backend_key in settings_mapping.items():
             if frontend_key in data:
                 value = data[frontend_key]
                 # Handle boolean values properly
                 if isinstance(value, bool):
                     value = 'True' if value else 'False'
-                SystemSetting.set_setting(backend_key, str(value))
-        
+                # Pass business_id to ensure settings are saved for current business
+                SystemSetting.set_setting(backend_key, str(value), business_id=current_user.business_id)
+
         # Check if timezone was updated and trigger sync
         if 'timezone' in data:
             try:
