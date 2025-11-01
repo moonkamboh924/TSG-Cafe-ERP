@@ -532,18 +532,48 @@ class SystemSetting(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     @classmethod
-    def get_setting(cls, key, default=None):
-        setting = cls.query.filter_by(key=key).first()
+    def get_setting(cls, key, default=None, business_id=None):
+        """Get setting value, optionally filtered by business_id"""
+        # If business_id provided, filter by it
+        if business_id is not None:
+            setting = cls.query.filter_by(key=key, business_id=business_id).first()
+        else:
+            # Try to get from current user's business first
+            try:
+                from flask_login import current_user
+                if current_user.is_authenticated and hasattr(current_user, 'business_id') and current_user.business_id:
+                    setting = cls.query.filter_by(key=key, business_id=current_user.business_id).first()
+                else:
+                    setting = cls.query.filter_by(key=key).first()
+            except:
+                # Fallback to any setting with this key
+                setting = cls.query.filter_by(key=key).first()
+        
         return setting.value if setting else default
     
     @classmethod
-    def set_setting(cls, key, value, description=None):
-        setting = cls.query.filter_by(key=key).first()
+    def set_setting(cls, key, value, description=None, business_id=None):
+        """Set setting value, optionally for specific business"""
+        # If business_id provided, use it
+        if business_id is not None:
+            setting = cls.query.filter_by(key=key, business_id=business_id).first()
+        else:
+            # Try to use current user's business
+            try:
+                from flask_login import current_user
+                if current_user.is_authenticated and hasattr(current_user, 'business_id') and current_user.business_id:
+                    business_id = current_user.business_id
+                    setting = cls.query.filter_by(key=key, business_id=business_id).first()
+                else:
+                    setting = cls.query.filter_by(key=key).first()
+            except:
+                setting = cls.query.filter_by(key=key).first()
+        
         if setting:
             setting.value = value
             setting.updated_at = datetime.now(timezone.utc)
         else:
-            setting = cls(key=key, value=value, description=description)
+            setting = cls(key=key, value=value, description=description, business_id=business_id)
             db.session.add(setting)
         db.session.commit()
         return setting

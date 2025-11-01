@@ -64,13 +64,16 @@ def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
-    # System administrators can see all users
-    # Other users cannot see system administrators
+    # MULTI-TENANT: System administrators can see all users from all businesses
+    # Other users can only see users from their own business
     if current_user.role == 'system_administrator':
         users_query = User.query
     else:
-        # Hide system administrators from regular users
-        users_query = User.query.filter(User.role != 'system_administrator')
+        # Regular users: only see users from their business, excluding system administrators
+        users_query = User.query.filter(
+            User.business_id == current_user.business_id,
+            User.role != 'system_administrator'
+        )
     
     users = users_query.order_by(User.id.desc()).paginate(
         page=page, per_page=per_page, error_out=False
@@ -132,24 +135,42 @@ def create_user():
         # Set default password if not provided
         password = data.get('password', '1234@1234')
         
+        # Auto-assign navigation permissions based on role if not provided
+        role = data['role']
+        navigation_permissions = data.get('navigation_permissions')
+        
+        if not navigation_permissions:
+            # Default permissions based on role
+            role_permissions = {
+                'system_administrator': ['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'],
+                'admin': ['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'],
+                'manager': ['dashboard', 'pos', 'menu', 'inventory', 'reports'],
+                'cashier': ['dashboard', 'pos'],
+                'inventory': ['dashboard', 'inventory', 'menu'],
+                'finance': ['dashboard', 'finance', 'reports'],
+                'employee': ['dashboard']
+            }
+            navigation_permissions = role_permissions.get(role, ['dashboard'])
+        
+        # MULTI-TENANT: Assign user to current user's business
         user = User(
+            business_id=current_user.business_id,  # MULTI-TENANT
             employee_id=employee_id,
             username=username,
             email=data['email'],
             first_name=first_name,
             last_name=last_name,
             full_name=full_name,
-            role=data['role'],
+            role=role,
             designation=data.get('designation'),
             phone=data.get('phone'),
             address=data.get('address'),
             department=data.get('department'),
-            navigation_permissions=data.get('navigation_permissions'),
+            navigation_permissions=navigation_permissions,
             requires_password_change=data.get('requires_password_change', True),
             is_active=data.get('is_active', True)
         )
         user.set_password(password)
-        
         db.session.add(user)
         db.session.commit()
         
