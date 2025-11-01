@@ -7,7 +7,7 @@ from app.utils.security_utils import SecureCredentials
 from werkzeug.security import generate_password_hash
 
 print("=" * 60)
-print("Starting TSG Cafe ERP System...")
+print("Starting TSG Cafe ERP System v1.0...")
 print("=" * 60)
 
 try:
