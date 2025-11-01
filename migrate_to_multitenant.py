@@ -6,6 +6,12 @@ This script will:
 3. Update all existing records with business_id = 1
 """
 
+import sys
+import io
+
+# Fix encoding for Windows console
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 from app import create_app
 from app.extensions import db
 from sqlalchemy import text

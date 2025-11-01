@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from .models import User, AuditLog, SystemSetting
+from .models import User, AuditLog, SystemSetting, Business
 from .extensions import db
 import json
 import re
@@ -201,17 +201,35 @@ def register():
             return render_template('auth/register.html', erp_name=erp_name)
         
         try:
+            # MULTI-TENANT: Create Business first
+            # Check if business name already exists
+            existing_business = Business.query.filter_by(business_name=business_name).first()
+            if existing_business:
+                flash('Business name already exists. Please choose a different name.', 'error')
+                erp_name = SystemSetting.get_setting('restaurant_name', 'My Business')
+                return render_template('auth/register.html', erp_name=erp_name)
+            
+            # Create new business
+            business = Business(
+                business_name=business_name,
+                owner_email=email,
+                subscription_plan='free',
+                is_active=True
+            )
+            db.session.add(business)
+            db.session.flush()  # Get business.id
+            
             # Check if this is the first user (fresh system)
             is_first_user = User.query.count() == 0
             
-            # Generate employee ID and username
-            employee_id = User.generate_next_employee_id()
+            # Generate employee ID and username (unique per business)
+            employee_id = 'EMP001'  # First employee of new business
             username = User.generate_username(first_name, last_name, employee_id)
             
-            # Check if username already exists (unlikely but possible)
+            # Check if username already exists in this business
             counter = 1
             original_username = username
-            while User.query.filter_by(username=username).first():
+            while User.query.filter_by(business_id=business.id, username=username).first():
                 username = f"{original_username}{counter}"
                 counter += 1
             
@@ -220,6 +238,7 @@ def register():
             
             # Create new user with all fields
             user = User(
+                business_id=business.id,  # MULTI-TENANT
                 employee_id=employee_id,
                 username=username,
                 email=email,
@@ -228,7 +247,10 @@ def register():
                 full_name=full_name,
                 phone=phone,
                 address=address,
-                role='system_administrator' if is_first_user else 'viewer',  # First user is admin
+                department='Management',
+                designation='Owner',
+                role='admin',  # Business owner is admin
+                is_owner=True,  # MULTI-TENANT: Mark as business owner
                 is_active=True,
                 is_protected=is_first_user,  # Protect first user
                 requires_password_change=False,
@@ -237,41 +259,38 @@ def register():
             )
             user.set_password(password)
             
-            # Set full navigation permissions for first user
-            if is_first_user:
-                user.set_navigation_permissions(['admin', 'pos', 'menu', 'inventory', 'finance', 'reports'])
+            # Set full navigation permissions for business owner
+            user.set_navigation_permissions(['admin', 'pos', 'menu', 'inventory', 'finance', 'reports'])
             
             db.session.add(user)
+            db.session.flush()  # Get user.id
             
-            # Update business name in global settings
-            business_setting = SystemSetting.query.filter_by(key='restaurant_name').first()
-            if business_setting:
-                business_setting.value = business_name
-            else:
-                business_setting = SystemSetting(key='restaurant_name', value=business_name)
-                db.session.add(business_setting)
+            # Update business with owner_id
+            business.owner_id = user.id
             
-            # Set other business details
-            phone_setting = SystemSetting.query.filter_by(key='restaurant_phone').first()
-            if phone_setting:
-                phone_setting.value = phone
-            else:
-                phone_setting = SystemSetting(key='restaurant_phone', value=phone)
-                db.session.add(phone_setting)
+            # MULTI-TENANT: Create business-specific settings
+            # Create settings for this business
+            settings_to_create = [
+                ('restaurant_name', business_name),
+                ('restaurant_phone', phone),
+                ('restaurant_address', address),
+                ('restaurant_email', email),
+                ('restaurant_subtitle', 'Powered by Trisync Global'),
+                ('copyright_company', business_name),
+                ('tax_rate', '16'),
+                ('currency', 'PKR'),
+                ('date_format', 'DD/MM/YYYY'),
+                ('time_format', '12'),
+                ('timezone', 'Asia/Karachi')
+            ]
             
-            address_setting = SystemSetting.query.filter_by(key='restaurant_address').first()
-            if address_setting:
-                address_setting.value = address
-            else:
-                address_setting = SystemSetting(key='restaurant_address', value=address)
-                db.session.add(address_setting)
-            
-            email_setting = SystemSetting.query.filter_by(key='restaurant_email').first()
-            if email_setting:
-                email_setting.value = email
-            else:
-                email_setting = SystemSetting(key='restaurant_email', value=email)
-                db.session.add(email_setting)
+            for key, value in settings_to_create:
+                setting = SystemSetting(
+                    business_id=business.id,
+                    key=key,
+                    value=value
+                )
+                db.session.add(setting)
             
             db.session.commit()
             
