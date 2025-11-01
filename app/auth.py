@@ -270,7 +270,8 @@ def register():
             business.owner_id = user.id
             
             # MULTI-TENANT: Create business-specific settings
-            # Create settings for this business
+            # Note: Due to UNIQUE constraint on key, we check if settings exist
+            # TODO: Remove UNIQUE constraint in Phase 3 to allow per-business settings
             settings_to_create = [
                 ('restaurant_name', business_name),
                 ('restaurant_phone', phone),
@@ -286,12 +287,15 @@ def register():
             ]
             
             for key, value in settings_to_create:
-                setting = SystemSetting(
-                    business_id=business.id,
-                    key=key,
-                    value=value
-                )
-                db.session.add(setting)
+                # Check if setting already exists (due to UNIQUE constraint)
+                existing = SystemSetting.query.filter_by(key=key).first()
+                if not existing:
+                    setting = SystemSetting(
+                        business_id=business.id,
+                        key=key,
+                        value=value
+                    )
+                    db.session.add(setting)
             
             db.session.commit()
             
@@ -318,8 +322,12 @@ def register():
                 flash('Username already exists. Please try again.', 'error')
             elif 'UNIQUE constraint failed: businesses.business_name' in error_msg:
                 flash('Business name already exists. Please choose a different name.', 'error')
+            elif 'UNIQUE constraint failed: system_settings.key' in error_msg:
+                flash('Registration failed: System settings conflict. Please contact support.', 'error')
             else:
-                flash(f'Registration failed: {error_msg}', 'error')
+                # Log the full error for debugging
+                print(f"Registration error: {error_msg}")
+                flash('Registration failed. Please try again or contact support.', 'error')
             
             erp_name = SystemSetting.get_setting('restaurant_name', 'My Business')
             return render_template('auth/register.html', erp_name=erp_name)
