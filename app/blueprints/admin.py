@@ -151,9 +151,24 @@ def update_user(user_id):
     if request.method == 'GET':
         return jsonify(user.to_dict())
     
-    # Handle DELETE request - delete user
+    # Handle DELETE request - create deletion request (not direct delete)
     if request.method == 'DELETE':
-        # Check if the user can be deleted by the current user
+        from app.models import AccountDeletionRequest
+        
+        # Users cannot delete their own account directly
+        if user.id == current_user.id:
+            return jsonify({
+                'error': 'You cannot delete your own account. Please submit a deletion request instead.',
+                'show_request_form': True
+            }), 403
+        
+        # Only system administrator can delete other users
+        if current_user.role != 'system_administrator':
+            return jsonify({
+                'error': 'Only System Administrators can delete user accounts.'
+            }), 403
+        
+        # Check if the user can be deleted
         if not user.can_be_edited_by(current_user):
             return jsonify({
                 'error': 'You do not have permission to delete this protected user'
@@ -163,18 +178,22 @@ def update_user(user_id):
             # Log the deletion before removing
             log_audit('delete', 'user', user.id, {
                 'username': user.username,
-                'full_name': user.full_name
+                'full_name': user.full_name,
+                'deleted_by': current_user.full_name
             })
             
             # Delete the user
             db.session.delete(user)
             db.session.commit()
             
-            return jsonify({'success': True, 'message': 'User deleted successfully'})
+            return jsonify({
+                'success': True, 
+                'message': f'User {user.full_name} has been permanently deleted from the system.'
+            })
             
         except Exception as e:
             db.session.rollback()
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': f'Error deleting user: {str(e)}'}), 500
     
     # Handle PUT request - update user
     data = request.get_json()
@@ -1200,3 +1219,140 @@ def approve_password_reset():
         db.session.rollback()
         flash(f'Error approving password reset: {str(e)}', 'error')
         return redirect(url_for('admin.password_reset_requests'))
+
+@bp.route('/account-deletion-requests')
+@login_required
+@require_permissions('admin.view')
+def account_deletion_requests():
+    """View all account deletion requests - System Administrator only"""
+    # Only system administrators can access account deletion requests
+    if current_user.role != 'system_administrator':
+        flash('Access denied. Only System Administrators can manage account deletion requests.', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    from app.models import AccountDeletionRequest
+    requests = AccountDeletionRequest.query.order_by(AccountDeletionRequest.requested_at.desc()).all()
+    return render_template('admin/account_deletion_requests.html', requests=requests)
+
+@bp.route('/api/request-account-deletion', methods=['POST'])
+@login_required
+def request_account_deletion():
+    """User requests to delete their own account"""
+    try:
+        from app.models import AccountDeletionRequest
+        
+        reason = request.form.get('reason', '').strip()
+        
+        # Check if there's already a pending request
+        existing_request = AccountDeletionRequest.query.filter_by(
+            user_id=current_user.id,
+            status='pending'
+        ).first()
+        
+        if existing_request:
+            return jsonify({
+                'success': False,
+                'message': 'You already have a pending account deletion request.'
+            }), 400
+        
+        # Create deletion request
+        deletion_request = AccountDeletionRequest(
+            user_id=current_user.id,
+            reason=reason,
+            status='pending'
+        )
+        db.session.add(deletion_request)
+        db.session.commit()
+        
+        log_audit('account_deletion_request', 'user', current_user.id, {
+            'reason': reason,
+            'request_id': deletion_request.id
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'Your account deletion request has been submitted. A System Administrator will review it within 24-48 hours.'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error submitting request: {str(e)}'
+        }), 500
+
+@bp.route('/api/approve-account-deletion', methods=['POST'])
+@login_required
+@require_permissions('admin.edit')
+def approve_account_deletion():
+    """Approve account deletion request and delete user - System Administrator only"""
+    # Only system administrators can approve account deletions
+    if current_user.role != 'system_administrator':
+        flash('Access denied. Only System Administrators can approve account deletions.', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    try:
+        from app.models import AccountDeletionRequest
+        
+        request_id = request.form.get('request_id')
+        admin_notes = request.form.get('admin_notes', '')
+        action = request.form.get('action')  # 'approve' or 'reject'
+        
+        if not request_id or not action:
+            flash('Request ID and action are required.', 'error')
+            return redirect(url_for('admin.account_deletion_requests'))
+        
+        # Get the deletion request
+        deletion_request = AccountDeletionRequest.query.get_or_404(request_id)
+        
+        if deletion_request.status != 'pending':
+            flash('This request has already been processed.', 'error')
+            return redirect(url_for('admin.account_deletion_requests'))
+        
+        # Get the user
+        user = User.query.get(deletion_request.user_id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('admin.account_deletion_requests'))
+        
+        if action == 'reject':
+            # Reject the request
+            deletion_request.status = 'rejected'
+            deletion_request.approved_at = datetime.now(timezone.utc)
+            deletion_request.approved_by_id = current_user.id
+            deletion_request.admin_notes = admin_notes
+            db.session.commit()
+            
+            flash(f'Account deletion request for {user.full_name} has been rejected.', 'success')
+            return redirect(url_for('admin.account_deletion_requests'))
+        
+        elif action == 'approve':
+            # Approve and delete the account
+            user_name = user.full_name
+            user_email = user.email
+            
+            # Update request status
+            deletion_request.status = 'approved'
+            deletion_request.approved_at = datetime.now(timezone.utc)
+            deletion_request.approved_by_id = current_user.id
+            deletion_request.admin_notes = admin_notes
+            
+            # Log the deletion
+            log_audit('approve_account_deletion', 'user', user.id, {
+                'user_name': user_name,
+                'user_email': user_email,
+                'approved_by': current_user.full_name,
+                'reason': deletion_request.reason
+            })
+            
+            # Delete the user (this will cascade delete related data)
+            db.session.delete(user)
+            db.session.commit()
+            
+            flash(f'Account for {user_name} ({user_email}) has been permanently deleted from the system.', 'success')
+            return redirect(url_for('admin.account_deletion_requests'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error processing account deletion: {str(e)}', 'error')
+        return redirect(url_for('admin.account_deletion_requests'))

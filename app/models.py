@@ -672,3 +672,38 @@ class PasswordResetRequest(db.Model):
             'approved_at': self.approved_at.isoformat() if self.approved_at else None,
             'approved_by': self.approved_by.full_name if self.approved_by else None
         }
+
+class AccountDeletionRequest(db.Model):
+    """Account deletion requests - system administrator approves and deletes account"""
+    __tablename__ = 'account_deletion_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Request details
+    reason = db.Column(db.Text)  # Why user wants to delete account
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, rejected
+    requested_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    # Admin response
+    admin_notes = db.Column(db.Text)
+    approved_at = db.Column(db.DateTime)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    user = db.relationship('User', backref='deletion_requests', foreign_keys=[user_id])
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_email': self.user.email if self.user else None,
+            'user_name': self.user.full_name if self.user else None,
+            'reason': self.reason,
+            'status': self.status,
+            'requested_at': self.requested_at.isoformat(),
+            'admin_notes': self.admin_notes,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'approved_by': self.approved_by.full_name if self.approved_by else None
+        }
