@@ -26,7 +26,9 @@ def index():
 @require_system_admin
 def employee_details():
     """Employee Details Dashboard"""
-    return render_template('system_admin/employee_details.html')
+    # Redirect to main dashboard since employee details are integrated there
+    from flask import redirect, url_for
+    return redirect(url_for('system_admin_dashboard.index'))
 
 @bp.route('/api/employee-details')
 @login_required
