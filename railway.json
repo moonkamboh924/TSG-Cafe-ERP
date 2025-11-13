@@ -4,9 +4,9 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python run.py",
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 100,
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT run:app",
+    "healthcheckPath": "/auth/login",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

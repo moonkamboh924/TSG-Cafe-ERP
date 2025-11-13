@@ -199,6 +199,12 @@ if __name__ == '__main__':
                 print(f"Fallback failed: {str(fallback_error)}")
                 db.session.rollback()
     
+    # For Gunicorn deployment, we don't call app.run()
+    # The app object is exposed for Gunicorn to use
+    pass
+
+# For direct execution (development)
+if __name__ == '__main__':
     # Get port from environment variable (Railway provides this)
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_ENV', 'development') == 'development'
