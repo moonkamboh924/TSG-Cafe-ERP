@@ -51,65 +51,51 @@ def create_app(config_object="config.Config"):
     # Register auth blueprint
     from .auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    
+    # Register tenant registration blueprint
+    from .blueprints import tenant_registration
+    app.register_blueprint(tenant_registration.bp, url_prefix="/tenant")
 
     # Import models to ensure they are registered with SQLAlchemy
     from . import models
     
-    # Lazy database initialization for faster startup
+    # Multi-tenant database initialization
     def init_database():
-        """Initialize database tables and demo data lazily"""
+        """Initialize database tables for multi-tenant ERP"""
         try:
             db.create_all()
-            print("[OK] Database tables initialized")
+            print("[OK] Multi-tenant database tables initialized")
             
-            # Quick check and create demo data if needed
-            from .models import Business, User
-            try:
-                business_exists = db.session.execute('SELECT 1 FROM businesses LIMIT 1').fetchone()
-                if not business_exists:
-                    print("[INFO] Creating demo data...")
-                    
-                    # Create demo business
-                    demo_business = Business(
-                        business_name='TSG Cafe Demo',
-                        owner_email='admin@tsgcafe.com',
-                        subscription_plan='free',
-                        is_active=True
-                    )
-                    db.session.add(demo_business)
-                    db.session.flush()  # Get ID without full commit
-                    
-                    # Create admin user
-                    admin_user = User(
-                        business_id=demo_business.id,
-                        employee_id='ADMIN001',
-                        username='admin',
-                        email='admin@tsgcafe.com',
-                        first_name='Admin',
-                        last_name='User',
-                        full_name='Admin User',
-                        role='admin',
-                        is_owner=True,
-                        is_active=True,
-                        requires_password_change=False,
-                        email_verified=True
-                    )
-                    admin_user.set_password('admin123')
-                    admin_user.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
-                    
-                    db.session.add(admin_user)
-                    demo_business.owner_id = admin_user.id
-                    db.session.commit()
-                    
-                    print("[OK] Demo data ready - admin/admin123")
-            except Exception:
-                # If demo data creation fails, continue anyway
-                pass
+            # Check if any tenants exist
+            from .models import Business
+            tenant_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
+            
+            if tenant_count == 0:
+                print("[INFO] No tenants found - system ready for tenant registration")
+                # Create a system admin tenant only if DEMO_MODE is enabled
+                demo_mode = os.environ.get('DEMO_MODE', 'false').lower() == 'true'
+                
+                if demo_mode:
+                    from .services.tenant_service import TenantService
+                    try:
+                        demo_tenant = TenantService.create_tenant(
+                            business_name='Demo Restaurant',
+                            owner_email='demo@example.com',
+                            owner_name='Demo Admin',
+                            subscription_plan='free'
+                        )
+                        print(f"[DEMO] Demo tenant created:")
+                        print(f"  Username: {demo_tenant['owner']['username']}")
+                        print(f"  Password: {demo_tenant['owner']['temp_password']}")
+                    except Exception as e:
+                        print(f"[DEMO] Failed to create demo tenant: {str(e)}")
+            else:
+                print(f"[OK] Multi-tenant system ready - {tenant_count} tenant(s) active")
                 
         except Exception as e:
-            print(f"Warning: Database issue: {str(e)}")
+            print(f"Warning: Database initialization issue: {str(e)}")
     
-    # Initialize database in app context but don't block startup
+    # Initialize database in app context
     with app.app_context():
         init_database()
     
@@ -226,19 +212,32 @@ def create_app(config_object="config.Config"):
                 'error': str(e)
             })
     
-    # Add root route handler for unauthenticated users
+    # Add root route handler for multi-tenant system
     @app.route('/')
     def root():
         try:
-            from flask import redirect, url_for
+            from flask import redirect, url_for, render_template
             from flask_login import current_user
+            from .models import Business
+            
+            # If user is authenticated, redirect to dashboard
             if current_user.is_authenticated:
                 return redirect(url_for('dashboard.index'))
+            
+            # Check if any tenants exist
+            tenant_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
+            
+            if tenant_count == 0:
+                # No tenants exist - show welcome page with registration
+                return render_template('welcome.html')
             else:
+                # Tenants exist - redirect to login
                 return redirect(url_for('auth.login'))
+                
         except Exception as e:
             app.logger.error(f"Error in root route: {str(e)}")
-            return f'<h1>TSG Cafe ERP</h1><p>Error: {str(e)}</p><p><a href="/test">Test Page</a></p><p><a href="/auth/login">Login</a></p>'
+            # Fallback to tenant registration if there's an error
+            return redirect(url_for('tenant.register'))
     
     
     # Add before_request handler for password change requirement
