@@ -13,14 +13,14 @@ print(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'Not set')}")
 
 try:
     from app import create_app
-    print("✓ App module imported successfully")
+    print("[OK] App module imported successfully")
     
     # Create Flask application
     app = create_app()
-    print("✓ Flask application created successfully")
+    print("[OK] Flask application created successfully")
     
 except Exception as e:
-    print(f"✗ Error creating Flask app: {str(e)}")
+    print(f"[ERROR] Error creating Flask app: {str(e)}")
     import traceback
     traceback.print_exc()
     sys.exit(1)
@@ -35,6 +35,6 @@ if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=port, debug=debug)
     except Exception as e:
-        print(f"✗ Error starting server: {str(e)}")
+        print(f"[ERROR] Error starting server: {str(e)}")
         import traceback
         traceback.print_exc()

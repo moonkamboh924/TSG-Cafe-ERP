@@ -59,7 +59,7 @@ def create_app(config_object="config.Config"):
     with app.app_context():
         try:
             db.create_all()
-            print("✓ Database tables initialized")
+            print("[OK] Database tables initialized")
             
             # Create demo data for production deployment
             from .models import Business, User
@@ -99,7 +99,7 @@ def create_app(config_object="config.Config"):
                 demo_business.owner_id = demo_admin.id
                 db.session.commit()
                 
-                print("✓ Demo data created - Username: DEMO001, Password: demo123")
+                print("[OK] Demo data created - Username: DEMO001, Password: demo123")
                 
         except Exception as e:
             print(f"Warning: Database initialization issue: {str(e)}")
