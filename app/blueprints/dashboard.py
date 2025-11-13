@@ -14,7 +14,7 @@ bp = Blueprint('dashboard', __name__)
 def index():
     return render_template('dashboard/index.html')
 
-@bp.route('/api/dashboard/kpis/today')
+@bp.route('/api/kpis/today')
 @login_required
 @require_permissions('dashboard.view')
 def today_kpis():
