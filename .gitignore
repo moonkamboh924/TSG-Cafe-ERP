@@ -35,6 +35,9 @@ wheels/
 # *.db
 # *.sqlite
 # *.sqlite3
+# SQLite temporary files
+*.db-shm
+*.db-wal
 
 # Logs
 logs/
