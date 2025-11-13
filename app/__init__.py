@@ -108,12 +108,73 @@ def create_app(config_object="config.Config"):
     @app.route('/health')
     def health_check():
         from flask import jsonify
-        return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+        import os
+        
+        health_data = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'database_url_set': bool(os.environ.get('DATABASE_URL')),
+            'database_connection': 'unknown'
+        }
+        
+        # Test database connection
+        try:
+            db.session.execute('SELECT 1')
+            health_data['database_connection'] = 'connected'
+        except Exception as e:
+            health_data['database_connection'] = f'failed: {str(e)}'
+            health_data['status'] = 'unhealthy'
+        
+        return jsonify(health_data)
     
     # Add simple test route
     @app.route('/test')
     def test():
         return '<h1>TSG Cafe ERP - Application is running!</h1><p><a href="/auth/login">Go to Login</a></p>'
+    
+    # Add database diagnostic route
+    @app.route('/db-status')
+    def db_status():
+        from flask import jsonify
+        import os
+        
+        try:
+            # Get database info
+            db_url = os.environ.get('DATABASE_URL', 'Not set')
+            
+            # Test connection and get info
+            result = db.session.execute('SELECT version()')
+            version = result.fetchone()[0] if result else 'Unknown'
+            
+            # Count tables
+            tables_result = db.session.execute("""
+                SELECT COUNT(*) FROM information_schema.tables 
+                WHERE table_schema = 'public'
+            """)
+            table_count = tables_result.fetchone()[0]
+            
+            # Count users if table exists
+            try:
+                users_result = db.session.execute('SELECT COUNT(*) FROM users')
+                user_count = users_result.fetchone()[0]
+            except:
+                user_count = 'Table not found'
+            
+            return jsonify({
+                'database_url_set': bool(db_url != 'Not set'),
+                'database_url_preview': db_url[:30] + '...' if len(db_url) > 30 else db_url,
+                'connection_status': 'connected',
+                'postgresql_version': version,
+                'table_count': table_count,
+                'user_count': user_count
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'database_url_set': bool(os.environ.get('DATABASE_URL')),
+                'connection_status': 'failed',
+                'error': str(e)
+            })
     
     # Add root route handler for unauthenticated users
     @app.route('/')
