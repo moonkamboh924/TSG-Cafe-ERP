@@ -492,6 +492,39 @@ def get_next_employee_id():
     next_id = User.generate_next_employee_id(current_user.business_id)
     return jsonify({'employee_id': next_id})
 
+@bp.route('/api/businesses')
+@login_required
+@require_permissions('admin.view')
+def list_businesses():
+    """Get all businesses (System Administrator only)"""
+    if current_user.role != 'system_administrator':
+        return jsonify({'error': 'Access denied. Only System Administrators can view all businesses.'}), 403
+    
+    try:
+        from app.models import Business
+        
+        # Get all businesses with user counts
+        businesses = db.session.query(
+            Business,
+            db.func.count(User.id).label('user_count')
+        ).outerjoin(User, Business.id == User.business_id)\
+         .group_by(Business.id)\
+         .order_by(Business.created_at.desc()).all()
+        
+        business_list = []
+        for business, user_count in businesses:
+            business_data = business.to_dict()
+            business_data['user_count'] = user_count
+            business_list.append(business_data)
+        
+        return jsonify({
+            'businesses': business_list,
+            'total': len(business_list)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error fetching businesses: {str(e)}'}), 500
+
 @bp.route('/api/stats')
 @login_required
 @require_permissions('admin.view')

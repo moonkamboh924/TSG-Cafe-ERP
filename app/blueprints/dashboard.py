@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, and_
-from ..models import Sale, AuditLog, Expense
+from ..models import Sale, AuditLog, Expense, Business
 from ..extensions import db
 from ..auth import require_permissions
 
@@ -12,6 +12,11 @@ bp = Blueprint('dashboard', __name__)
 @login_required
 @require_permissions('dashboard.view')
 def index():
+    # Redirect system administrators to their dedicated interface
+    if current_user.role == 'system_administrator':
+        from flask import redirect, url_for
+        return redirect(url_for('system_admin_dashboard.index'))
+    
     return render_template('dashboard/index.html')
 
 @bp.route('/api/kpis/today')

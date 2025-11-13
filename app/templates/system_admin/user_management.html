@@ -1,0 +1,310 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}User Management - TSG Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">System Administrator Management</h1>
+                <p class="text-gray-600 mt-2">Manage system administrator accounts and permissions</p>
+            </div>
+            <div class="flex space-x-3">
+                <button class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-user-plus mr-2"></i>Add User
+                </button>
+            </div>
+        </div>
+
+        <!-- System Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">System Administrators</p>
+                        <p class="text-3xl font-bold text-blue-600" id="totalUsers">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Admins</p>
+                        <p class="text-3xl font-bold text-green-600" id="activeSessions">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">System Health</p>
+                        <p class="text-3xl font-bold text-green-600" id="systemHealth">Good</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Database Size</p>
+                        <p class="text-3xl font-bold text-purple-600" id="databaseSize">0 MB</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-database text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">User Management</h3>
+                </div>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="roleFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">System Administrators</option>
+                        <option value="system_administrator">System Administrator</option>
+                    </select>
+                    
+                    <select id="statusFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    
+                    <input type="text" id="userSearch" placeholder="Search users..." class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    
+                    <button onclick="resetFilters()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">User</th>
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">Email</th>
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">Role</th>
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">Status</th>
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">Navigation Permissions</th>
+                            <th class="text-left py-3 px-6 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- User data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="p-6 border-t border-gray-200 flex items-center justify-between">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="userCount">0</span> users
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prevPage" class="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors" disabled>
+                        <i class="fas fa-chevron-left mr-1"></i> Previous
+                    </button>
+                    <button id="nextPage" class="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors" disabled>
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let currentSearch = '';
+let currentRole = '';
+let currentStatus = '';
+
+// Load user statistics
+async function loadUserStats() {
+    try {
+        const response = await fetch('/system-admin/users/api/stats');
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('totalUsers').textContent = data.total_users || 0;
+            document.getElementById('activeSessions').textContent = data.active_sessions || 0;
+            document.getElementById('systemHealth').textContent = data.system_health || 'Good';
+            document.getElementById('databaseSize').textContent = data.database_size || '0 MB';
+        }
+    } catch (error) {
+        console.error('Error loading user stats:', error);
+    }
+}
+
+// Load users data
+async function loadUsers(page = 1, search = '', role = '', status = '') {
+    try {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: 25,
+            search: search,
+            role: role,
+            status: status
+        });
+        
+        const response = await fetch(`/system-admin/users/api/users?${params}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            renderUsersTable(data.users);
+            updatePagination(data);
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+// Render users table
+function renderUsersTable(users) {
+    const tbody = document.getElementById('usersTableBody');
+    
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No users found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = users.map(user => {
+        const statusBadge = user.is_active 
+            ? '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>'
+            : '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Inactive</span>';
+        
+        const roleBadges = {
+            'system_administrator': 'bg-purple-100 text-purple-800',
+            'admin': 'bg-blue-100 text-blue-800',
+            'manager': 'bg-green-100 text-green-800',
+            'employee': 'bg-gray-100 text-gray-800'
+        };
+        
+        const roleClass = roleBadges[user.role] || roleBadges.employee;
+        
+        return `
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-3 px-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-medium">${user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">${user.full_name || 'N/A'}</p>
+                            <p class="text-sm text-gray-500">${user.business ? user.business.name : 'No Business'}</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    <div>
+                        <p class="font-medium text-gray-900">${user.email}</p>
+                        <p class="text-sm text-gray-500">@${user.username}</p>
+                    </div>
+                </td>
+                <td class="py-3 px-6">
+                    <span class="px-2 py-1 text-xs font-medium ${roleClass} rounded-full">${user.role}</span>
+                </td>
+                <td class="py-3 px-6">${statusBadge}</td>
+                <td class="py-3 px-6">
+                    <span class="text-sm text-gray-600">Dashboard, POS, Menu, Inventory, Finance, Reports, Admin</span>
+                </td>
+                <td class="py-3 px-6">
+                    <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                        <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('userCount').textContent = users.length;
+}
+
+// Update pagination
+function updatePagination(data) {
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= (data.pages || 1);
+    
+    prevBtn.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadUsers(currentPage, currentSearch, currentRole, currentStatus);
+        }
+    };
+    
+    nextBtn.onclick = () => {
+        if (currentPage < (data.pages || 1)) {
+            currentPage++;
+            loadUsers(currentPage, currentSearch, currentRole, currentStatus);
+        }
+    };
+}
+
+// Reset filters
+function resetFilters() {
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('userSearch').value = '';
+    currentPage = 1;
+    currentSearch = '';
+    currentRole = '';
+    currentStatus = '';
+    loadUsers();
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserStats();
+    loadUsers();
+    
+    // Add event listeners
+    document.getElementById('userSearch').addEventListener('input', function(e) {
+        currentSearch = e.target.value;
+        currentPage = 1;
+        setTimeout(() => {
+            loadUsers(currentPage, currentSearch, currentRole, currentStatus);
+        }, 500);
+    });
+    
+    document.getElementById('roleFilter').addEventListener('change', function(e) {
+        currentRole = e.target.value;
+        currentPage = 1;
+        loadUsers(currentPage, currentSearch, currentRole, currentStatus);
+    });
+    
+    document.getElementById('statusFilter').addEventListener('change', function(e) {
+        currentStatus = e.target.value;
+        currentPage = 1;
+        loadUsers(currentPage, currentSearch, currentRole, currentStatus);
+    });
+});
+</script>
+{% endblock %}

@@ -56,6 +56,21 @@ def create_app(config_object="config.Config"):
     # Register tenant registration blueprint
     from .blueprints import tenant_registration
     app.register_blueprint(tenant_registration.bp, url_prefix="/tenant")
+    
+    # Register system admin blueprints
+    from .system_admin.blueprints.dashboard import bp as system_admin_dashboard_bp
+    from .system_admin.blueprints.businesses import bp as system_admin_businesses_bp
+    from .system_admin.blueprints.analytics import bp as system_admin_analytics_bp
+    from .system_admin.blueprints.monitoring import bp as system_admin_monitoring_bp
+    from .system_admin.blueprints.settings import bp as system_admin_settings_bp
+    from .system_admin.blueprints.user_management import bp as system_admin_users_bp
+    
+    app.register_blueprint(system_admin_dashboard_bp)
+    app.register_blueprint(system_admin_businesses_bp)
+    app.register_blueprint(system_admin_analytics_bp)
+    app.register_blueprint(system_admin_monitoring_bp)
+    app.register_blueprint(system_admin_settings_bp)
+    app.register_blueprint(system_admin_users_bp)
 
     # Import models to ensure they are registered with SQLAlchemy
     from . import models
