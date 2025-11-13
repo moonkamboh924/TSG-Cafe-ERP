@@ -62,10 +62,13 @@ class TenantService:
                 first_name = 'Business'
                 last_name = 'Owner'
             
+            # Generate unique employee_id
+            employee_id = TenantService._generate_employee_id(business.id)
+            
             # Create owner user
             owner_user = User(
                 business_id=business.id,
-                employee_id='OWNER001',
+                employee_id=employee_id,
                 username=username,
                 email=owner_email,
                 first_name=first_name,
@@ -128,6 +131,26 @@ class TenantService:
             username = f"{clean_name}{suffix:03d}"
         
         return username
+    
+    @staticmethod
+    def _generate_employee_id(business_id):
+        """Generate unique employee_id for the business"""
+        # Start with OWNER001 and increment if needed
+        base_id = "OWNER"
+        counter = 1
+        
+        while True:
+            employee_id = f"{base_id}{counter:03d}"
+            # Check if this employee_id exists in any business (global uniqueness)
+            existing = User.query.filter_by(employee_id=employee_id).first()
+            if not existing:
+                return employee_id
+            counter += 1
+            
+            # Safety check to prevent infinite loop
+            if counter > 999:
+                # Use business_id as suffix for uniqueness
+                return f"OWNER{business_id:03d}"
     
     @staticmethod
     def _generate_password():
