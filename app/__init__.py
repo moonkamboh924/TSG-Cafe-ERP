@@ -60,6 +60,52 @@ def create_app(config_object="config.Config"):
         try:
             db.create_all()
             print("[OK] Database tables initialized")
+            
+            # Create initial demo data for fresh database
+            from .models import Business, User
+            if Business.query.count() == 0:
+                print("[INFO] Fresh database detected - creating initial data")
+                
+                # Create demo business
+                demo_business = Business(
+                    business_name='TSG Cafe Demo',
+                    owner_email='admin@tsgcafe.com',
+                    subscription_plan='free',
+                    is_active=True
+                )
+                db.session.add(demo_business)
+                db.session.commit()
+                
+                # Create admin user
+                admin_user = User(
+                    business_id=demo_business.id,
+                    employee_id='ADMIN001',
+                    username='admin',
+                    email='admin@tsgcafe.com',
+                    first_name='Admin',
+                    last_name='User',
+                    full_name='Admin User',
+                    role='admin',
+                    is_owner=True,
+                    is_active=True,
+                    requires_password_change=False,
+                    email_verified=True
+                )
+                admin_user.set_password('admin123')
+                admin_user.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
+                
+                db.session.add(admin_user)
+                db.session.commit()
+                
+                # Update business owner_id
+                demo_business.owner_id = admin_user.id
+                db.session.commit()
+                
+                print("[OK] Initial data created:")
+                print("  Business: TSG Cafe Demo")
+                print("  Admin Username: admin")
+                print("  Admin Password: admin123")
+                
         except Exception as e:
             print(f"Warning: Database initialization issue: {str(e)}")
     
