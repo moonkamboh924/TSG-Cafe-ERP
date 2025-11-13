@@ -38,6 +38,8 @@ wheels/
 # SQLite temporary files
 *.db-shm
 *.db-wal
+# Database backups
+*.db.backup_*
 
 # Logs
 logs/
