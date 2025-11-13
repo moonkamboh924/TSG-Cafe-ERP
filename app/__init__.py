@@ -61,9 +61,10 @@ def create_app(config_object="config.Config"):
             db.create_all()
             print("[OK] Database tables initialized")
             
-            # Create initial demo data for fresh database
+            # Create initial demo data for fresh database (only if needed)
             from .models import Business, User
-            if Business.query.count() == 0:
+            business_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
+            if business_count == 0:
                 print("[INFO] Fresh database detected - creating initial data")
                 
                 # Create demo business
