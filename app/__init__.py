@@ -39,7 +39,7 @@ def create_app(config_object="config.Config"):
         return User.query.get(int(user_id))
 
     # Register blueprints
-    app.register_blueprint(dashboard.bp, url_prefix="/dashboard")
+    app.register_blueprint(dashboard.bp, url_prefix="/")
     app.register_blueprint(admin.bp, url_prefix="/admin")
     app.register_blueprint(pos.bp, url_prefix="/pos")
     app.register_blueprint(menu.bp, url_prefix="/menu")
@@ -60,47 +60,6 @@ def create_app(config_object="config.Config"):
         try:
             db.create_all()
             print("[OK] Database tables initialized")
-            
-            # Create demo data for production deployment
-            from .models import Business, User
-            if Business.query.count() == 0:
-                # Create demo business
-                demo_business = Business(
-                    business_name='Demo Restaurant',
-                    owner_email='demo@tsgcafe.com',
-                    subscription_plan='free',
-                    is_active=True
-                )
-                db.session.add(demo_business)
-                db.session.commit()
-                
-                # Create demo admin user
-                demo_admin = User(
-                    business_id=demo_business.id,
-                    employee_id='EMP001',
-                    username='DEMO001',
-                    email='demo@tsgcafe.com',
-                    first_name='Demo',
-                    last_name='Admin',
-                    full_name='Demo Admin',
-                    role='admin',
-                    is_owner=True,
-                    is_active=True,
-                    requires_password_change=False,
-                    email_verified=True
-                )
-                demo_admin.set_password('demo123')
-                demo_admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
-                
-                db.session.add(demo_admin)
-                db.session.commit()
-                
-                # Update business owner_id
-                demo_business.owner_id = demo_admin.id
-                db.session.commit()
-                
-                print("[OK] Demo data created - Username: DEMO001, Password: demo123")
-                
         except Exception as e:
             print(f"Warning: Database initialization issue: {str(e)}")
     
@@ -156,19 +115,6 @@ def create_app(config_object="config.Config"):
     def test():
         return '<h1>TSG Cafe ERP - Application is running!</h1><p><a href="/auth/login">Go to Login</a></p>'
     
-    # Add root route handler for unauthenticated users
-    @app.route('/')
-    def root():
-        try:
-            from flask import redirect, url_for
-            from flask_login import current_user
-            if current_user.is_authenticated:
-                return redirect(url_for('dashboard.index'))
-            else:
-                return redirect(url_for('auth.login'))
-        except Exception as e:
-            app.logger.error(f"Error in root route: {str(e)}")
-            return f'<h1>TSG Cafe ERP</h1><p>Error: {str(e)}</p><p><a href="/test">Test Page</a></p><p><a href="/auth/login">Login</a></p>'
     
     # Add before_request handler for password change requirement
     @app.before_request
