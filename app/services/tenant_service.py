@@ -93,7 +93,10 @@ class TenantService:
             business.owner_id = owner_user.id
             
             # Create default system settings for this tenant
-            TenantService._create_default_settings(business.id)
+            TenantService._create_default_settings(business.id, business_name)
+            
+            # Create default menu categories and items
+            TenantService._create_default_menu_structure(business.id)
             
             db.session.commit()
             
@@ -160,10 +163,10 @@ class TenantService:
         return ''.join(secrets.choice(chars) for _ in range(12))
     
     @staticmethod
-    def _create_default_settings(business_id):
+    def _create_default_settings(business_id, business_name):
         """Create default system settings for new tenant"""
         default_settings = [
-            ('restaurant_name', 'My Restaurant'),
+            ('restaurant_name', business_name),
             ('currency', 'USD'),
             ('timezone', 'UTC'),
             ('date_format', 'DD/MM/YYYY'),
@@ -183,6 +186,58 @@ class TenantService:
                 value=value
             )
             db.session.add(setting)
+    
+    @staticmethod
+    def _create_default_menu_structure(business_id):
+        """Create default menu categories and sample items"""
+        from ..models import MenuCategory, MenuItem
+        
+        # Default menu categories
+        categories = [
+            {'name': 'Appetizers', 'order_index': 1},
+            {'name': 'Main Courses', 'order_index': 2},
+            {'name': 'Beverages', 'order_index': 3},
+            {'name': 'Desserts', 'order_index': 4}
+        ]
+        
+        for cat_data in categories:
+            category = MenuCategory(
+                business_id=business_id,
+                name=cat_data['name'],
+                order_index=cat_data['order_index'],
+                is_active=True
+            )
+            db.session.add(category)
+            db.session.flush()  # Get category ID
+            
+            # Add sample menu items for each category
+            if cat_data['name'] == 'Beverages':
+                items = [
+                    {'name': 'Coffee', 'price': 3.50},
+                    {'name': 'Tea', 'price': 2.50},
+                    {'name': 'Soft Drink', 'price': 2.00}
+                ]
+            elif cat_data['name'] == 'Main Courses':
+                items = [
+                    {'name': 'Grilled Chicken', 'price': 15.99},
+                    {'name': 'Pasta Special', 'price': 12.99}
+                ]
+            else:
+                items = []
+            
+            for i, item_data in enumerate(items, 1):
+                # Generate SKU for menu item
+                sku = f"MENU{category.id:02d}{i:03d}"
+                
+                menu_item = MenuItem(
+                    business_id=business_id,
+                    category_id=category.id,
+                    sku=sku,
+                    name=item_data['name'],
+                    price=item_data['price'],
+                    is_active=True
+                )
+                db.session.add(menu_item)
     
     @staticmethod
     def get_tenant_info(business_id):
