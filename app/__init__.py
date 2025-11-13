@@ -60,6 +60,47 @@ def create_app(config_object="config.Config"):
         try:
             db.create_all()
             print("✓ Database tables initialized")
+            
+            # Create demo data for production deployment
+            from .models import Business, User
+            if Business.query.count() == 0:
+                # Create demo business
+                demo_business = Business(
+                    business_name='Demo Restaurant',
+                    owner_email='demo@tsgcafe.com',
+                    subscription_plan='free',
+                    is_active=True
+                )
+                db.session.add(demo_business)
+                db.session.commit()
+                
+                # Create demo admin user
+                demo_admin = User(
+                    business_id=demo_business.id,
+                    employee_id='EMP001',
+                    username='DEMO001',
+                    email='demo@tsgcafe.com',
+                    first_name='Demo',
+                    last_name='Admin',
+                    full_name='Demo Admin',
+                    role='admin',
+                    is_owner=True,
+                    is_active=True,
+                    requires_password_change=False,
+                    email_verified=True
+                )
+                demo_admin.set_password('demo123')
+                demo_admin.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
+                
+                db.session.add(demo_admin)
+                db.session.commit()
+                
+                # Update business owner_id
+                demo_business.owner_id = demo_admin.id
+                db.session.commit()
+                
+                print("✓ Demo data created - Username: DEMO001, Password: demo123")
+                
         except Exception as e:
             print(f"Warning: Database initialization issue: {str(e)}")
     
