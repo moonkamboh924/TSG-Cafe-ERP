@@ -3,10 +3,12 @@ Timezone utility functions for system-wide timezone handling
 """
 from datetime import datetime, timezone
 import pytz
-from app.models import SystemSetting
+# Lazy import to avoid circular dependency
+# from app.models import SystemSetting
 
 def get_system_timezone():
     """Get the configured system timezone"""
+    from app.models import SystemSetting
     timezone_str = SystemSetting.get_setting('timezone', 'Asia/Karachi')
     try:
         return pytz.timezone(timezone_str)
@@ -66,6 +68,7 @@ def format_datetime(dt, format_str=None):
         dt = convert_utc_to_local(dt)
     
     # Get system date and time format settings
+    from app.models import SystemSetting
     date_format = SystemSetting.get_setting('date_format', 'DD/MM/YYYY')
     time_format = SystemSetting.get_setting('time_format', '12')
     
@@ -102,6 +105,7 @@ def format_date_only(dt):
     else:
         dt = convert_utc_to_local(dt)
     
+    from app.models import SystemSetting
     date_format = SystemSetting.get_setting('date_format', 'DD/MM/YYYY')
     
     if date_format == 'DD/MM/YYYY':
@@ -126,6 +130,7 @@ def format_time_only(dt):
     else:
         dt = convert_utc_to_local(dt)
     
+    from app.models import SystemSetting
     time_format = SystemSetting.get_setting('time_format', '12')
     
     if time_format == '24':
