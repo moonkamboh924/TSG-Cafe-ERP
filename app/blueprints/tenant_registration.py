@@ -64,7 +64,12 @@ def register():
                                  owner_name=owner_name,
                                  subscription_plan=subscription_plan)
         except Exception as e:
-            flash('Registration failed. Please try again.', 'error')
+            # Show actual error for debugging
+            flash(f'Registration failed: {str(e)}', 'error')
+            # Also log the error
+            import traceback
+            print(f"Registration error: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
             return render_template('tenant/register.html',
                                  business_name=business_name,
                                  owner_email=owner_email,

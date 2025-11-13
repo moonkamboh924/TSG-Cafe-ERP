@@ -1,5 +1,6 @@
 from flask import Flask
 from datetime import datetime
+import os
 from .extensions import db, migrate, login_manager
 from .blueprints import dashboard, admin, pos, menu, inventory, finance, reports, profile
 
@@ -68,7 +69,8 @@ def create_app(config_object="config.Config"):
             
             # Check if any tenants exist
             from .models import Business
-            tenant_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
+            from sqlalchemy import text
+            tenant_count = db.session.execute(text('SELECT COUNT(*) FROM businesses')).scalar()
             
             if tenant_count == 0:
                 print("[INFO] No tenants found - system ready for tenant registration")
@@ -225,7 +227,8 @@ def create_app(config_object="config.Config"):
                 return redirect(url_for('dashboard.index'))
             
             # Check if any tenants exist
-            tenant_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
+            from sqlalchemy import text
+            tenant_count = db.session.execute(text('SELECT COUNT(*) FROM businesses')).scalar()
             
             if tenant_count == 0:
                 # No tenants exist - show welcome page with registration

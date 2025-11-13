@@ -157,8 +157,7 @@ class TenantService:
             setting = SystemSetting(
                 business_id=business_id,
                 key=key,
-                value=value,
-                created_at=datetime.now(timezone.utc)
+                value=value
             )
             db.session.add(setting)
     
