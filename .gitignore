@@ -37,7 +37,7 @@ wheels/
 # *.sqlite3
 
 # Logs
-# logs/ (keep for deployment)
+logs/
 *.log
 
 # IDE

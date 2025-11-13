@@ -18,8 +18,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE $PORT
-
 # Run the application
-CMD python railway_test.py
+CMD gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 1 wsgi:application
