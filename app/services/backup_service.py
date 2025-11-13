@@ -334,6 +334,9 @@ class BackupService:
             
             if last_backup_time:
                 last_backup = datetime.fromisoformat(last_backup_time)
+                # Ensure timezone awareness
+                if last_backup.tzinfo is None:
+                    last_backup = last_backup.replace(tzinfo=timezone.utc)
                 now = datetime.now(timezone.utc)
                 
                 if backup_frequency == 'daily' and (now - last_backup).days < 1:

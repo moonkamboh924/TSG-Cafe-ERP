@@ -5,6 +5,7 @@ from sqlalchemy import func, and_
 from ..models import Sale, Expense, DailyClosing, CreditPayment
 from ..extensions import db
 from ..auth import require_permissions, log_audit
+from ..utils.timezone_utils import safe_fromisoformat
 
 bp = Blueprint('finance', __name__)
 
@@ -139,7 +140,7 @@ def create_expense():
             category=data['category'],
             note=data.get('note', ''),
             amount=data['amount'],
-            incurred_at=datetime.fromisoformat(data.get('incurred_at', datetime.now(timezone.utc).isoformat())),
+            incurred_at=safe_fromisoformat(data.get('incurred_at')),
             user_id=current_user.id
         )
         
@@ -289,7 +290,7 @@ def update_expense(expense_id):
         expense.amount = data.get('amount', expense.amount)
         expense.note = data.get('note', expense.note)
         if 'incurred_at' in data:
-            expense.incurred_at = datetime.fromisoformat(data['incurred_at'])
+            expense.incurred_at = safe_fromisoformat(data['incurred_at'])
         
         db.session.commit()
         

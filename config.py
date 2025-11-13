@@ -3,21 +3,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     
     # Use Railway's PostgreSQL database
     # Railway provides DATABASE_URL environment variable
-    database_url = os.environ.get('DATABASE_URL')
-    
-    if database_url:
-        # Railway/Heroku compatibility: convert postgres:// to postgresql://
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        SQLALCHEMY_DATABASE_URI = database_url
+    # Database configuration
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        # Handle PostgreSQL URL format for Railway/Heroku
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
         # Fallback to SQLite for local development
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/erp.db'
+        # Ensure instance directory exists
+        instance_dir = os.path.join(basedir, "instance")
+        os.makedirs(instance_dir, exist_ok=True)
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(instance_dir, "erp.db")}'
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

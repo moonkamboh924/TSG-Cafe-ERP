@@ -145,6 +145,29 @@ def get_timezone_info():
         'timezone_name': current_time.strftime('%Z')
     }
 
+def safe_fromisoformat(date_string):
+    """
+    Safely parse ISO format datetime string with timezone awareness
+    
+    Args:
+        date_string: ISO format datetime string
+        
+    Returns:
+        timezone-aware datetime object
+    """
+    if not date_string:
+        return datetime.now(timezone.utc)
+    
+    try:
+        dt = datetime.fromisoformat(date_string)
+        # Ensure timezone awareness
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (ValueError, AttributeError):
+        # Fallback to current time if parsing fails
+        return datetime.now(timezone.utc)
+
 def sync_existing_records():
     """
     Sync existing records when timezone is updated.
