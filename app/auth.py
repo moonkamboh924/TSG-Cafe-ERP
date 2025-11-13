@@ -2,14 +2,34 @@
 Authentication Blueprint for TSG Cafe ERP
 Handles login, logout, and redirects registration to tenant system
 """
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from .models import User, SystemSetting, AuditLog
 from .extensions import db
 from datetime import datetime, timezone
+from functools import wraps
 
 bp = Blueprint('auth', __name__)
+
+def require_permissions(*required_permissions):
+    """Decorator to require specific permissions for a route"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.login'))
+            
+            # Check if user has required permissions
+            if hasattr(current_user, 'navigation_permissions'):
+                user_permissions = current_user.navigation_permissions or []
+                for permission in required_permissions:
+                    if permission not in user_permissions:
+                        abort(403)  # Forbidden
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 def log_audit(action, entity, entity_id=None, meta=None):
     """Log audit trail"""

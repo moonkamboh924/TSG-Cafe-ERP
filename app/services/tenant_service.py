@@ -4,6 +4,7 @@ Handles tenant creation, management, and data isolation
 """
 import os
 import secrets
+import string
 from datetime import datetime, timezone
 from flask import current_app
 from ..extensions import db
@@ -132,7 +133,6 @@ class TenantService:
     def _generate_password():
         """Generate secure temporary password"""
         # Generate 12-character password with mixed case, numbers, and symbols
-        import string
         chars = string.ascii_letters + string.digits + "!@#$%"
         return ''.join(secrets.choice(chars) for _ in range(12))
     
