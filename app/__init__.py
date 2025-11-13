@@ -55,6 +55,14 @@ def create_app(config_object="config.Config"):
     # Import models to ensure they are registered with SQLAlchemy
     from . import models
     
+    # Initialize database tables (for multi-tenant ERP)
+    with app.app_context():
+        try:
+            db.create_all()
+            print("✓ Database tables initialized")
+        except Exception as e:
+            print(f"Warning: Database initialization issue: {str(e)}")
+    
     # Add template context processor for settings
     @app.context_processor
     def inject_settings():
