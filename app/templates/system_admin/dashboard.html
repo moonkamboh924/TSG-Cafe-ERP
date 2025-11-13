@@ -259,12 +259,7 @@
 {% block extra_js %}
 <script>
 let systemStats = {};
-let businessGrowthChart = null;
-let subscriptionChart = null;
-let employeeData = {};
-let currentPage = 1;
-let currentSearch = '';
-let currentBusinessFilter = '';
+// Removed unused variables: businessGrowthChart, subscriptionChart, employeeData, currentPage, currentSearch, currentBusinessFilter
 
 // Load system statistics
 async function loadSystemStats() {
@@ -460,11 +455,7 @@ function updatePagination() {
     };
 }
 
-// Refresh employee data
-function refreshEmployeeData() {
-    currentPage = 1;
-    loadEmployeeData(currentPage, currentSearch, currentBusinessFilter);
-}
+// Removed unused refreshEmployeeData function
 
 // Profile picture upload function
 async function uploadProfilePicture(input) {
@@ -487,7 +478,7 @@ async function uploadProfilePicture(input) {
         formData.append('profile_picture', file);
         
         try {
-            const response = await fetch('/api/upload-profile-picture', {
+            const response = await fetch('/system-admin/profile/api/upload-profile-picture', {
                 method: 'POST',
                 body: formData
             });

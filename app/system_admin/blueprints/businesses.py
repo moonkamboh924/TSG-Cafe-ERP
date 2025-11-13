@@ -2,49 +2,37 @@
 Business Management Blueprint for System Administrators
 """
 
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required
 from datetime import datetime, timezone
 from sqlalchemy import func
 from ...models import Business, User
 from ...extensions import db
+from ..decorators import require_system_admin, system_admin_api_required
 
 bp = Blueprint('system_admin_businesses', __name__, url_prefix='/system-admin/businesses')
 
-def require_system_admin():
-    """Decorator to ensure only system administrators can access"""
-    if current_user.role != 'system_administrator':
-        return redirect(url_for('dashboard.index'))
-    return None
-
 @bp.route('/')
 @login_required
+@require_system_admin
 def index():
     """Business Management Dashboard"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return redirect_response
-    
     # For now, redirect to main system admin dashboard
+    from flask import redirect, url_for
     return redirect(url_for('system_admin_dashboard.index'))
 
 @bp.route('/employee-details')
 @login_required
+@require_system_admin
 def employee_details():
     """Employee Details Dashboard"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return redirect_response
-    
     return render_template('system_admin/employee_details.html')
 
 @bp.route('/api/employee-details')
 @login_required
+@system_admin_api_required
 def get_employee_details():
     """Get detailed employee information across all businesses"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         page = request.args.get('page', 1, type=int)

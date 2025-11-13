@@ -3,38 +3,28 @@ System Admin User Management Blueprint
 Handles all user management for system administrators
 """
 
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required
 from datetime import datetime, timezone
 from sqlalchemy import func
 from ...models import Business, User
 from ...extensions import db
+from ..decorators import require_system_admin, system_admin_api_required
 
 bp = Blueprint('system_admin_users', __name__, url_prefix='/system-admin/users')
 
-def require_system_admin():
-    """Decorator to ensure only system administrators can access"""
-    if current_user.role != 'system_administrator':
-        return redirect(url_for('dashboard.index'))
-    return None
-
 @bp.route('/')
 @login_required
+@require_system_admin
 def index():
     """System Admin User Management Dashboard"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return redirect_response
-    
     return render_template('system_admin/user_management.html')
 
 @bp.route('/api/users')
 @login_required
+@system_admin_api_required
 def get_all_users():
     """Get all users across all businesses for system admin"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         page = request.args.get('page', 1, type=int)
@@ -60,9 +50,9 @@ def get_all_users():
                 )
             )
         
-        # Apply role filter
-        if role_filter:
-            query = query.filter(User.role == role_filter)
+        # Role filter is redundant since we already filter for system_administrator
+        # if role_filter:
+        #     query = query.filter(User.role == role_filter)
             
         # Apply status filter
         if status_filter == 'active':
@@ -131,11 +121,9 @@ def get_all_users():
 
 @bp.route('/api/stats')
 @login_required
+@system_admin_api_required
 def get_user_stats():
     """Get user statistics for system admin dashboard"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Basic user statistics for system administrators only

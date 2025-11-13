@@ -3,8 +3,8 @@ System Administrator Dashboard Blueprint
 Separate dashboard for system administrators
 """
 
-from flask import Blueprint, render_template, jsonify, redirect, url_for
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, jsonify
+from flask_login import login_required
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from ...models import Business, User
@@ -15,32 +15,22 @@ except ImportError:
     Expense = None
     AuditLog = None
 from ...extensions import db
+from ..decorators import require_system_admin, system_admin_api_required
 
 bp = Blueprint('system_admin_dashboard', __name__, url_prefix='/system-admin')
 
-def require_system_admin():
-    """Decorator to ensure only system administrators can access"""
-    if current_user.role != 'system_administrator':
-        return redirect(url_for('dashboard.index'))
-    return None
-
 @bp.route('/')
 @login_required
+@require_system_admin
 def index():
     """System Administrator Main Dashboard"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return redirect_response
-    
     return render_template('system_admin/dashboard.html')
 
 @bp.route('/api/stats')
 @login_required
+@system_admin_api_required
 def system_stats():
     """Get system-wide statistics"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Business Statistics
@@ -114,63 +104,12 @@ def system_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/api/business-analytics')
-@login_required
-def business_analytics():
-    """Get business analytics data"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        # Get businesses with user counts and activity
-        businesses_data = db.session.query(
-            Business,
-            func.count(User.id).label('user_count')
-        ).outerjoin(User, Business.id == User.business_id)\
-         .group_by(Business.id)\
-         .order_by(Business.created_at.desc()).all()
-        
-        businesses_list = []
-        for business, user_count in businesses_data:
-            # Get recent activity for this business (if AuditLog has business_id)
-            recent_activity = 0
-            if AuditLog is not None:
-                try:
-                    if hasattr(AuditLog, 'business_id'):
-                        recent_activity = AuditLog.query.filter(
-                            AuditLog.business_id == business.id,
-                            AuditLog.created_at >= datetime.now(timezone.utc) - timedelta(days=7)
-                        ).count()
-                except:
-                    recent_activity = 0
-            
-            businesses_list.append({
-                'id': business.id,
-                'name': business.business_name,
-                'owner_email': business.owner_email,
-                'subscription_plan': business.subscription_plan,
-                'is_active': business.is_active,
-                'created_at': business.created_at.isoformat(),
-                'user_count': user_count,
-                'recent_activity': recent_activity
-            })
-        
-        return jsonify({
-            'businesses': businesses_list,
-            'total': len(businesses_list)
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @bp.route('/api/system-health')
 @login_required
+@system_admin_api_required
 def system_health():
     """Get system health metrics"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Database health

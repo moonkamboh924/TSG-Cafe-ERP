@@ -64,6 +64,7 @@ def create_app(config_object="config.Config"):
     from .system_admin.blueprints.monitoring import bp as system_admin_monitoring_bp
     from .system_admin.blueprints.settings import bp as system_admin_settings_bp
     from .system_admin.blueprints.user_management import bp as system_admin_users_bp
+    from .system_admin.blueprints.profile import bp as system_admin_profile_bp
     
     app.register_blueprint(system_admin_dashboard_bp)
     app.register_blueprint(system_admin_businesses_bp)
@@ -71,6 +72,7 @@ def create_app(config_object="config.Config"):
     app.register_blueprint(system_admin_monitoring_bp)
     app.register_blueprint(system_admin_settings_bp)
     app.register_blueprint(system_admin_users_bp)
+    app.register_blueprint(system_admin_profile_bp)
 
     # Import models to ensure they are registered with SQLAlchemy
     from . import models
