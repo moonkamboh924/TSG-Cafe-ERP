@@ -23,8 +23,19 @@ def require_permissions(*required_permissions):
             # Check if user has required permissions
             if hasattr(current_user, 'navigation_permissions'):
                 user_permissions = current_user.navigation_permissions or []
+                
+                # Check each required permission
                 for permission in required_permissions:
-                    if permission not in user_permissions:
+                    # Allow both exact match and base permission
+                    # e.g., 'dashboard' permission allows 'dashboard.view'
+                    base_permission = permission.split('.')[0]
+                    
+                    if permission not in user_permissions and base_permission not in user_permissions:
+                        # If user is admin or owner, allow all permissions
+                        if hasattr(current_user, 'role') and current_user.role == 'admin':
+                            continue
+                        if hasattr(current_user, 'is_owner') and current_user.is_owner:
+                            continue
                         abort(403)  # Forbidden
             
             return f(*args, **kwargs)
