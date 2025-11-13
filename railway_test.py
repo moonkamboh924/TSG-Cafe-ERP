@@ -13,8 +13,8 @@ app = Flask(__name__)
 @app.route('/')
 def root():
     return '''
-    <h1>🚀 Railway Test - TSG Cafe ERP</h1>
-    <p><strong>Status:</strong> ✅ Railway deployment working!</p>
+    <h1>Railway Test - TSG Cafe ERP</h1>
+    <p><strong>Status:</strong> Railway deployment working!</p>
     <p><strong>Python Version:</strong> {}</p>
     <p><strong>PORT:</strong> {}</p>
     <p><strong>DATABASE_URL:</strong> {}</p>
@@ -65,5 +65,5 @@ def db_test():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Starting Railway test server on port {port}")
+    print(f"Starting Railway test server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
