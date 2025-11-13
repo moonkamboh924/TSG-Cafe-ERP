@@ -689,7 +689,7 @@ class CreditSale(db.Model):
     due_date = db.Column(db.DateTime)
     status = db.Column(db.String(20), default='pending', nullable=False)  # pending, partial, paid
     notes = db.Column(db.Text)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Relationships
     sale = db.relationship('Sale', backref=db.backref('credit_sale', uselist=False))
@@ -724,7 +724,7 @@ class CreditPayment(db.Model):
     payment_method = db.Column(db.String(20), nullable=False)  # cash, online
     payment_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     notes = db.Column(db.Text)
-    received_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    received_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Relationships
     receiver = db.relationship('User', backref='received_credit_payments')

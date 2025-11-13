@@ -223,7 +223,10 @@ def update_user(user_id):
             }), 403
         
         try:
-            from app.models import Sale, Expense, DailyClosing, PasswordResetRequest
+            from app.models import (
+                Sale, Expense, DailyClosing, PasswordResetRequest, 
+                AccountDeletionRequest, AuditLog, CreditSale, CreditPayment
+            )
             
             # System administrator can delete any account
             # Set user_id to NULL in related records to maintain referential integrity
@@ -237,8 +240,26 @@ def update_user(user_id):
             # Update daily closings to set user_id to NULL
             DailyClosing.query.filter_by(user_id=user.id).update({'user_id': None})
             
+            # Update audit logs to set user_id to NULL
+            AuditLog.query.filter_by(user_id=user.id).update({'user_id': None})
+            
+            # Update credit sales created_by to NULL
+            CreditSale.query.filter_by(created_by=user.id).update({'created_by': None})
+            
+            # Update credit payments received_by to NULL
+            CreditPayment.query.filter_by(received_by=user.id).update({'received_by': None})
+            
             # Delete any pending password reset requests for this user
             PasswordResetRequest.query.filter_by(user_id=user.id).delete()
+            
+            # Delete any pending account deletion requests for this user
+            AccountDeletionRequest.query.filter_by(user_id=user.id).delete()
+            
+            # Delete any password reset requests approved by this user
+            PasswordResetRequest.query.filter_by(approved_by_id=user.id).update({'approved_by_id': None})
+            
+            # Delete any account deletion requests approved by this user
+            AccountDeletionRequest.query.filter_by(approved_by_id=user.id).update({'approved_by_id': None})
             
             # Log the deletion before removing
             log_audit('delete', 'user', user.id, {
