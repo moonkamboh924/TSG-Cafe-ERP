@@ -197,10 +197,17 @@ if __name__ == '__main__':
             except Exception as fallback_error:
                 print(f"Fallback failed: {str(fallback_error)}")
                 db.session.rollback()
-    
-    # For Gunicorn deployment, we don't call app.run()
-    # The app object is exposed for Gunicorn to use
-    print("✓ Application initialized successfully for production deployment")
+
+except Exception as e:
+    print(f"✗ CRITICAL ERROR during database initialization: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    # Still expose the app object even if database init fails
+    # This allows the health check to work
+
+# For Gunicorn deployment, we don't call app.run()
+# The app object is exposed for Gunicorn to use
+print("✓ Application initialized successfully for production deployment")
 
 # For direct execution (development)
 if __name__ == '__main__':
