@@ -55,60 +55,63 @@ def create_app(config_object="config.Config"):
     # Import models to ensure they are registered with SQLAlchemy
     from . import models
     
-    # Initialize database tables (for multi-tenant ERP)
-    with app.app_context():
+    # Lazy database initialization for faster startup
+    def init_database():
+        """Initialize database tables and demo data lazily"""
         try:
             db.create_all()
             print("[OK] Database tables initialized")
             
-            # Create initial demo data for fresh database (only if needed)
+            # Quick check and create demo data if needed
             from .models import Business, User
-            business_count = db.session.execute('SELECT COUNT(*) FROM businesses').scalar()
-            if business_count == 0:
-                print("[INFO] Fresh database detected - creating initial data")
-                
-                # Create demo business
-                demo_business = Business(
-                    business_name='TSG Cafe Demo',
-                    owner_email='admin@tsgcafe.com',
-                    subscription_plan='free',
-                    is_active=True
-                )
-                db.session.add(demo_business)
-                db.session.commit()
-                
-                # Create admin user
-                admin_user = User(
-                    business_id=demo_business.id,
-                    employee_id='ADMIN001',
-                    username='admin',
-                    email='admin@tsgcafe.com',
-                    first_name='Admin',
-                    last_name='User',
-                    full_name='Admin User',
-                    role='admin',
-                    is_owner=True,
-                    is_active=True,
-                    requires_password_change=False,
-                    email_verified=True
-                )
-                admin_user.set_password('admin123')
-                admin_user.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
-                
-                db.session.add(admin_user)
-                db.session.commit()
-                
-                # Update business owner_id
-                demo_business.owner_id = admin_user.id
-                db.session.commit()
-                
-                print("[OK] Initial data created:")
-                print("  Business: TSG Cafe Demo")
-                print("  Admin Username: admin")
-                print("  Admin Password: admin123")
+            try:
+                business_exists = db.session.execute('SELECT 1 FROM businesses LIMIT 1').fetchone()
+                if not business_exists:
+                    print("[INFO] Creating demo data...")
+                    
+                    # Create demo business
+                    demo_business = Business(
+                        business_name='TSG Cafe Demo',
+                        owner_email='admin@tsgcafe.com',
+                        subscription_plan='free',
+                        is_active=True
+                    )
+                    db.session.add(demo_business)
+                    db.session.flush()  # Get ID without full commit
+                    
+                    # Create admin user
+                    admin_user = User(
+                        business_id=demo_business.id,
+                        employee_id='ADMIN001',
+                        username='admin',
+                        email='admin@tsgcafe.com',
+                        first_name='Admin',
+                        last_name='User',
+                        full_name='Admin User',
+                        role='admin',
+                        is_owner=True,
+                        is_active=True,
+                        requires_password_change=False,
+                        email_verified=True
+                    )
+                    admin_user.set_password('admin123')
+                    admin_user.set_navigation_permissions(['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin'])
+                    
+                    db.session.add(admin_user)
+                    demo_business.owner_id = admin_user.id
+                    db.session.commit()
+                    
+                    print("[OK] Demo data ready - admin/admin123")
+            except Exception:
+                # If demo data creation fails, continue anyway
+                pass
                 
         except Exception as e:
-            print(f"Warning: Database initialization issue: {str(e)}")
+            print(f"Warning: Database issue: {str(e)}")
+    
+    # Initialize database in app context but don't block startup
+    with app.app_context():
+        init_database()
     
     # Add template context processor for settings
     @app.context_processor
