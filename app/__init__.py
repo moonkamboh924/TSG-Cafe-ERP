@@ -62,17 +62,17 @@ def create_app(config_object="config.Config"):
         from .system_admin.blueprints.dashboard import bp as system_admin_dashboard_bp
         from .system_admin.blueprints.user_management import bp as system_admin_users_bp
         from .system_admin.blueprints.profile import bp as system_admin_profile_bp
+        from .system_admin.blueprints.businesses import bp as system_admin_businesses_bp
         
         app.register_blueprint(system_admin_dashboard_bp)
         app.register_blueprint(system_admin_users_bp)
         app.register_blueprint(system_admin_profile_bp)
+        app.register_blueprint(system_admin_businesses_bp)
         
-        # Temporarily disable problematic blueprints until they're fully fixed
-        # from .system_admin.blueprints.businesses import bp as system_admin_businesses_bp
+        # Still disable these problematic blueprints
         # from .system_admin.blueprints.analytics import bp as system_admin_analytics_bp
         # from .system_admin.blueprints.monitoring import bp as system_admin_monitoring_bp
         # from .system_admin.blueprints.settings import bp as system_admin_settings_bp
-        # app.register_blueprint(system_admin_businesses_bp)
         # app.register_blueprint(system_admin_analytics_bp)
         # app.register_blueprint(system_admin_monitoring_bp)
         # app.register_blueprint(system_admin_settings_bp)

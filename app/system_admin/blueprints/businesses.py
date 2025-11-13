@@ -123,13 +123,11 @@ def get_employee_details():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/api/list')
+@bp.route('/api/businesses')
 @login_required
+@system_admin_api_required
 def list_businesses():
     """Get all businesses with detailed information"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         page = request.args.get('page', 1, type=int)
@@ -171,13 +169,11 @@ def list_businesses():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/api/<int:business_id>/toggle-status', methods=['POST'])
+@bp.route('/api/businesses/<int:business_id>/toggle-status', methods=['POST'])
 @login_required
+@system_admin_api_required
 def toggle_business_status(business_id):
     """Toggle business active status"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         business = Business.query.get_or_404(business_id)
@@ -196,13 +192,11 @@ def toggle_business_status(business_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/api/<int:business_id>/users')
+@bp.route('/api/businesses/<int:business_id>/users')
 @login_required
+@system_admin_api_required
 def get_business_users(business_id):
     """Get users for a specific business"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         business = Business.query.get_or_404(business_id)
