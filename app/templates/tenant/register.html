@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Your Business - TSG Cafe ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .registration-form {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        .availability-check {
+            font-size: 0.875rem;
+        }
+        .available { color: #28a745; }
+        .unavailable { color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="registration-form">
+                    <div class="form-header p-4 text-center">
+                        <h2 class="mb-0"><i class="fas fa-store me-2"></i>Register Your Business</h2>
+                        <p class="mb-0 mt-2">Start your restaurant management journey</p>
+                    </div>
+                    
+                    <div class="p-4">
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" id="registrationForm">
+                            <!-- Business Name -->
+                            <div class="mb-3">
+                                <label for="business_name" class="form-label">
+                                    <i class="fas fa-building me-1"></i>Business Name *
+                                </label>
+                                <input type="text" class="form-control" id="business_name" name="business_name" 
+                                       value="{{ business_name or '' }}" required>
+                                <div class="availability-check" id="business_name_check"></div>
+                            </div>
+
+                            <!-- Owner Name -->
+                            <div class="mb-3">
+                                <label for="owner_name" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Owner Full Name *
+                                </label>
+                                <input type="text" class="form-control" id="owner_name" name="owner_name" 
+                                       value="{{ owner_name or '' }}" required>
+                            </div>
+
+                            <!-- Owner Email -->
+                            <div class="mb-3">
+                                <label for="owner_email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Owner Email *
+                                </label>
+                                <input type="email" class="form-control" id="owner_email" name="owner_email" 
+                                       value="{{ owner_email or '' }}" required>
+                                <div class="availability-check" id="email_check"></div>
+                            </div>
+
+                            <!-- Subscription Plan -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-crown me-1"></i>Subscription Plan
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_free" 
+                                               value="free" {{ 'checked' if not subscription_plan or subscription_plan == 'free' }}>
+                                        <label class="btn btn-outline-success w-100" for="plan_free">
+                                            <div>Free</div>
+                                            <small>$0/month</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_basic" 
+                                               value="basic" {{ 'checked' if subscription_plan == 'basic' }}>
+                                        <label class="btn btn-outline-primary w-100" for="plan_basic">
+                                            <div>Basic</div>
+                                            <small>$29/month</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_premium" 
+                                               value="premium" {{ 'checked' if subscription_plan == 'premium' }}>
+                                        <label class="btn btn-outline-warning w-100" for="plan_premium">
+                                            <div>Premium</div>
+                                            <small>$99/month</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <a href="{{ url_for('tenant.plans') }}" target="_blank">Compare plans</a>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Terms -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" target="_blank">Terms of Service</a> and 
+                                        <a href="#" target="_blank">Privacy Policy</a>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary w-100 py-2" id="submitBtn">
+                                <i class="fas fa-rocket me-2"></i>Create My Business Account
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="text-muted">
+                                Already have an account? 
+                                <a href="{{ url_for('auth.login') }}">Sign in here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Real-time availability checking
+        let checkTimeout;
+        
+        function checkAvailability() {
+            const businessName = document.getElementById('business_name').value.trim();
+            const ownerEmail = document.getElementById('owner_email').value.trim();
+            
+            if (!businessName && !ownerEmail) return;
+            
+            clearTimeout(checkTimeout);
+            checkTimeout = setTimeout(() => {
+                fetch('{{ url_for("tenant.check_availability") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        business_name: businessName,
+                        owner_email: ownerEmail
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Business name availability
+                    const businessCheck = document.getElementById('business_name_check');
+                    if (businessName) {
+                        if (data.business_name_available) {
+                            businessCheck.innerHTML = '<i class="fas fa-check available"></i> Business name is available';
+                            businessCheck.className = 'availability-check available';
+                        } else {
+                            businessCheck.innerHTML = '<i class="fas fa-times unavailable"></i> Business name is already taken';
+                            businessCheck.className = 'availability-check unavailable';
+                        }
+                    } else {
+                        businessCheck.innerHTML = '';
+                    }
+                    
+                    // Email availability
+                    const emailCheck = document.getElementById('email_check');
+                    if (ownerEmail) {
+                        if (data.email_available) {
+                            emailCheck.innerHTML = '<i class="fas fa-check available"></i> Email is available';
+                            emailCheck.className = 'availability-check available';
+                        } else {
+                            emailCheck.innerHTML = '<i class="fas fa-times unavailable"></i> Email is already registered';
+                            emailCheck.className = 'availability-check unavailable';
+                        }
+                    } else {
+                        emailCheck.innerHTML = '';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }, 500);
+        }
+        
+        document.getElementById('business_name').addEventListener('input', checkAvailability);
+        document.getElementById('owner_email').addEventListener('input', checkAvailability);
+    </script>
+</body>
+</html>
