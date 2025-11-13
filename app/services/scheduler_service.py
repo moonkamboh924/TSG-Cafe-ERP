@@ -2,8 +2,9 @@ import threading
 import time
 import logging
 from datetime import datetime, timezone, timedelta
-from app.services.backup_service import backup_service
-from app.models import SystemSetting
+# Lazy imports to avoid circular dependencies
+# from app.services.backup_service import backup_service
+# from app.models import SystemSetting
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +23,24 @@ class SchedulerService:
         """Initialize the scheduler service with Flask app"""
         self.app = app
         
-        # Only start scheduler if not already running and not in debug mode reloader
+        # Only start scheduler in development mode or when explicitly enabled
         import os
-        if not self.running and os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            def start_scheduler():
-                self.start()
-            
-            # Use a timer to start scheduler after app initialization
-            import threading
-            timer = threading.Timer(2.0, start_scheduler)
-            timer.daemon = True
-            timer.start()
+        flask_env = os.environ.get('FLASK_ENV', 'production')
+        enable_scheduler = os.environ.get('ENABLE_SCHEDULER', 'false').lower() == 'true'
+        
+        # Disable scheduler in production by default to avoid threading issues
+        if flask_env == 'development' or enable_scheduler:
+            if not self.running and os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+                def start_scheduler():
+                    self.start()
+                
+                # Use a timer to start scheduler after app initialization
+                import threading
+                timer = threading.Timer(2.0, start_scheduler)
+                timer.daemon = True
+                timer.start()
+        else:
+            logger.info("Scheduler service disabled in production environment")
     
     def start(self):
         """Start the scheduler thread"""
@@ -70,6 +78,10 @@ class SchedulerService:
     def _check_auto_backup(self):
         """Check if automatic backup is needed"""
         try:
+            # Lazy import to avoid circular dependencies
+            from app.models import SystemSetting
+            from app.services.backup_service import backup_service
+            
             backup_frequency = SystemSetting.get_setting('backup_frequency', 'daily')
             
             if backup_frequency == 'disabled':
@@ -108,6 +120,9 @@ class SchedulerService:
     def _check_database_integrity(self):
         """Check database integrity daily"""
         try:
+            # Lazy import to avoid circular dependencies
+            from app.models import SystemSetting
+            
             last_integrity_check = SystemSetting.get_setting('last_integrity_check')
             now = datetime.now(timezone.utc)
             

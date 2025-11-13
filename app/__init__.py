@@ -1,4 +1,5 @@
 from flask import Flask
+from datetime import datetime
 from .extensions import db, migrate, login_manager
 from .blueprints import dashboard, admin, pos, menu, inventory, finance, reports, profile
 
@@ -94,6 +95,12 @@ def create_app(config_object="config.Config"):
         import os
         return send_from_directory(os.path.join(app.root_path, 'static'),
                                  'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    
+    # Add health check endpoint for Railway
+    @app.route('/health')
+    def health_check():
+        from flask import jsonify
+        return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
     
     # Add before_request handler for password change requirement
     @app.before_request

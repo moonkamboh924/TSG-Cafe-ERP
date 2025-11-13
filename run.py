@@ -40,11 +40,10 @@ try:
             # Pass 'Sangat Cafe' as default for this deployment
             # Users can change it in Global Settings after login
             seed_database(default_business_name='Sangat Cafe')
-            print("Seed data initialization completed!")
+            print("✓ Seed data initialization completed!")
         except Exception as e:
-            print(f"ERROR: Seed data initialization failed: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            print(f"WARNING: Seed data initialization failed: {str(e)}")
+            # Don't exit on seed data failure, app can still work
         
         # Create/update default admin user (must be inside app context)
         try:
@@ -201,7 +200,7 @@ if __name__ == '__main__':
     
     # For Gunicorn deployment, we don't call app.run()
     # The app object is exposed for Gunicorn to use
-    pass
+    print("✓ Application initialized successfully for production deployment")
 
 # For direct execution (development)
 if __name__ == '__main__':
