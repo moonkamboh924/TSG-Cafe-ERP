@@ -65,11 +65,9 @@ def growth_trends():
 
 @bp.route('/api/subscription-analytics')
 @login_required
+@system_admin_api_required
 def subscription_analytics():
     """Get subscription plan analytics"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Current subscription distribution

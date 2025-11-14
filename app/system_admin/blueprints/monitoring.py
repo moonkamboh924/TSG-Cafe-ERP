@@ -21,11 +21,9 @@ def index():
 
 @bp.route('/api/system-health')
 @login_required
+@system_admin_api_required
 def system_health():
     """Get real-time system health metrics"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Database connectivity
@@ -64,11 +62,9 @@ def system_health():
 
 @bp.route('/api/activity-logs')
 @login_required
+@system_admin_api_required
 def activity_logs():
     """Get recent system activity logs"""
-    redirect_response = require_system_admin()
-    if redirect_response:
-        return jsonify({'error': 'Access denied'}), 403
     
     try:
         # Get recent audit logs
