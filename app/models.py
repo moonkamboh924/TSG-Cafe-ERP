@@ -138,6 +138,25 @@ class User(UserMixin, db.Model):
         """Verify identity for protected user operations"""
         return self.verification_code == code if self.verification_code else False
     
+    def is_system_administrator(self):
+        """Check if user is the system administrator"""
+        return self.role == 'system_administrator' and self.username == 'MM001'
+    
+    def has_super_admin_privileges(self):
+        """Check if user has super admin privileges"""
+        return self.is_system_administrator() and self.is_protected
+    
+    def can_access_system_admin_panel(self):
+        """Check if user can access system admin panel"""
+        return self.role == 'system_administrator' and self.is_active
+    
+    def generate_verification_code(self):
+        """Generate a new verification code for protected operations"""
+        import secrets
+        import string
+        self.verification_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+        return self.verification_code
+    
     def is_account_locked(self):
         """Check if account is currently locked"""
         if self.account_locked_until:
