@@ -143,3 +143,108 @@ def get_user_stats():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/create', methods=['POST'])
+@login_required
+@system_admin_api_required
+def create_system_administrator():
+    """Create a new system administrator account"""
+    
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'email', 'password']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
+        
+        # Check if email already exists
+        existing_user = User.query.filter_by(email=data['email']).first()
+        if existing_user:
+            return jsonify({'error': 'Email address already exists'}), 400
+        
+        # Check if username already exists (if provided)
+        username = data.get('username')
+        if username:
+            existing_username = User.query.filter_by(username=username).first()
+            if existing_username:
+                return jsonify({'error': 'Username already exists'}), 400
+        
+        # Generate username if not provided
+        if not username:
+            first_name = data['first_name']
+            last_name = data['last_name']
+            # Generate employee ID for system admin
+            employee_count = User.query.filter_by(role='system_administrator').count()
+            employee_id = f"SYS{employee_count + 2:03d}"  # Start from SYS002 (MM001 is SYS001)
+            username = User.generate_username(first_name, last_name, employee_id)
+            
+            # Ensure username uniqueness
+            counter = 1
+            original_username = username
+            while User.query.filter_by(username=username).first():
+                username = f"{original_username}{counter}"
+                counter += 1
+        else:
+            # Generate employee ID
+            employee_count = User.query.filter_by(role='system_administrator').count()
+            employee_id = f"SYS{employee_count + 2:03d}"
+        
+        # Validate password strength (basic validation)
+        password = data['password']
+        if len(password) < 8:
+            return jsonify({'error': 'Password must be at least 8 characters long'}), 400
+        
+        # Create new system administrator
+        new_admin = User(
+            business_id=None,  # System admins don't belong to specific business
+            employee_id=employee_id,
+            username=username,
+            email=data['email'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            full_name=f"{data['first_name']} {data['last_name']}".strip(),
+            designation=data.get('designation', 'System Administrator'),
+            department=data.get('department', 'IT'),
+            phone=data.get('phone'),
+            address=data.get('address'),
+            role='system_administrator',
+            is_owner=False,
+            is_protected=data.get('is_protected', False),
+            is_active=data.get('is_active', True),
+            requires_password_change=data.get('requires_password_change', True),
+            email_verified=True  # System admins are pre-verified
+        )
+        
+        # Set password
+        new_admin.set_password(data['password'])
+        
+        # Set navigation permissions (full access for system admin)
+        new_admin.set_navigation_permissions([
+            'dashboard', 'pos', 'menu', 'inventory', 
+            'finance', 'reports', 'admin'
+        ])
+        
+        db.session.add(new_admin)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'System administrator created successfully',
+            'user': {
+                'id': new_admin.id,
+                'username': new_admin.username,
+                'email': new_admin.email,
+                'full_name': new_admin.full_name,
+                'employee_id': new_admin.employee_id,
+                'designation': new_admin.designation,
+                'department': new_admin.department,
+                'is_active': new_admin.is_active,
+                'is_protected': new_admin.is_protected
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
