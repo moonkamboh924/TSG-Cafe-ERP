@@ -73,3 +73,22 @@ def require_super_admin(f):
             
         return f(*args, **kwargs)
     return decorated_function
+
+def require_navigation_permission(permission):
+    """Decorator to require specific navigation permission"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.login'))
+            
+            if not current_user.has_system_admin_access():
+                abort(403)
+            
+            if not current_user.has_navigation_permission(permission):
+                flash(f'You do not have permission to access {permission.replace("_", " ").title()}', 'error')
+                return redirect(url_for('system_admin_dashboard.index'))
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

@@ -10,13 +10,14 @@ from datetime import datetime, timezone
 
 from ...models import Business, User
 from ...extensions import db
-from ..decorators import require_system_admin, system_admin_api_required
+from ..decorators import require_system_admin, system_admin_api_required, require_navigation_permission
 
 bp = Blueprint('system_admin_users', __name__, url_prefix='/system-admin/users')
 
 @bp.route('/')
 @login_required
 @require_system_admin
+@require_navigation_permission('admin')
 def index():
     """System Admin User Management Dashboard"""
     return render_template('system_admin/user_management.html')

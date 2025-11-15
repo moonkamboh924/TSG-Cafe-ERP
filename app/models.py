@@ -196,6 +196,16 @@ class User(UserMixin, db.Model):
                 return []
         return []
     
+    def has_navigation_permission(self, permission):
+        """Check if user has a specific navigation permission"""
+        # System dashboard is always available for system administrators
+        if permission == 'system_dashboard' and self.role == 'system_administrator':
+            return True
+        
+        # Get user's navigation permissions
+        user_permissions = self.get_navigation_permissions()
+        return permission in user_permissions
+    
     @staticmethod
     def generate_next_employee_id(business_id=None):
         """Generate the next employee ID in format EMP001, EMP002, etc."""
