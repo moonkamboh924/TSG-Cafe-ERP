@@ -223,8 +223,8 @@ def create_system_administrator():
         # Set navigation permissions based on user selection
         permissions = data.get('permissions', [])
         if not permissions:
-            # Default permissions for system admin if none specified
-            permissions = ['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin']
+            # Default system administrator permissions if none specified
+            permissions = ['system_dashboard', 'user_management', 'business_management', 'system_settings', 'security_management', 'audit_logs', 'backup_management', 'system_monitoring']
         
         new_admin.set_navigation_permissions(permissions)
         
