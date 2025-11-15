@@ -66,6 +66,7 @@ def create_app(config_object="config.Config"):
         from .system_admin.blueprints.settings import bp as system_admin_settings_bp
         from .system_admin.blueprints.analytics import bp as system_admin_analytics_bp
         from .system_admin.blueprints.monitoring import bp as system_admin_monitoring_bp
+        from .system_admin.blueprints.subscription_management import bp as system_admin_subscriptions_bp
         
         app.register_blueprint(system_admin_dashboard_bp)
         app.register_blueprint(system_admin_users_bp)
@@ -74,6 +75,7 @@ def create_app(config_object="config.Config"):
         app.register_blueprint(system_admin_settings_bp)
         app.register_blueprint(system_admin_analytics_bp)
         app.register_blueprint(system_admin_monitoring_bp)
+        app.register_blueprint(system_admin_subscriptions_bp)
         
         print("[OK] System admin blueprints registered successfully")
     except Exception as e:
