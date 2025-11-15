@@ -1152,7 +1152,14 @@ async function handleAddUser(event) {
             body: JSON.stringify(userData)
         });
         
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (jsonError) {
+            console.error('Failed to parse response JSON:', jsonError);
+            showNotification('Server response error. Please try again.', 'error');
+            return;
+        }
         
         if (response.ok) {
             // Success
@@ -1161,11 +1168,12 @@ async function handleAddUser(event) {
             loadUsers(); // Refresh the user list
             loadUserStats(); // Refresh statistics
         } else {
-            // Error
+            // Error from server
+            console.error('Server error:', result);
             showNotification(result.error || 'Failed to create system administrator', 'error');
         }
     } catch (error) {
-        console.error('Error creating user:', error);
+        console.error('Network error creating user:', error);
         console.error('User data being sent:', userData);
         showNotification('Network error occurred. Please try again.', 'error');
     }
