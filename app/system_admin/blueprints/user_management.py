@@ -220,6 +220,7 @@ def create_system_administrator():
         # Create new system administrator
         new_admin = User(
             username=username,
+            employee_id=employee_id,  # Add the generated employee ID
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
@@ -258,19 +259,17 @@ def create_system_administrator():
             'user': {
                 'id': new_admin.id,
                 'username': new_admin.username,
+                'employee_id': new_admin.employee_id,
                 'email': new_admin.email,
                 'full_name': new_admin.full_name,
-                'employee_id': new_admin.employee_id,
-                'designation': new_admin.designation,
-                'department': new_admin.department,
-                'is_active': new_admin.is_active,
-                'is_protected': new_admin.is_protected,
-                'permissions': new_admin.get_navigation_permissions()
+                'role': new_admin.role
             }
         }), 201
         
     except Exception as e:
         db.session.rollback()
+        print(f"Error creating system administrator: {str(e)}")
+        print(f"Data received: {data}")
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/api/delete/<int:user_id>', methods=['DELETE'])
