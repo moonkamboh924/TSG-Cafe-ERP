@@ -124,15 +124,28 @@ class User(UserMixin, db.Model):
         return permission in user_perms
     
     def can_be_edited_by(self, user):
-        """Check if this user can be edited by the given user"""
-        # Muhammad Mamoon (MM001) can edit any user including protected users
+        """Check if this user can be edited by another user"""
+        # MM001 account cannot be edited by anyone (including itself)
+        if self.username == 'MM001':
+            return False
+        
+        # Muhammad Mamoon (MM001) can edit any other user including protected users
         if user.username == 'MM001':
             return True
+        
+        # Protected users can only be edited by MM001
         if self.is_protected:
-            # Protected users can only edit themselves
-            return self.id == user.id
-        # Non-protected users can be edited by admins or themselves
-        return user.role == 'admin' or self.id == user.id
+            return False
+        
+        # System administrators can edit other system administrators (except protected ones)
+        if user.role == 'system_administrator' and self.role == 'system_administrator':
+            return True
+        
+        # Users can edit themselves (if not protected)
+        if user.id == self.id:
+            return True
+        
+        return False
     
     def verify_identity(self, code):
         """Verify identity for protected user operations"""

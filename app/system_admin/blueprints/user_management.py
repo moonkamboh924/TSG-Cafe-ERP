@@ -304,7 +304,7 @@ def delete_system_administrator(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/api/user/<int:user_id>', methods=['GET'])
+@bp.route('/api/user/<int:user_id>')
 @login_required
 @system_admin_api_required
 def get_system_administrator(user_id):
@@ -318,6 +318,10 @@ def get_system_administrator(user_id):
         
         if not user:
             return jsonify({'error': 'System administrator not found'}), 404
+        
+        # Prevent editing MM001 account
+        if user.username == 'MM001':
+            return jsonify({'error': 'MM001 account cannot be edited - this is a protected system account'}), 403
         
         user_data = {
             'id': user.id,
@@ -362,6 +366,10 @@ def update_system_administrator(user_id):
         
         if not user_to_update:
             return jsonify({'error': 'System administrator not found'}), 404
+        
+        # Prevent updating MM001 account
+        if user_to_update.username == 'MM001':
+            return jsonify({'error': 'MM001 account cannot be modified - this is a protected system account with fixed permissions'}), 403
         
         # Validate required fields
         required_fields = ['first_name', 'last_name', 'email']

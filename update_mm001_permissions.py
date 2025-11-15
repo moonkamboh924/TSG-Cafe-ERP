@@ -37,7 +37,7 @@ def update_mm001_permissions():
             current_permissions = mm001_user.get_navigation_permissions()
             print(f"[CURRENT] Permissions: {current_permissions}")
             
-            # New system administrator permissions
+            # Fixed system administrator permissions for MM001 (cannot be changed)
             new_permissions = [
                 'system_dashboard',
                 'user_management', 
@@ -48,6 +48,9 @@ def update_mm001_permissions():
                 'monitoring', 
                 'reports'
             ]
+            
+            # Mark MM001 as super protected (cannot be edited by anyone)
+            mm001_user.is_protected = True
             
             # Update permissions
             mm001_user.set_navigation_permissions(new_permissions)

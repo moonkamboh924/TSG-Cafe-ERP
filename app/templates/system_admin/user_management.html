@@ -787,12 +787,17 @@ function renderUsersTable(users) {
                 </td>
                 <td class="py-3 px-6">
                     <div class="flex space-x-2">
-                        <button onclick="editUser('${user.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
-                            <i class="fas fa-edit mr-1"></i>Edit
-                        </button>
-                        <button onclick="deleteUser('${user.id}', '${user.username}')" class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                            <i class="fas fa-trash mr-1"></i>Delete
-                        </button>
+                        ${user.username === 'MM001' ? 
+                            `<span class="text-gray-400 text-sm font-medium px-2 py-1 rounded bg-gray-50">
+                                <i class="fas fa-lock mr-1"></i>Protected Account
+                            </span>` :
+                            `<button onclick="editUser('${user.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteUser('${user.id}', '${user.username}')" class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>`
+                        }
                     </div>
                 </td>
             </tr>
