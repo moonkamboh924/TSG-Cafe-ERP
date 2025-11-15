@@ -391,6 +391,14 @@ def update_system_administrator(user_id):
             if current_user.username == 'MM001':  # Only MM001 can change protected status
                 user_to_update.is_protected = data.get('is_protected', user_to_update.is_protected)
         
+        # Update navigation permissions
+        permissions = data.get('permissions', [])
+        if permissions:
+            # Always add system_dashboard permission for all system administrators
+            if 'system_dashboard' not in permissions:
+                permissions.insert(0, 'system_dashboard')
+            user_to_update.set_navigation_permissions(permissions)
+        
         db.session.commit()
         
         return jsonify({

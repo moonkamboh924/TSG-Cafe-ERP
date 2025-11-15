@@ -495,6 +495,109 @@
                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
                 
+                <!-- Navigation Permissions -->
+                <div class="md:col-span-2 mt-4">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                        <i class="fas fa-key mr-2 text-blue-600"></i>Navigation Permissions
+                    </h4>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-gray-700">Select Access Permissions:</span>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="selectAllEditPermissions()" 
+                                        class="text-xs px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                    Select All
+                                </button>
+                                <button type="button" onclick="clearAllEditPermissions()" 
+                                        class="text-xs px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            
+                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
+                                <input type="checkbox" name="edit_permissions" value="admin" 
+                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-users-cog text-green-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">Admin</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">User, Business & Subscription Management</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
+                                <input type="checkbox" name="edit_permissions" value="system_settings" 
+                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-cogs text-purple-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">System Settings</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Global configuration</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
+                                <input type="checkbox" name="edit_permissions" value="system_analytics" 
+                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">System Analytics</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">System performance analytics</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
+                                <input type="checkbox" name="edit_permissions" value="monitoring" 
+                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-heartbeat text-yellow-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">Monitoring</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">System health monitoring</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
+                                <input type="checkbox" name="edit_permissions" value="reports" 
+                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-file-alt text-teal-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">Reports</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">System reports & analytics</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-600 mt-0.5 mr-2"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-blue-800">System Administrator Permission Guidelines:</p>
+                                    <ul class="text-xs text-blue-700 mt-1 space-y-1">
+                                        <li>• System Dashboard access is automatically granted to all system administrators</li>
+                                        <li>• Admin permission provides access to User, Business & Subscription Management</li>
+                                        <li>• System Settings allows global configuration management</li>
+                                        <li>• Analytics, Monitoring, and Reports provide performance insights</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Account Settings -->
                 <div class="md:col-span-2 mt-4">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
@@ -774,6 +877,21 @@ function clearAllPermissions() {
     });
 }
 
+// Edit Permission management functions
+function selectAllEditPermissions() {
+    const checkboxes = document.querySelectorAll('input[name="edit_permissions"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function clearAllEditPermissions() {
+    const checkboxes = document.querySelectorAll('input[name="edit_permissions"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
 // Password strength checker
 function checkPasswordStrength() {
     const password = document.getElementById('password').value;
@@ -932,6 +1050,13 @@ async function editUser(userId) {
             document.getElementById('editIsActive').checked = user.is_active;
             document.getElementById('editIsProtected').checked = user.is_protected;
             
+            // Populate permissions
+            const userPermissions = user.permissions || [];
+            const editPermissionCheckboxes = document.querySelectorAll('input[name="edit_permissions"]');
+            editPermissionCheckboxes.forEach(checkbox => {
+                checkbox.checked = userPermissions.includes(checkbox.value);
+            });
+            
             // Show edit modal
             openEditUserModal();
         } else {
@@ -967,6 +1092,13 @@ async function handleEditUser(event) {
     const formData = new FormData(event.target);
     const userId = formData.get('user_id');
     
+    // Get selected permissions
+    const selectedEditPermissions = [];
+    const editPermissionCheckboxes = document.querySelectorAll('input[name="edit_permissions"]:checked');
+    editPermissionCheckboxes.forEach(checkbox => {
+        selectedEditPermissions.push(checkbox.value);
+    });
+    
     const userData = {
         first_name: formData.get('first_name'),
         last_name: formData.get('last_name'),
@@ -976,7 +1108,8 @@ async function handleEditUser(event) {
         department: formData.get('department'),
         address: formData.get('address'),
         is_active: formData.get('is_active') === 'on',
-        is_protected: formData.get('is_protected') === 'on'
+        is_protected: formData.get('is_protected') === 'on',
+        permissions: selectedEditPermissions
     };
     
     try {
