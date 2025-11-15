@@ -82,7 +82,7 @@ def require_navigation_permission(permission):
             if not current_user.is_authenticated:
                 return redirect(url_for('auth.login'))
             
-            if not current_user.has_system_admin_access():
+            if not current_user.can_access_system_admin_panel():
                 abort(403)
             
             if not current_user.has_navigation_permission(permission):
