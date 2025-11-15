@@ -198,11 +198,11 @@
                         <div>
                             <label for="role" class="block text-sm font-medium text-gray-700 mb-2">System Administrator Role</label>
                             <select id="role" name="role" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                 <option value="">Select Role</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Executive">Executive</option>
-                                <option value="Officer">Officer</option>
+                                <option value="Manager">👔 Manager</option>
+                                <option value="Executive">🏆 Executive</option>
+                                <option value="Officer">👮 Officer</option>
                             </select>
                         </div>
                         
@@ -231,24 +231,24 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                    <input type="text" id="username" name="username" 
-                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="Auto-generated if empty">
+                    <input type="text" id="username" name="username" readonly
+                           class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
+                           placeholder="Auto-generated from name">
+                    <p class="text-xs text-gray-500 mt-1">Username will be auto-generated as: First letter + Last letter + Number</p>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
                     <div class="relative">
-                        <input type="password" id="password" name="password" required 
+                        <input type="password" id="password" name="password" required value="1234@1234"
                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12">
                         <button type="button" onclick="togglePasswordVisibility('password')" 
                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <i class="fas fa-eye" id="passwordToggleIcon"></i>
                         </button>
                     </div>
-                    <div class="mt-2">
-                        <div id="passwordStrength" class="text-sm"></div>
-                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Default password: 1234@1234 (User can change after login)</p>
+                    <div id="passwordStrength" class="mt-2"></div>
                 </div>
                 
                 <div class="md:col-span-2">
@@ -506,11 +506,11 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">System Administrator Role</label>
                     <select id="editRole" name="role" required
-                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                         <option value="">Select Role</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Executive">Executive</option>
-                        <option value="Officer">Officer</option>
+                        <option value="Manager">👔 Manager</option>
+                        <option value="Executive">🏆 Executive</option>
+                        <option value="Officer">👮 Officer</option>
                     </select>
                 </div>
                 
@@ -911,6 +911,31 @@ function resetFilters() {
 document.addEventListener('DOMContentLoaded', function() {
     loadUserStats();
     loadUsers();
+    
+    // Auto-generate username preview when name fields change
+    const firstNameField = document.getElementById('firstName');
+    const lastNameField = document.getElementById('lastName');
+    const usernameField = document.getElementById('username');
+    
+    function updateUsernamePreview() {
+        const firstName = firstNameField.value.trim();
+        const lastName = lastNameField.value.trim();
+        
+        if (firstName && lastName) {
+            const firstChar = firstName.charAt(0).toUpperCase();
+            const lastChar = lastName.charAt(0).toUpperCase();
+            usernameField.value = `${firstChar}${lastChar}# (Auto-generated)`;
+            usernameField.placeholder = `Will be: ${firstChar}${lastChar}1, ${firstChar}${lastChar}2, etc.`;
+        } else {
+            usernameField.value = '';
+            usernameField.placeholder = 'Auto-generated from name';
+        }
+    }
+    
+    if (firstNameField && lastNameField && usernameField) {
+        firstNameField.addEventListener('input', updateUsernamePreview);
+        lastNameField.addEventListener('input', updateUsernamePreview);
+    }
     
     // Add event listeners
     document.getElementById('userSearch').addEventListener('input', function(e) {

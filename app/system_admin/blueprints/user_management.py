@@ -35,7 +35,7 @@ def get_all_users():
         role_filter = request.args.get('role', '')
         status_filter = request.args.get('status', '')
         
-        # Base query for system administrator users only (including new roles)
+        # Base query for system administrator users only (including MM001 and new roles)
         system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
         query = db.session.query(User, Business).outerjoin(
             Business, User.business_id == Business.id
@@ -185,24 +185,31 @@ def create_system_administrator():
         if not username:
             first_name = data['first_name']
             last_name = data['last_name']
-            # Generate employee ID for system admin
-            employee_count = User.query.filter_by(role='system_administrator').count()
-            employee_id = f"SYS{employee_count + 2:03d}"  # Start from SYS002 (MM001 is SYS001)
-            username = User.generate_username(first_name, last_name, employee_id)
+            # Generate username automatically (not editable by users)
+            # Pattern: First letter of first name + First letter of last name + Series number
+            first_char = data['first_name'][0].upper() if data['first_name'] else 'X'
+            last_char = data['last_name'][0].upper() if data['last_name'] else 'X'
             
-            # Ensure username uniqueness
+            # Find next available series number
+            base_username = f"{first_char}{last_char}"
             counter = 1
-            original_username = username
-            while User.query.filter_by(username=username).first():
-                username = f"{original_username}{counter}"
+            while True:
+                test_username = f"{base_username}{counter}"
+                if not User.query.filter_by(username=test_username).first():
+                    username = test_username
+                    break
                 counter += 1
-        else:
-            # Generate employee ID
-            employee_count = User.query.filter_by(role='system_administrator').count()
-            employee_id = f"SYS{employee_count + 2:03d}"
         
-        # Validate password strength (basic validation)
-        password = data['password']
+        # Generate employee ID for system administrators
+        employee_id = None
+        if not employee_id:
+            # Count existing system administrators to generate next ID
+            system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
+            system_admin_count = User.query.filter(User.role.in_(system_admin_roles)).count()
+            employee_id = f"SYS{system_admin_count + 2:03d}"
+        
+        # Set default password if not provided
+        password = data.get('password', '1234@1234')
         if len(password) < 8:
             return jsonify({'error': 'Password must be at least 8 characters long'}), 400
         
@@ -393,7 +400,7 @@ def update_system_administrator(user_id):
         if existing_user:
             return jsonify({'error': 'Email address already exists'}), 400
         
-        # Update user fields
+        # Update user fields (username is NOT editable)
         user_to_update.first_name = data['first_name']
         user_to_update.last_name = data['last_name']
         user_to_update.email = data['email']
@@ -403,6 +410,7 @@ def update_system_administrator(user_id):
         user_to_update.department = data.get('department')
         user_to_update.address = data.get('address')
         user_to_update.full_name = f"{data['first_name']} {data['last_name']}".strip()
+        # Note: Username is never updated - it's permanent once created
         
         # Update account settings (only if user has permission)
         if current_user.username == 'MM001' or current_user.id == user_to_update.id:
