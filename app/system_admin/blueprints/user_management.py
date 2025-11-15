@@ -220,11 +220,13 @@ def create_system_administrator():
         # Set password
         new_admin.set_password(data['password'])
         
-        # Set navigation permissions (full access for system admin)
-        new_admin.set_navigation_permissions([
-            'dashboard', 'pos', 'menu', 'inventory', 
-            'finance', 'reports', 'admin'
-        ])
+        # Set navigation permissions based on user selection
+        permissions = data.get('permissions', [])
+        if not permissions:
+            # Default permissions for system admin if none specified
+            permissions = ['dashboard', 'pos', 'menu', 'inventory', 'finance', 'reports', 'admin']
+        
+        new_admin.set_navigation_permissions(permissions)
         
         db.session.add(new_admin)
         db.session.commit()
@@ -241,7 +243,8 @@ def create_system_administrator():
                 'designation': new_admin.designation,
                 'department': new_admin.department,
                 'is_active': new_admin.is_active,
-                'is_protected': new_admin.is_protected
+                'is_protected': new_admin.is_protected,
+                'permissions': new_admin.get_navigation_permissions()
             }
         }), 201
         
