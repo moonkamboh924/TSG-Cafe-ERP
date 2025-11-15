@@ -312,7 +312,7 @@
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             
                             <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
                                 <input type="checkbox" name="permissions" value="user_management" checked 
@@ -350,51 +350,40 @@
                                 </div>
                             </label>
                             
+                            
                             <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
-                                <input type="checkbox" name="permissions" value="security_management" checked 
+                                <input type="checkbox" name="permissions" value="system_analytics" checked 
                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
                                 <div class="ml-3 flex-1">
                                     <div class="flex items-center mb-1">
-                                        <i class="fas fa-shield-alt text-red-600 mr-2"></i>
-                                        <span class="text-sm font-medium text-gray-900">Security Management</span>
+                                        <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">System Analytics</span>
                                     </div>
-                                    <p class="text-xs text-gray-500">Security policies</p>
+                                    <p class="text-xs text-gray-500">System performance analytics</p>
                                 </div>
                             </label>
                             
                             <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
-                                <input type="checkbox" name="permissions" value="audit_logs" checked 
+                                <input type="checkbox" name="permissions" value="monitoring" checked 
                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
                                 <div class="ml-3 flex-1">
                                     <div class="flex items-center mb-1">
-                                        <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>
-                                        <span class="text-sm font-medium text-gray-900">Audit Logs</span>
+                                        <i class="fas fa-heartbeat text-yellow-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">Monitoring</span>
                                     </div>
-                                    <p class="text-xs text-gray-500">System activity logs</p>
+                                    <p class="text-xs text-gray-500">System health monitoring</p>
                                 </div>
                             </label>
                             
                             <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
-                                <input type="checkbox" name="permissions" value="backup_management" checked 
+                                <input type="checkbox" name="permissions" value="reports" checked 
                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
                                 <div class="ml-3 flex-1">
                                     <div class="flex items-center mb-1">
-                                        <i class="fas fa-database text-yellow-600 mr-2"></i>
-                                        <span class="text-sm font-medium text-gray-900">Backup Management</span>
+                                        <i class="fas fa-file-alt text-teal-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-900">Reports</span>
                                     </div>
-                                    <p class="text-xs text-gray-500">Data backup & restore</p>
-                                </div>
-                            </label>
-                            
-                            <label class="flex items-start p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer min-h-[80px]">
-                                <input type="checkbox" name="permissions" value="system_monitoring" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 flex-shrink-0">
-                                <div class="ml-3 flex-1">
-                                    <div class="flex items-center mb-1">
-                                        <i class="fas fa-chart-line text-teal-600 mr-2"></i>
-                                        <span class="text-sm font-medium text-gray-900">System Monitoring</span>
-                                    </div>
-                                    <p class="text-xs text-gray-500">Performance monitoring</p>
+                                    <p class="text-xs text-gray-500">System reports & analytics</p>
                                 </div>
                             </label>
                         </div>
@@ -406,9 +395,9 @@
                                     <p class="text-sm font-medium text-blue-800">System Administrator Permission Guidelines:</p>
                                     <ul class="text-xs text-blue-700 mt-1 space-y-1">
                                         <li>• System Dashboard and User Management are essential for all system administrators</li>
-                                        <li>• Security Management and Audit Logs are recommended for security oversight</li>
-                                        <li>• Backup Management ensures data protection and recovery capabilities</li>
-                                        <li>• System Monitoring provides performance and health insights</li>
+                                        <li>• Business Management provides oversight of tenant businesses</li>
+                                        <li>• System Settings allows global configuration management</li>
+                                        <li>• System Analytics, Monitoring, and Reports provide performance insights</li>
                                     </ul>
                                 </div>
                             </div>

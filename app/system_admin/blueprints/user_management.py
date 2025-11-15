@@ -224,7 +224,7 @@ def create_system_administrator():
         permissions = data.get('permissions', [])
         if not permissions:
             # Default system administrator permissions if none specified
-            permissions = ['user_management', 'business_management', 'system_settings', 'security_management', 'audit_logs', 'backup_management', 'system_monitoring']
+            permissions = ['user_management', 'business_management', 'system_settings', 'system_analytics', 'monitoring', 'reports']
         
         # Always add system_dashboard permission for all system administrators
         if 'system_dashboard' not in permissions:
