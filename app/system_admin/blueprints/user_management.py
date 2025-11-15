@@ -225,7 +225,7 @@ def create_system_administrator():
         permissions = data.get('permissions', [])
         if not permissions:
             # Default system administrator permissions if none specified
-            permissions = ['user_management', 'business_management', 'system_settings', 'system_analytics', 'monitoring', 'reports']
+            permissions = ['admin', 'system_settings', 'system_analytics', 'monitoring', 'reports']
         
         # Always add system_dashboard permission for all system administrators
         if 'system_dashboard' not in permissions:
@@ -295,6 +295,116 @@ def delete_system_administrator(user_id):
             'deleted_user': {
                 'username': deleted_username,
                 'email': deleted_email
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/user/<int:user_id>', methods=['GET'])
+@login_required
+@system_admin_api_required
+def get_system_administrator(user_id):
+    """Get a single system administrator by ID"""
+    
+    try:
+        user = User.query.filter_by(
+            id=user_id, 
+            role='system_administrator'
+        ).first()
+        
+        if not user:
+            return jsonify({'error': 'System administrator not found'}), 404
+        
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.full_name,
+            'employee_id': user.employee_id,
+            'designation': user.designation,
+            'department': user.department,
+            'phone': user.phone,
+            'address': user.address,
+            'is_active': user.is_active,
+            'is_protected': user.is_protected,
+            'permissions': user.get_navigation_permissions(),
+            'created_at': user.created_at.isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'user': user_data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/update/<int:user_id>', methods=['PUT'])
+@login_required
+@system_admin_api_required
+def update_system_administrator(user_id):
+    """Update a system administrator account"""
+    
+    try:
+        data = request.get_json()
+        
+        # Find the user to update
+        user_to_update = User.query.filter_by(
+            id=user_id, 
+            role='system_administrator'
+        ).first()
+        
+        if not user_to_update:
+            return jsonify({'error': 'System administrator not found'}), 404
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'email']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
+        
+        # Check if email already exists (excluding current user)
+        existing_user = User.query.filter(
+            User.email == data['email'],
+            User.id != user_id
+        ).first()
+        if existing_user:
+            return jsonify({'error': 'Email address already exists'}), 400
+        
+        # Update user fields
+        user_to_update.first_name = data['first_name']
+        user_to_update.last_name = data['last_name']
+        user_to_update.email = data['email']
+        user_to_update.phone = data.get('phone')
+        user_to_update.designation = data.get('designation')
+        user_to_update.department = data.get('department')
+        user_to_update.address = data.get('address')
+        user_to_update.full_name = f"{data['first_name']} {data['last_name']}".strip()
+        
+        # Update account settings (only if user has permission)
+        if current_user.username == 'MM001' or current_user.id == user_to_update.id:
+            user_to_update.is_active = data.get('is_active', user_to_update.is_active)
+            if current_user.username == 'MM001':  # Only MM001 can change protected status
+                user_to_update.is_protected = data.get('is_protected', user_to_update.is_protected)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'System administrator updated successfully',
+            'user': {
+                'id': user_to_update.id,
+                'username': user_to_update.username,
+                'email': user_to_update.email,
+                'full_name': user_to_update.full_name,
+                'designation': user_to_update.designation,
+                'department': user_to_update.department,
+                'is_active': user_to_update.is_active,
+                'is_protected': user_to_update.is_protected
             }
         }), 200
         
