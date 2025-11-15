@@ -99,10 +99,10 @@ def get_all_users():
         
         # Get all system administrators across all businesses (including new roles)
         system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
-        users = User.query.filter(User.role.in_(system_admin_roles)).all()
-        print(f"DEBUG: Found {len(users)} system admin users")
-        total_users = len(users)
-        active_users = User.query.filter(User.role.in_(system_admin_roles), is_active=True).count()
+        all_users = User.query.filter(User.role.in_(system_admin_roles)).all()
+        print(f"DEBUG: Found {len(all_users)} system admin users")
+        total_users = len(all_users)
+        active_users = User.query.filter(User.role.in_(system_admin_roles), User.is_active == True).count()
         
         # Get users by role (only system administrators)
         role_stats = db.session.query(
