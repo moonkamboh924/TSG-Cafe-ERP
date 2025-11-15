@@ -163,7 +163,7 @@ def create_system_administrator():
         data = request.get_json()
         
         # Validate required fields
-        required_fields = ['first_name', 'last_name', 'email', 'password', 'role']
+        required_fields = ['first_name', 'last_name', 'full_name', 'email', 'password', 'role']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
@@ -223,7 +223,7 @@ def create_system_administrator():
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
-            full_name=f"{data['first_name']} {data['last_name']}".strip(),
+            full_name=data['full_name'],  # Use manually entered full name
             phone=data.get('phone'),
             designation=data.get('designation'),
             department=data.get('department'),
@@ -386,7 +386,7 @@ def update_system_administrator(user_id):
             return jsonify({'error': 'MM001 account cannot be modified - this is a protected system account with fixed permissions'}), 403
         
         # Validate required fields
-        required_fields = ['first_name', 'last_name', 'email', 'role']
+        required_fields = ['first_name', 'last_name', 'full_name', 'email', 'role']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
@@ -413,7 +413,7 @@ def update_system_administrator(user_id):
         user_to_update.designation = data.get('designation')
         user_to_update.department = data.get('department')
         user_to_update.address = data.get('address')
-        user_to_update.full_name = f"{data['first_name']} {data['last_name']}".strip()
+        user_to_update.full_name = data['full_name']  # Use manually entered full name
         # Note: Username is never updated - it's permanent once created
         
         # Update account settings (only if user has permission)
