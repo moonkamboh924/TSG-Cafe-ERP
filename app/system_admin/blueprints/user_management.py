@@ -17,7 +17,7 @@ bp = Blueprint('system_admin_users', __name__, url_prefix='/system-admin/users')
 @bp.route('/')
 @login_required
 @require_system_admin
-@require_navigation_permission('admin')
+@require_navigation_permission('user_management')
 def index():
     """System Admin User Management Dashboard"""
     return render_template('system_admin/user_management.html')
@@ -227,7 +227,7 @@ def create_system_administrator():
         permissions = data.get('permissions', [])
         if not permissions:
             # Default system administrator permissions if none specified
-            permissions = ['admin', 'system_settings', 'system_analytics', 'monitoring', 'reports']
+            permissions = ['user_management', 'business_management', 'subscription_management', 'system_settings', 'system_analytics', 'monitoring', 'reports']
         
         # Always add system_dashboard permission for all system administrators
         if 'system_dashboard' not in permissions:

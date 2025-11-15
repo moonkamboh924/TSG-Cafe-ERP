@@ -40,7 +40,9 @@ def update_mm001_permissions():
             # New system administrator permissions
             new_permissions = [
                 'system_dashboard',
-                'admin', 
+                'user_management', 
+                'business_management',
+                'subscription_management',
                 'system_settings', 
                 'system_analytics', 
                 'monitoring', 
