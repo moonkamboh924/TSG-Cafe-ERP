@@ -1129,6 +1129,7 @@ async function handleAddUser(event) {
     const userData = {
         first_name: formData.get('first_name'),
         last_name: formData.get('last_name'),
+        full_name: formData.get('full_name'),
         email: formData.get('email'),
         phone: formData.get('phone'),
         role: formData.get('role'),
@@ -1165,6 +1166,7 @@ async function handleAddUser(event) {
         }
     } catch (error) {
         console.error('Error creating user:', error);
+        console.error('User data being sent:', userData);
         showNotification('Network error occurred. Please try again.', 'error');
     }
 }
@@ -1297,6 +1299,7 @@ async function handleEditUser(event) {
     const userData = {
         first_name: formData.get('first_name'),
         last_name: formData.get('last_name'),
+        full_name: formData.get('full_name'),
         email: formData.get('email'),
         phone: formData.get('phone'),
         role: formData.get('role'),
@@ -1329,6 +1332,7 @@ async function handleEditUser(event) {
         }
     } catch (error) {
         console.error('Error updating user:', error);
+        console.error('User data being sent:', userData);
         showNotification('Network error occurred. Please try again.', 'error');
     }
 }
