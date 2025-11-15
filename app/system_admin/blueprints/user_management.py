@@ -35,10 +35,11 @@ def get_all_users():
         role_filter = request.args.get('role', '')
         status_filter = request.args.get('status', '')
         
-        # Base query for system administrator users only
+        # Base query for system administrator users only (including new roles)
+        system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
         query = db.session.query(User, Business).outerjoin(
             Business, User.business_id == Business.id
-        ).filter(User.role == 'system_administrator')
+        ).filter(User.role.in_(system_admin_roles))
         
         # Apply search filter
         if search:
@@ -94,9 +95,10 @@ def get_all_users():
             }
             user_list.append(user_data)
         
-        # Get summary statistics for system administrators only
-        total_users = User.query.filter_by(role='system_administrator').count()
-        active_users = User.query.filter_by(role='system_administrator', is_active=True).count()
+        # Get all system administrators across all businesses (including new roles)
+        system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
+        total_users = User.query.filter(User.role.in_(system_admin_roles)).count()
+        active_users = User.query.filter(User.role.in_(system_admin_roles), is_active=True).count()
         
         # Get users by role (only system administrators)
         role_stats = db.session.query(
@@ -157,10 +159,15 @@ def create_system_administrator():
         data = request.get_json()
         
         # Validate required fields
-        required_fields = ['first_name', 'last_name', 'email', 'password']
+        required_fields = ['first_name', 'last_name', 'email', 'password', 'role']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
+        
+        # Validate role
+        valid_roles = ['Manager', 'Executive', 'Officer']
+        if data['role'] not in valid_roles:
+            return jsonify({'error': f'Role must be one of: {", ".join(valid_roles)}'}), 400
         
         # Check if email already exists
         existing_user = User.query.filter_by(email=data['email']).first()
@@ -201,22 +208,18 @@ def create_system_administrator():
         
         # Create new system administrator
         new_admin = User(
-            business_id=None,  # System admins don't belong to specific business
-            employee_id=employee_id,
             username=username,
             email=data['email'],
             first_name=data['first_name'],
             last_name=data['last_name'],
             full_name=f"{data['first_name']} {data['last_name']}".strip(),
-            designation=data.get('designation', 'System Administrator'),
-            department=data.get('department', 'IT'),
             phone=data.get('phone'),
+            designation=data.get('designation'),
+            department=data.get('department'),
             address=data.get('address'),
-            role='system_administrator',
-            is_owner=False,
-            is_protected=data.get('is_protected', False),
-            is_active=data.get('is_active', True),
-            requires_password_change=data.get('requires_password_change', True),
+            role=data['role'],  # Use selected role: Manager, Executive, or Officer
+            is_active=True,
+            requires_password_change=False,  # Set to False for system admins
             email_verified=True  # System admins are pre-verified
         )
         
@@ -372,10 +375,15 @@ def update_system_administrator(user_id):
             return jsonify({'error': 'MM001 account cannot be modified - this is a protected system account with fixed permissions'}), 403
         
         # Validate required fields
-        required_fields = ['first_name', 'last_name', 'email']
+        required_fields = ['first_name', 'last_name', 'email', 'role']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
+        
+        # Validate role
+        valid_roles = ['Manager', 'Executive', 'Officer']
+        if data['role'] not in valid_roles:
+            return jsonify({'error': f'Role must be one of: {", ".join(valid_roles)}'}), 400
         
         # Check if email already exists (excluding current user)
         existing_user = User.query.filter(
@@ -390,6 +398,7 @@ def update_system_administrator(user_id):
         user_to_update.last_name = data['last_name']
         user_to_update.email = data['email']
         user_to_update.phone = data.get('phone')
+        user_to_update.role = data['role']
         user_to_update.designation = data.get('designation')
         user_to_update.department = data.get('department')
         user_to_update.address = data.get('address')
