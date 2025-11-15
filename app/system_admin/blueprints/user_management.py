@@ -3,10 +3,11 @@ System Admin User Management Blueprint
 Handles all user management for system administrators
 """
 
-from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required
+from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user
+from sqlalchemy import func, desc, and_
 from datetime import datetime, timezone
-from sqlalchemy import func
+
 from ...models import Business, User
 from ...extensions import db
 from ..decorators import require_system_admin, system_admin_api_required
