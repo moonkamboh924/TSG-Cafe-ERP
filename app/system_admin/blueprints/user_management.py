@@ -82,6 +82,7 @@ def get_all_users():
                 'address': user.address,
                 'is_active': user.is_active,
                 'is_owner': user.is_owner,
+                'permissions': user.get_navigation_permissions(),
                 'created_at': user.created_at.isoformat(),
                 'business': {
                     'id': business.id if business else None,
@@ -251,6 +252,51 @@ def create_system_administrator():
                 'permissions': new_admin.get_navigation_permissions()
             }
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/delete/<int:user_id>', methods=['DELETE'])
+@login_required
+@system_admin_api_required
+def delete_system_administrator(user_id):
+    """Delete a system administrator account"""
+    
+    try:
+        # Find the user to delete
+        user_to_delete = User.query.filter_by(
+            id=user_id, 
+            role='system_administrator'
+        ).first()
+        
+        if not user_to_delete:
+            return jsonify({'error': 'System administrator not found'}), 404
+        
+        # Prevent deletion of the main system administrator (MM001)
+        if user_to_delete.username == 'MM001':
+            return jsonify({'error': 'Cannot delete the main system administrator account (MM001)'}), 403
+        
+        # Prevent users from deleting themselves
+        if user_to_delete.id == current_user.id:
+            return jsonify({'error': 'Cannot delete your own account'}), 403
+        
+        # Store user info for logging
+        deleted_username = user_to_delete.username
+        deleted_email = user_to_delete.email
+        
+        # Delete the user
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'System administrator "{deleted_username}" deleted successfully',
+            'deleted_user': {
+                'username': deleted_username,
+                'email': deleted_email
+            }
+        }), 200
         
     except Exception as e:
         db.session.rollback()
