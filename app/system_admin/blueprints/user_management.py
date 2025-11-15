@@ -68,6 +68,8 @@ def get_all_users():
             page=page, per_page=per_page, error_out=False
         )
         
+        print(f"DEBUG: Query returned {users.total} total users, {len(users.items)} on this page")
+        
         user_list = []
         for user, business in users.items:
             user_data = {
@@ -97,7 +99,9 @@ def get_all_users():
         
         # Get all system administrators across all businesses (including new roles)
         system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
-        total_users = User.query.filter(User.role.in_(system_admin_roles)).count()
+        users = User.query.filter(User.role.in_(system_admin_roles)).all()
+        print(f"DEBUG: Found {len(users)} system admin users")
+        total_users = len(users)
         active_users = User.query.filter(User.role.in_(system_admin_roles), is_active=True).count()
         
         # Get users by role (only system administrators)
