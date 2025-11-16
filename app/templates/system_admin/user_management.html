@@ -1170,7 +1170,12 @@ async function handleAddUser(event) {
         } else {
             // Error from server
             console.error('Server error:', result);
-            showNotification(result.error || 'Failed to create system administrator', 'error');
+            const errorMessage = result.error || 'Failed to create system administrator';
+            showNotification(errorMessage, 'error');
+            // Fallback alert in case notification system fails
+            if (!document.getElementById('notificationContainer')) {
+                alert('Error: ' + errorMessage);
+            }
         }
     } catch (error) {
         console.error('Network error creating user:', error);
@@ -1181,7 +1186,15 @@ async function handleAddUser(event) {
 
 // Enhanced notification system
 function showNotification(message, type = 'info', duration = 5000) {
-    const notificationContainer = document.getElementById('notificationContainer');
+    let notificationContainer = document.getElementById('notificationContainer');
+    
+    // Create container if it doesn't exist
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notificationContainer';
+        notificationContainer.className = 'fixed top-4 right-4 z-50 space-y-2 max-w-sm';
+        document.body.appendChild(notificationContainer);
+    }
     
     // Create notification element
     const notification = document.createElement('div');
