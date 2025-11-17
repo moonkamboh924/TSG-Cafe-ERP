@@ -89,7 +89,15 @@ def login():
         if user:
             # Check if account is locked
             if user.is_account_locked():
-                minutes_left = int((user.account_locked_until - datetime.now(timezone.utc)).total_seconds() / 60)
+                # Ensure timezone-aware comparison for minutes calculation
+                current_time = datetime.now(timezone.utc)
+                lock_until = user.account_locked_until
+                
+                # If lock_until is timezone-naive, assume it's UTC
+                if lock_until.tzinfo is None:
+                    lock_until = lock_until.replace(tzinfo=timezone.utc)
+                
+                minutes_left = int((lock_until - current_time).total_seconds() / 60)
                 flash(f'Account is locked due to multiple failed login attempts. Please try again in {minutes_left} minutes.', 'error')
                 log_audit('login_failed', 'user', meta={'email': email, 'reason': 'account_locked'})
                 erp_name = SystemSetting.get_setting('restaurant_name', 'My Business')
