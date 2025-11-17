@@ -173,7 +173,15 @@ class User(UserMixin, db.Model):
     def is_account_locked(self):
         """Check if account is currently locked"""
         if self.account_locked_until:
-            if datetime.now(timezone.utc) < self.account_locked_until:
+            # Ensure both datetimes are timezone-aware for comparison
+            current_time = datetime.now(timezone.utc)
+            lock_until = self.account_locked_until
+            
+            # If lock_until is timezone-naive, assume it's UTC
+            if lock_until.tzinfo is None:
+                lock_until = lock_until.replace(tzinfo=timezone.utc)
+            
+            if current_time < lock_until:
                 return True
             else:
                 # Lock period expired, reset
