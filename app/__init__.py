@@ -1,5 +1,5 @@
 from flask import Flask
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from .extensions import db, migrate, login_manager
 from .blueprints import dashboard, admin, pos, menu, inventory, finance, reports, profile
@@ -175,7 +175,7 @@ def create_app(config_object="config.Config"):
         
         health_data = {
             'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'database_url_set': bool(os.environ.get('DATABASE_URL')),
             'database_connection': 'unknown'
         }
