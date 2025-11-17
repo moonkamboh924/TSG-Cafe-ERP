@@ -1359,6 +1359,16 @@ function showConfirmationModal(title, message, onConfirm, confirmText = 'Confirm
     const messageElement = document.getElementById('confirmMessage');
     const confirmButton = document.getElementById('confirmButton');
     
+    // Check if elements exist
+    if (!modal || !titleElement || !messageElement || !confirmButton) {
+        console.error('Confirmation modal elements not found');
+        // Fallback to browser confirm if modal elements are missing
+        if (confirm(`${title}\n\n${message}`)) {
+            onConfirm();
+        }
+        return;
+    }
+    
     // Set content
     titleElement.textContent = title;
     messageElement.textContent = message;
@@ -1377,14 +1387,16 @@ function showConfirmationModal(title, message, onConfirm, confirmText = 'Confirm
 
 function closeConfirmationModal() {
     const modal = document.getElementById('confirmationModal');
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
 }
 
 // Close modal when clicking outside
 document.addEventListener('click', function(event) {
     const modal = document.getElementById('confirmationModal');
-    if (event.target === modal) {
+    if (modal && event.target === modal) {
         closeConfirmationModal();
     }
 });
@@ -1392,7 +1404,10 @@ document.addEventListener('click', function(event) {
 // Close modal with Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        closeConfirmationModal();
+        const modal = document.getElementById('confirmationModal');
+        if (modal && modal.classList.contains('show')) {
+            closeConfirmationModal();
+        }
     }
 });
 
