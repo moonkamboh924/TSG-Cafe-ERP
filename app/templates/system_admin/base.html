@@ -42,26 +42,44 @@
                     <div class="hidden md:flex md:space-x-1 lg:space-x-2 ml-4 lg:ml-6 xl:ml-8 flex-wrap">
                         <!-- Admin Dropdown - Show only if user has any admin permission -->
                         {% if current_user.has_navigation_permission('user_management') or current_user.has_navigation_permission('business_management') or current_user.has_navigation_permission('subscription_management') %}
-                        <div class="relative group">
-                            <button class="nav-link flex items-center {% if request.endpoint and (request.endpoint.startswith('system_admin_users.') or request.endpoint.startswith('system_admin_businesses.') or request.endpoint.startswith('system_admin_subscriptions.')) %}active{% endif %}" onclick="toggleDropdown('adminDropdown')">
-                                <i class="fas fa-users-cog mr-2"></i>Admin
-                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        <div class="relative group luxury-dropdown">
+                            <button class="nav-link flex items-center {% if request.endpoint and (request.endpoint.startswith('system_admin_users.') or request.endpoint.startswith('system_admin_businesses.') or request.endpoint.startswith('system_admin_subscriptions.')) %}active{% endif %} luxury-nav-item">
+                                <i class="fas fa-users-cog mr-2 transition-transform duration-300 group-hover:scale-110"></i>Admin
+                                <i class="fas fa-chevron-down ml-1 text-xs transition-transform duration-300 group-hover:rotate-180"></i>
                             </button>
-                            <div id="adminDropdown" class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
-                                <div class="py-2">
+                            <div class="luxury-dropdown-menu absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 opacity-0 invisible transform translate-y-2 scale-95 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out z-50">
+                                <div class="py-3 px-2">
                                     {% if current_user.has_navigation_permission('user_management') %}
-                                    <a href="{{ url_for('system_admin_users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 {% if request.endpoint and request.endpoint.startswith('system_admin_users.') %}bg-blue-50 text-blue-600{% endif %}">
-                                        <i class="fas fa-users-cog mr-2"></i>User Management
+                                    <a href="{{ url_for('system_admin_users.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md {% if request.endpoint and request.endpoint.startswith('system_admin_users.') %}bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 shadow-md{% endif %}">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-users-cog text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">User Management</div>
+                                            <div class="text-xs text-gray-500">Manage system users</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                     {% if current_user.has_navigation_permission('business_management') %}
-                                    <a href="{{ url_for('system_admin_businesses.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 {% if request.endpoint and request.endpoint.startswith('system_admin_businesses.') %}bg-blue-50 text-blue-600{% endif %}">
-                                        <i class="fas fa-building mr-2"></i>Business Management
+                                    <a href="{{ url_for('system_admin_businesses.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 hover:text-purple-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md {% if request.endpoint and request.endpoint.startswith('system_admin_businesses.') %}bg-gradient-to-r from-purple-50 to-pink-50 text-purple-600 shadow-md{% endif %}">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-building text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">Business Management</div>
+                                            <div class="text-xs text-gray-500">Manage businesses</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                     {% if current_user.has_navigation_permission('subscription_management') %}
-                                    <a href="{{ url_for('system_admin_subscriptions.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 {% if request.endpoint and request.endpoint.startswith('system_admin_subscriptions.') %}bg-blue-50 text-blue-600{% endif %}">
-                                        <i class="fas fa-credit-card mr-2"></i>Subscription Management
+                                    <a href="{{ url_for('system_admin_subscriptions.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md {% if request.endpoint and request.endpoint.startswith('system_admin_subscriptions.') %}bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 shadow-md{% endif %}">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-credit-card text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">Subscription Management</div>
+                                            <div class="text-xs text-gray-500">Manage subscriptions</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                 </div>
@@ -95,26 +113,44 @@
                         
                         <!-- Reports - Show only if user has reports permission -->
                         {% if current_user.has_navigation_permission('reports') %}
-                        <div class="relative group">
-                            <button class="nav-link flex items-center" onclick="toggleDropdown('reportsDropdown')">
-                                <i class="fas fa-chart-bar mr-2"></i>Reports
-                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        <div class="relative group luxury-dropdown">
+                            <button class="nav-link flex items-center luxury-nav-item">
+                                <i class="fas fa-chart-bar mr-2 transition-transform duration-300 group-hover:scale-110"></i>Reports
+                                <i class="fas fa-chevron-down ml-1 text-xs transition-transform duration-300 group-hover:rotate-180"></i>
                             </button>
-                            <div id="reportsDropdown" class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
-                                <div class="py-2">
+                            <div class="luxury-dropdown-menu absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 opacity-0 invisible transform translate-y-2 scale-95 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out z-50">
+                                <div class="py-3 px-2">
                                     {% if current_user.has_navigation_permission('system_analytics') %}
-                                    <a href="{{ url_for('system_admin_analytics.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
-                                        <i class="fas fa-chart-pie mr-2"></i>System Reports
+                                    <a href="{{ url_for('system_admin_analytics.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-chart-pie text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">System Reports</div>
+                                            <div class="text-xs text-gray-500">Analytics & insights</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                     {% if current_user.has_navigation_permission('admin') %}
-                                    <a href="{{ url_for('system_admin_businesses.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
-                                        <i class="fas fa-building mr-2"></i>Business Reports
+                                    <a href="{{ url_for('system_admin_businesses.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 hover:text-teal-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-building text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">Business Reports</div>
+                                            <div class="text-xs text-gray-500">Business analytics</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                     {% if current_user.has_navigation_permission('monitoring') %}
-                                    <a href="{{ url_for('system_admin_monitoring.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
-                                        <i class="fas fa-clipboard-list mr-2"></i>Audit Reports
+                                    <a href="{{ url_for('system_admin_monitoring.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50 hover:text-violet-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                            <i class="fas fa-clipboard-list text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">Audit Reports</div>
+                                            <div class="text-xs text-gray-500">System audit logs</div>
+                                        </div>
                                     </a>
                                     {% endif %}
                                 </div>
@@ -127,23 +163,52 @@
                 <!-- Right side - User menu -->
                 <div class="flex items-center space-x-4">
                     <!-- User Profile Dropdown -->
-                    <div class="relative group">
-                        <button class="flex items-center text-gray-700 hover:text-gray-900 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100">
-                            <div id="userProfileIcon" class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden">
+                    <div class="relative group luxury-dropdown">
+                        <button class="flex items-center text-gray-700 hover:text-gray-900 transition-all duration-300 p-2 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-md luxury-nav-item">
+                            <div id="userProfileIcon" class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden shadow-lg transition-transform duration-300 group-hover:scale-110">
                                 {% if current_user.profile_picture %}
                                     <img src="{{ current_user.profile_picture }}" alt="{{ current_user.username }}" class="w-full h-full object-cover">
                                 {% else %}
                                     <i class="fas fa-user-shield text-white text-sm"></i>
                                 {% endif %}
                             </div>
-                            <i class="fas fa-chevron-down text-xs ml-2"></i>
+                            <div class="ml-3 text-left hidden lg:block">
+                                <div class="text-sm font-medium text-gray-900">{{ current_user.first_name }}</div>
+                                <div class="text-xs text-gray-500">{{ current_user.role.replace('_', ' ').title() }}</div>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs ml-2 transition-transform duration-300 group-hover:rotate-180"></i>
                         </button>
                         
                         <!-- Dropdown Menu -->
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                            <div class="py-2">
-                                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        <div class="luxury-dropdown-menu absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 opacity-0 invisible transform translate-y-2 scale-95 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out z-50">
+                            <div class="py-3 px-2">
+                                <!-- User Info Header -->
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden shadow-lg">
+                                            {% if current_user.profile_picture %}
+                                                <img src="{{ current_user.profile_picture }}" alt="{{ current_user.username }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <i class="fas fa-user-shield text-white"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="font-medium text-gray-900">{{ current_user.full_name }}</div>
+                                            <div class="text-sm text-gray-500">{{ current_user.email }}</div>
+                                            <div class="text-xs text-blue-600 font-medium">{{ current_user.role.replace('_', ' ').title() }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Menu Items -->
+                                <a href="{{ url_for('auth.logout') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:text-red-700 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                                        <i class="fas fa-sign-out-alt text-white text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">Logout</div>
+                                        <div class="text-xs text-gray-500">Sign out of your account</div>
+                                    </div>
                                 </a>
                             </div>
                         </div>
@@ -172,48 +237,142 @@
         </div>
     </footer>
 
-    <!-- Custom System Admin Styles -->
+    <!-- Luxury Navigation Styles -->
     <style>
         .nav-link {
-            @apply px-2 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150;
+            @apply px-3 lg:px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 transform hover:scale-105 hover:shadow-md;
         }
         .nav-link.active {
-            @apply bg-blue-100 text-blue-700;
+            @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-md;
         }
         .glass-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Luxury Dropdown Animations */
+        .luxury-dropdown:hover .luxury-dropdown-menu {
+            animation: luxuryFadeIn 0.3s ease-out forwards;
+        }
+        
+        .luxury-nav-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .luxury-nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .luxury-nav-item:hover::before {
+            left: 100%;
+        }
+        
+        .luxury-dropdown-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .luxury-dropdown-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.4s ease;
+        }
+        
+        .luxury-dropdown-item:hover::before {
+            left: 100%;
+        }
+        
+        @keyframes luxuryFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(0.95);
+                filter: blur(5px);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(5px) scale(0.98);
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+        
+        /* Hover glow effects */
+        .luxury-dropdown-menu {
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .luxury-dropdown:hover .luxury-dropdown-menu {
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                0 0 30px rgba(59, 130, 246, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
     </style>
 
-    <!-- Navigation JavaScript -->
+    <!-- Enhanced Navigation JavaScript -->
     <script>
-        function toggleDropdown(dropdownId) {
-            const dropdown = document.getElementById(dropdownId);
-            const allDropdowns = document.querySelectorAll('[id$="Dropdown"]');
+        // Smooth scroll and enhanced interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add smooth transitions to all navigation elements
+            const navItems = document.querySelectorAll('.luxury-nav-item');
             
-            // Close all other dropdowns
-            allDropdowns.forEach(d => {
-                if (d.id !== dropdownId) {
-                    d.classList.add('hidden');
-                }
+            navItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
             });
             
-            // Toggle current dropdown
-            dropdown.classList.toggle('hidden');
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdowns = document.querySelectorAll('[id$="Dropdown"]');
-            const isClickInsideDropdown = event.target.closest('[onclick*="toggleDropdown"]') || 
-                                        event.target.closest('[id$="Dropdown"]');
+            // Enhanced dropdown item interactions
+            const dropdownItems = document.querySelectorAll('.luxury-dropdown-item');
             
-            if (!isClickInsideDropdown) {
-                dropdowns.forEach(dropdown => {
-                    dropdown.classList.add('hidden');
+            dropdownItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 20px rgba(59, 130, 246, 0.1)';
                 });
-            }
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.boxShadow = '';
+                });
+            });
+        });
+        
+        // Close dropdowns when clicking outside (for mobile compatibility)
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.luxury-dropdown');
+            
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.contains(event.target)) {
+                    // Force close dropdown by removing hover state
+                    dropdown.classList.remove('hover');
+                }
+            });
         });
     </script>
 
