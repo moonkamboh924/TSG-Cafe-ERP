@@ -42,7 +42,8 @@
         
         <!-- Login Form -->
         <div class="glass-card p-8">
-            <form method="POST" class="space-y-6">
+            <form method="POST" class="space-y-6" id="loginForm">
+                {{ csrf_token() if csrf_token }}
                 <div>
                     <label for="email" class="block text-sm font-medium text-white/80 mb-2">
                         <i class="fas fa-envelope mr-2"></i>Email Address
@@ -98,6 +99,33 @@
     </div>
     
     <script>
+        // Prevent form resubmission popup
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+        
+        // Prevent back button resubmission
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+        
+        // Handle form submission to prevent double submission
+        let formSubmitted = false;
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            if (formSubmitted) {
+                e.preventDefault();
+                return false;
+            }
+            formSubmitted = true;
+            
+            // Disable submit button to prevent double clicks
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing In...';
+        });
+        
         // Auto-hide flash messages
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(alert => {
