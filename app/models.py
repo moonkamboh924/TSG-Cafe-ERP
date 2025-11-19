@@ -219,8 +219,8 @@ class User(UserMixin, db.Model):
     
     def has_navigation_permission(self, permission):
         """Check if user has a specific navigation permission"""
-        # System dashboard is always available for system administrators
-        if permission == 'system_dashboard' and self.role == 'system_administrator':
+        # System administrators have access to all system admin navigation areas
+        if self.role == 'system_administrator':
             return True
         
         # Get user's navigation permissions

@@ -14,6 +14,9 @@ from ..decorators import require_system_admin, system_admin_api_required, requir
 
 bp = Blueprint('system_admin_users', __name__, url_prefix='/system-admin/users')
 
+# Roles that are managed within the system admin portal
+SYSTEM_ADMIN_ROLES = ['system_administrator', 'Manager', 'Executive', 'Officer']
+
 @bp.route('/')
 @login_required
 @require_system_admin
@@ -36,10 +39,9 @@ def get_all_users():
         status_filter = request.args.get('status', '')
         
         # Base query for system administrator users only (including MM001 and new roles)
-        system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
         query = db.session.query(User, Business).outerjoin(
             Business, User.business_id == Business.id
-        ).filter(User.role.in_(system_admin_roles))
+        ).filter(User.role.in_(SYSTEM_ADMIN_ROLES))
         
         # Apply search filter
         if search:
@@ -98,11 +100,10 @@ def get_all_users():
             user_list.append(user_data)
         
         # Get all system administrators across all businesses (including new roles)
-        system_admin_roles = ['system_administrator', 'Manager', 'Executive', 'Officer']
-        all_users = User.query.filter(User.role.in_(system_admin_roles)).all()
+        all_users = User.query.filter(User.role.in_(SYSTEM_ADMIN_ROLES)).all()
         print(f"DEBUG: Found {len(all_users)} system admin users")
         total_users = len(all_users)
-        active_users = User.query.filter(User.role.in_(system_admin_roles), User.is_active == True).count()
+        active_users = User.query.filter(User.role.in_(SYSTEM_ADMIN_ROLES), User.is_active == True).count()
         
         # Get users by role (only system administrators)
         role_stats = db.session.query(
@@ -169,7 +170,7 @@ def create_system_administrator():
                 return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
         
         # Validate role
-        valid_roles = ['Manager', 'Executive', 'Officer']
+        valid_roles = [role for role in SYSTEM_ADMIN_ROLES if role != 'system_administrator']
         if data['role'] not in valid_roles:
             return jsonify({'error': f'Role must be one of: {", ".join(valid_roles)}'}), 400
         
@@ -280,9 +281,9 @@ def delete_system_administrator(user_id):
     
     try:
         # Find the user to delete
-        user_to_delete = User.query.filter_by(
-            id=user_id, 
-            role='system_administrator'
+        user_to_delete = User.query.filter(
+            User.id == user_id,
+            User.role.in_(SYSTEM_ADMIN_ROLES)
         ).first()
         
         if not user_to_delete:
@@ -299,6 +300,26 @@ def delete_system_administrator(user_id):
         # Store user info for logging
         deleted_username = user_to_delete.username
         deleted_email = user_to_delete.email
+        
+        # Clean up references to maintain referential integrity
+        from app.models import (
+            Sale, Expense, DailyClosing, PasswordResetRequest,
+            AccountDeletionRequest, AuditLog, CreditSale, CreditPayment, Business
+        )
+        
+        # If the user owns any tenant business, detach ownership to prevent FK constraint failures
+        Business.query.filter_by(owner_id=user_to_delete.id).update({'owner_id': None})
+
+        Sale.query.filter_by(user_id=user_to_delete.id).update({'user_id': None})
+        Expense.query.filter_by(user_id=user_to_delete.id).update({'user_id': None})
+        DailyClosing.query.filter_by(user_id=user_to_delete.id).update({'user_id': None})
+        AuditLog.query.filter_by(user_id=user_to_delete.id).update({'user_id': None})
+        CreditSale.query.filter_by(created_by=user_to_delete.id).update({'created_by': None})
+        CreditPayment.query.filter_by(received_by=user_to_delete.id).update({'received_by': None})
+        PasswordResetRequest.query.filter_by(user_id=user_to_delete.id).delete()
+        AccountDeletionRequest.query.filter_by(user_id=user_to_delete.id).delete()
+        PasswordResetRequest.query.filter_by(approved_by_id=user_to_delete.id).update({'approved_by_id': None})
+        AccountDeletionRequest.query.filter_by(approved_by_id=user_to_delete.id).update({'approved_by_id': None})
         
         # Delete the user
         db.session.delete(user_to_delete)
@@ -324,9 +345,9 @@ def get_system_administrator(user_id):
     """Get a single system administrator by ID"""
     
     try:
-        user = User.query.filter_by(
-            id=user_id, 
-            role='system_administrator'
+        user = User.query.filter(
+            User.id == user_id,
+            User.role.in_(SYSTEM_ADMIN_ROLES)
         ).first()
         
         if not user:
@@ -372,9 +393,9 @@ def update_system_administrator(user_id):
         data = request.get_json()
         
         # Find the user to update
-        user_to_update = User.query.filter_by(
-            id=user_id, 
-            role='system_administrator'
+        user_to_update = User.query.filter(
+            User.id == user_id,
+            User.role.in_(SYSTEM_ADMIN_ROLES)
         ).first()
         
         if not user_to_update:

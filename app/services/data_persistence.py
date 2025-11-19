@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone
 from functools import wraps
 from flask import current_app
+from sqlalchemy import text
 from app.extensions import db
 from app.models import AuditLog
 from typing import Any, Dict, Optional
@@ -141,7 +142,6 @@ class DataPersistenceService:
         """Check and ensure database integrity"""
         try:
             if 'sqlite' in current_app.config.get('SQLALCHEMY_DATABASE_URI', ''):
-                from sqlalchemy import text
                 with db.engine.connect() as conn:
                     # Check database integrity
                     result = conn.execute(text("PRAGMA integrity_check")).fetchone()
@@ -150,20 +150,51 @@ class DataPersistenceService:
                         return False, f"Database integrity issue: {result[0]}"
                     
                     # Check foreign key constraints
-                    result = conn.execute(text("PRAGMA foreign_key_check")).fetchall()
-                    if result:
-                        logger.error(f"Foreign key constraint violations found: {len(result)}")
-                        return False, f"Foreign key violations found: {len(result)}"
+                    violations = conn.execute(text("PRAGMA foreign_key_check")).fetchall()
+                    if violations:
+                        repaired = self._repair_foreign_key_violations(violations)
+                        if repaired:
+                            violations = conn.execute(text("PRAGMA foreign_key_check")).fetchall()
+                            if not violations:
+                                logger.info("Foreign key issues detected and auto-repaired")
+                                return True, "Foreign key issues auto-repaired"
+                        logger.error(f"Foreign key constraint violations found: {len(violations)}")
+                        return False, f"Foreign key violations found: {len(violations)}"
                     
                     logger.info("Database integrity check passed")
                     return True, "Database integrity is good"
             
             return True, "Database integrity check completed"
-            
+        
         except Exception as e:
             error_msg = f"Error checking database integrity: {str(e)}"
             logger.error(error_msg)
             return False, error_msg
+
+    def _repair_foreign_key_violations(self, violations):
+        """Attempt to auto-heal known FK violations (e.g., orphaned business owners)."""
+        repaired = False
+        try:
+            for table, rowid, parent_table, _ in violations:
+                # Clean up businesses pointing to missing users
+                if table == 'businesses' and parent_table == 'users':
+                    business = db.session.execute(
+                        text("SELECT id FROM businesses WHERE rowid = :rowid"),
+                        {"rowid": rowid}
+                    ).fetchone()
+                    if business:
+                        db.session.execute(
+                            text("UPDATE businesses SET owner_id = NULL WHERE id = :id"),
+                            {"id": business.id}
+                        )
+                        repaired = True
+            if repaired:
+                db.session.commit()
+        except Exception as repair_error:
+            logger.error(f"Failed repairing FK violations: {repair_error}")
+            db.session.rollback()
+            return False
+        return repaired
     
     def get_database_stats(self) -> Dict[str, Any]:
         """Get database statistics for monitoring"""
