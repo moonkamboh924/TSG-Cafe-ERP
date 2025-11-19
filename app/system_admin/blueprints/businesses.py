@@ -10,6 +10,7 @@ from ...models import (
     Business,
     User,
     Sale,
+    SaleLine,
     Expense,
     DailyClosing,
     PasswordResetRequest,
@@ -17,6 +18,16 @@ from ...models import (
     AuditLog,
     CreditSale,
     CreditPayment,
+    Supplier,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    InventoryItem,
+    InventoryLot,
+    MenuCategory,
+    MenuItem,
+    MenuRecipe,
+    SystemSetting,
+    BillTemplate,
 )
 from ...extensions import db
 from ..decorators import require_system_admin, system_admin_api_required
@@ -37,6 +48,32 @@ def _cleanup_user_associations(user):
     AccountDeletionRequest.query.filter_by(user_id=user.id).delete()
     PasswordResetRequest.query.filter_by(approved_by_id=user.id).update({'approved_by_id': None})
     AccountDeletionRequest.query.filter_by(approved_by_id=user.id).update({'approved_by_id': None})
+
+
+def _delete_business_data(business_id):
+    """Remove or detach data tied to a business before deletion"""
+    cleanup_order = [
+        CreditPayment,
+        CreditSale,
+        SaleLine,
+        Sale,
+        Expense,
+        DailyClosing,
+        PurchaseOrderLine,
+        PurchaseOrder,
+        Supplier,
+        InventoryLot,
+        MenuRecipe,
+        MenuItem,
+        MenuCategory,
+        InventoryItem,
+        SystemSetting,
+        BillTemplate,
+    ]
+
+    for model in cleanup_order:
+        if hasattr(model, 'business_id'):
+            model.query.filter_by(business_id=business_id).delete(synchronize_session=False)
 
 @bp.route('/')
 @login_required
@@ -347,6 +384,7 @@ def manage_business(business_id):
             _cleanup_user_associations(user)
             user.business_id = None
 
+        _delete_business_data(business_id)
         db.session.delete(business)
         db.session.commit()
 
