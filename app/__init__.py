@@ -126,6 +126,14 @@ def create_app(config_object="config.Config"):
     with app.app_context():
         init_database()
     
+    # Initialize system monitor
+    from .utils.system_monitor import SystemMonitor
+    SystemMonitor.initialize()
+    
+    # Initialize request tracking middleware
+    from .middleware import track_request_metrics
+    track_request_metrics(app)
+    
     # Add template context processor for settings
     @app.context_processor
     def inject_settings():
@@ -245,27 +253,43 @@ def create_app(config_object="config.Config"):
         try:
             from flask import redirect, url_for, render_template
             from flask_login import current_user
-            from .models import Business
+            from app.models import SystemSetting
             
             # If user is authenticated, redirect to dashboard
             if current_user.is_authenticated:
                 return redirect(url_for('dashboard.index'))
             
-            # Check if any tenants exist
-            from sqlalchemy import text
-            tenant_count = db.session.execute(text('SELECT COUNT(*) FROM businesses')).scalar()
+            # Get welcome page settings from database
+            settings = {
+                'hero_title': SystemSetting.get_setting('hero_title', 'Transform Your Restaurant Operations', business_id=None),
+                'hero_subtitle': SystemSetting.get_setting('hero_subtitle', 'Comprehensive Multi-Tenant ERP Solution for Modern Restaurants', business_id=None),
+                'hero_description': SystemSetting.get_setting('hero_description', 'Streamline your restaurant management with our powerful, cloud-based ERP system.', business_id=None),
+                'social_facebook': SystemSetting.get_setting('social_facebook', '#', business_id=None),
+                'social_twitter': SystemSetting.get_setting('social_twitter', '#', business_id=None),
+                'social_linkedin': SystemSetting.get_setting('social_linkedin', '#', business_id=None),
+                'social_instagram': SystemSetting.get_setting('social_instagram', '#', business_id=None),
+                'social_youtube': SystemSetting.get_setting('social_youtube', '#', business_id=None),
+                'contact_address': SystemSetting.get_setting('contact_address', '123 Restaurant Ave, Food City, FC 12345', business_id=None),
+                'contact_phone': SystemSetting.get_setting('contact_phone', '+1 (555) 123-4567', business_id=None),
+                'contact_email': SystemSetting.get_setting('contact_email', 'support@tsgcafeerp.com', business_id=None),
+                'contact_hours': SystemSetting.get_setting('contact_hours', 'Mon - Fri: 9:00 AM - 6:00 PM', business_id=None),
+                'tutorial_getting_started': SystemSetting.get_setting('tutorial_getting_started', '', business_id=None),
+                'tutorial_pos_system': SystemSetting.get_setting('tutorial_pos_system', '', business_id=None),
+                'tutorial_inventory': SystemSetting.get_setting('tutorial_inventory', '', business_id=None),
+                'tutorial_reports': SystemSetting.get_setting('tutorial_reports', '', business_id=None),
+                'company_name': SystemSetting.get_setting('company_name', 'TSG Cafe ERP', business_id=None),
+                'company_description': SystemSetting.get_setting('company_description', 'The leading multi-tenant restaurant management solution.', business_id=None),
+                'company_tagline': SystemSetting.get_setting('company_tagline', 'Powered by Trisync Global', business_id=None),
+                'copyright_text': SystemSetting.get_setting('copyright_text', '© 2025 Trisync Global. All rights reserved.', business_id=None),
+            }
             
-            if tenant_count == 0:
-                # No tenants exist - show welcome page with registration
-                return render_template('welcome.html')
-            else:
-                # Tenants exist - redirect to login
-                return redirect(url_for('auth.login'))
+            # Show welcome page for non-authenticated users
+            return render_template('welcome.html', settings=settings)
                 
         except Exception as e:
             app.logger.error(f"Error in root route: {str(e)}")
-            # Fallback to tenant registration if there's an error
-            return redirect(url_for('tenant.register'))
+            # Fallback to welcome page if there's an error
+            return render_template('welcome.html', settings={})
     
     
     # Add before_request handler for password change requirement

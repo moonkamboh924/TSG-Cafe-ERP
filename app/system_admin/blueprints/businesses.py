@@ -450,3 +450,75 @@ def get_business_users(business_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/businesses/<int:business_id>/analytics')
+@login_required
+@system_admin_api_required
+def get_business_analytics(business_id):
+    """Get comprehensive analytics for a specific business"""
+    
+    try:
+        business = Business.query.get_or_404(business_id)
+        
+        # Calculate total sales and revenue
+        total_sales = Sale.query.filter_by(business_id=business_id).count()
+        total_revenue = db.session.query(func.sum(Sale.total_amount)).filter_by(business_id=business_id).scalar() or 0.0
+        
+        # Calculate total expenses
+        total_expenses = db.session.query(func.sum(Expense.amount)).filter_by(business_id=business_id).scalar() or 0.0
+        
+        # Calculate credit sales and pending credits
+        credit_sales_amount = db.session.query(func.sum(CreditSale.pending_amount)).filter_by(business_id=business_id).scalar() or 0.0
+        total_credit_payments = db.session.query(func.sum(CreditPayment.amount)).filter(
+            CreditPayment.credit_sale_id.in_(
+                db.session.query(CreditSale.id).filter_by(business_id=business_id)
+            )
+        ).scalar() or 0.0
+        pending_credits = credit_sales_amount - total_credit_payments
+        
+        # Count menu items
+        menu_items_count = MenuItem.query.filter_by(business_id=business_id).count()
+        
+        # Get recent activities (last 5 audit logs)
+        recent_activities = []
+        audit_logs = AuditLog.query.filter_by(business_id=business_id).order_by(AuditLog.created_at.desc()).limit(5).all()
+        
+        for log in audit_logs:
+            activity_text = f"{log.action} on {log.entity}"
+            if log.entity_id:
+                activity_text += f" (ID: {log.entity_id})"
+            
+            recent_activities.append({
+                'action': activity_text,
+                'timestamp': log.created_at.isoformat(),
+                'user_id': log.user_id
+            })
+        
+        # Get active users count
+        active_users = User.query.filter_by(business_id=business_id, is_active=True).count()
+        
+        # Additional metrics
+        total_inventory_items = InventoryItem.query.filter_by(business_id=business_id).count()
+        total_suppliers = Supplier.query.filter_by(business_id=business_id).count()
+        total_purchase_orders = PurchaseOrder.query.filter_by(business_id=business_id).count()
+        
+        return jsonify({
+            'business_id': business_id,
+            'business_name': business.business_name,
+            'total_sales': total_sales,
+            'total_revenue': float(total_revenue),
+            'total_expenses': float(total_expenses),
+            'credit_sales': float(credit_sales_amount),
+            'pending_credits': float(pending_credits if pending_credits > 0 else 0),
+            'menu_items': menu_items_count,
+            'active_users': active_users,
+            'total_inventory_items': total_inventory_items,
+            'total_suppliers': total_suppliers,
+            'total_purchase_orders': total_purchase_orders,
+            'net_profit': float(total_revenue - total_expenses),
+            'recent_activities': recent_activities
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

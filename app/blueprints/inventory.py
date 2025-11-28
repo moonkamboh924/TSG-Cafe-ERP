@@ -23,13 +23,15 @@ def list_inventory():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
-    # Query inventory with stock levels
+    # MULTI-TENANT: Query inventory with stock levels filtered by business_id
     query = db.session.query(
         MenuItem.id,
         MenuItem.sku,
         MenuItem.name,
         func.coalesce(func.sum(InventoryLot.qty_on_hand), 0).label('stock_qty'),
         func.avg(InventoryLot.unit_cost).label('avg_cost')
+    ).filter(
+        MenuItem.business_id == current_user.business_id
     ).outerjoin(InventoryLot).group_by(MenuItem.id, MenuItem.sku, MenuItem.name)
     
     if q:
@@ -60,11 +62,16 @@ def list_inventory():
 @login_required
 @require_permissions('inventory.edit')
 def add_stock(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     data = request.get_json()
     
     try:
         lot = InventoryLot(
+            business_id=current_user.business_id,
             item_id=item_id,
             qty_on_hand=data['qty'],
             unit_cost=data['unit_cost']
@@ -93,7 +100,8 @@ def list_purchase_orders():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     
-    query = PurchaseOrder.query
+    # MULTI-TENANT: Filter by business_id
+    query = PurchaseOrder.query.filter_by(business_id=current_user.business_id)
     
     if status:
         query = query.filter(PurchaseOrder.status == status)

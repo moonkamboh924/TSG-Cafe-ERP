@@ -527,6 +527,25 @@ function updateDashboardCards() {
     
     document.getElementById('businessGrowth').textContent = `+${businessGrowth}%`;
     document.getElementById('userGrowth').textContent = `+${userGrowth}%`;
+    
+    // Load system health percentage
+    loadSystemHealthPercentage();
+}
+
+// Load system health percentage
+async function loadSystemHealthPercentage() {
+    try {
+        const response = await fetch('/system-admin/api/system-health');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.uptime && data.uptime.uptime_percent) {
+                document.getElementById('systemHealthPercent').textContent = data.uptime.uptime_percent.toFixed(1) + '%';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading system health:', error);
+        document.getElementById('systemHealthPercent').textContent = 'Error';
+    }
 }
 
 // Calculate growth percentage
@@ -867,36 +886,62 @@ async function loadUserDetails() {
 // Load detailed activity data
 async function loadActivityDetails() {
     try {
-        // Simulate activity metrics
-        document.getElementById('modalDailyLogins').textContent = Math.floor(Math.random() * 50) + 20;
-        document.getElementById('modalApiRequests').textContent = (Math.floor(Math.random() * 1000) + 500).toLocaleString();
-        document.getElementById('modalDbQueries').textContent = (Math.floor(Math.random() * 5000) + 2000).toLocaleString();
-        document.getElementById('modalActiveSessions').textContent = Math.floor(Math.random() * 15) + 5;
+        // Load real metrics from API
+        const response = await fetch('/system-admin/monitoring/api/system-metrics');
+        if (response.ok) {
+            const data = await response.json();
+            
+            document.getElementById('modalDailyLogins').textContent = data.daily_logins || 0;
+            document.getElementById('modalApiRequests').textContent = (data.api_requests || 0).toLocaleString();
+            document.getElementById('modalDbQueries').textContent = (data.db_queries || 0).toLocaleString();
+            document.getElementById('modalActiveSessions').textContent = data.active_sessions || 0;
+        } else {
+            // Fallback to loading message
+            document.getElementById('modalDailyLogins').textContent = '-';
+            document.getElementById('modalApiRequests').textContent = '-';
+            document.getElementById('modalDbQueries').textContent = '-';
+            document.getElementById('modalActiveSessions').textContent = '-';
+        }
         
-        // Load recent events
-        const eventsList = document.getElementById('systemEventsList');
-        eventsList.innerHTML = `
-            <div class="p-3 bg-green-50 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-green-800">User login successful</span>
-                    <span class="text-xs text-green-600">Just now</span>
-                </div>
-            </div>
-            <div class="p-3 bg-blue-50 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-blue-800">Database backup completed</span>
-                    <span class="text-xs text-blue-600">15 minutes ago</span>
-                </div>
-            </div>
-            <div class="p-3 bg-orange-50 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-orange-800">System maintenance scheduled</span>
-                    <span class="text-xs text-orange-600">1 hour ago</span>
-                </div>
-            </div>
-        `;
+        // Load recent events from audit logs
+        const eventsResponse = await fetch('/system-admin/monitoring/api/activity-logs');
+        if (eventsResponse.ok) {
+            const eventsData = await eventsResponse.json();
+            const eventsList = document.getElementById('systemEventsList');
+            
+            if (eventsData.logs && eventsData.logs.length > 0) {
+                eventsList.innerHTML = eventsData.logs.slice(0, 5).map(log => {
+                    const timestamp = new Date(log.created_at);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - timestamp) / (1000 * 60));
+                    
+                    let timeAgo;
+                    if (diffMinutes < 1) timeAgo = 'Just now';
+                    else if (diffMinutes < 60) timeAgo = `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+                    else if (diffMinutes < 1440) timeAgo = `${Math.floor(diffMinutes / 60)} hour${Math.floor(diffMinutes / 60) > 1 ? 's' : ''} ago`;
+                    else timeAgo = `${Math.floor(diffMinutes / 1440)} day${Math.floor(diffMinutes / 1440) > 1 ? 's' : ''} ago`;
+                    
+                    const bgColor = log.action.includes('login') ? 'green' : log.action.includes('delete') ? 'red' : 'blue';
+                    
+                    return `
+                        <div class="p-3 bg-${bgColor}-50 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-${bgColor}-800">${log.action} on ${log.entity}</span>
+                                <span class="text-xs text-${bgColor}-600">${timeAgo}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                eventsList.innerHTML = '<p class="text-gray-500 text-center py-3">No recent events</p>';
+            }
+        }
     } catch (error) {
         console.error('Error loading activity details:', error);
+        document.getElementById('modalDailyLogins').textContent = 'Error';
+        document.getElementById('modalApiRequests').textContent = 'Error';
+        document.getElementById('modalDbQueries').textContent = 'Error';
+        document.getElementById('modalActiveSessions').textContent = 'Error';
     }
 }
 
@@ -907,17 +952,25 @@ async function loadHealthDetails() {
         if (response.ok) {
             const data = await response.json();
             
-            // Update modal content with health metrics
-            document.getElementById('modalUptime').textContent = '99.9%';
-            document.getElementById('modalDbStatus').textContent = data.database_healthy ? 'Healthy' : 'Issues';
-            document.getElementById('modalMemoryUsage').textContent = '2.1 GB';
-            document.getElementById('modalResponseTime').textContent = '< 200ms';
+            // Update modal content with LIVE health metrics
+            if (data.uptime) {
+                document.getElementById('modalUptime').textContent = data.uptime.uptime_percent.toFixed(1) + '%';
+            }
+            document.getElementById('modalDbStatus').textContent = data.database_status === 'healthy' ? 'Healthy' : 'Issues';
+            
+            if (data.memory_usage) {
+                document.getElementById('modalMemoryUsage').textContent = data.memory_usage.used_gb + ' GB';
+            }
+            
+            if (data.avg_response_time !== undefined) {
+                document.getElementById('modalResponseTime').textContent = data.avg_response_time.toFixed(1) + 'ms';
+            }
         }
     } catch (error) {
         console.error('Error loading health details:', error);
-        // Set default values
-        document.getElementById('modalMemoryUsage').textContent = '2.1 GB';
-        document.getElementById('modalResponseTime').textContent = '< 200ms';
+        // Show error state
+        document.getElementById('modalMemoryUsage').textContent = 'Error';
+        document.getElementById('modalResponseTime').textContent = 'Error';
     }
 }
 

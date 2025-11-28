@@ -39,7 +39,7 @@
                     </div>
                     
                     <!-- System Admin Navigation Links - More Left & Responsive -->
-                    <div class="hidden md:flex md:space-x-1 lg:space-x-2 ml-4 lg:ml-6 xl:ml-8 flex-wrap">
+                    <div class="hidden md:flex md:space-x-1 lg:space-x-2 ml-4 lg:ml-6 xl:ml-8">
                         <!-- Admin Dropdown - Show only if user has any admin permission -->
                         {% if current_user.has_navigation_permission('user_management') or current_user.has_navigation_permission('business_management') or current_user.has_navigation_permission('subscription_management') %}
                         <div class="relative group luxury-dropdown">
@@ -109,53 +109,6 @@
                            class="nav-link {% if request.endpoint and request.endpoint.startswith('system_admin_monitoring.') %}active{% endif %}">
                             <i class="fas fa-heartbeat mr-2"></i>Monitoring
                         </a>
-                        {% endif %}
-                        
-                        <!-- Reports - Show only if user has reports permission -->
-                        {% if current_user.has_navigation_permission('reports') %}
-                        <div class="relative group luxury-dropdown">
-                            <button class="nav-link flex items-center luxury-nav-item">
-                                <i class="fas fa-chart-bar mr-2 transition-transform duration-300 group-hover:scale-110"></i>Reports
-                                <i class="fas fa-chevron-down ml-1 text-xs transition-transform duration-300 group-hover:rotate-180"></i>
-                            </button>
-                            <div class="luxury-dropdown-menu absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/20 opacity-0 invisible transform translate-y-2 scale-95 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out z-50">
-                                <div class="py-3 px-2">
-                                    {% if current_user.has_navigation_permission('system_analytics') %}
-                                    <a href="{{ url_for('system_admin_analytics.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-                                        <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                                            <i class="fas fa-chart-pie text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-medium">System Reports</div>
-                                            <div class="text-xs text-gray-500">Analytics & insights</div>
-                                        </div>
-                                    </a>
-                                    {% endif %}
-                                    {% if current_user.has_navigation_permission('admin') %}
-                                    <a href="{{ url_for('system_admin_businesses.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 hover:text-teal-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-                                        <div class="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                                            <i class="fas fa-building text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-medium">Business Reports</div>
-                                            <div class="text-xs text-gray-500">Business analytics</div>
-                                        </div>
-                                    </a>
-                                    {% endif %}
-                                    {% if current_user.has_navigation_permission('monitoring') %}
-                                    <a href="{{ url_for('system_admin_monitoring.index') }}" class="luxury-dropdown-item flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50 hover:text-violet-600 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md">
-                                        <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                                            <i class="fas fa-clipboard-list text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-medium">Audit Reports</div>
-                                            <div class="text-xs text-gray-500">System audit logs</div>
-                                        </div>
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -228,7 +181,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-600">
-                    © 2025 TSG ERP System. System Administration Panel.
+                    © 2025 Trisync Global. System Administration Panel.
                 </div>
                 <div class="text-sm text-gray-600">
                     Version 2.0 | <span class="text-green-600">System Online</span>

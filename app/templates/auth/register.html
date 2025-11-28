@@ -2,269 +2,777 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, device-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account - TSG Cafe System</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        .password-strength-bar {
-            height: 4px;
-            border-radius: 2px;
-            transition: all 0.3s ease;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .strength-weak { background-color: #ef4444; width: 33%; }
-        .strength-medium { background-color: #f59e0b; width: 66%; }
-        .strength-strong { background-color: #10b981; width: 100%; }
-        
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-            .responsive-input, .responsive-textarea {
-                padding: 0.625rem 0.75rem;
-                font-size: 0.875rem;
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .register-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-        
-        @media (min-width: 1024px) {
-            .responsive-input, .responsive-textarea {
-                padding: 0.875rem 1rem;
+
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .register-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0);
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-icon i {
+            font-size: 26px;
+            color: white;
+        }
+
+        .register-header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .register-header p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .register-body {
+            padding: 30px 40px;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 25%;
+            right: 25%;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+
+        .progress-steps::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 25%;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 1;
+            transition: width 0.3s ease;
+        }
+
+        .progress-steps[data-step="1"]::after { width: 0%; }
+        .progress-steps[data-step="2"]::after { width: 25%; }
+        .progress-steps[data-step="3"]::after { width: 50%; }
+
+        .step-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border: 3px solid #fff;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-item.active .step-circle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-item.completed .step-circle {
+            background: #28a745;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .step-item.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-title i {
+            color: #667eea;
+            margin-right: 10px;
+            font-size: 22px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .form-label i {
+            color: #667eea;
+            margin-right: 6px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .input-icon.valid i {
+            color: #28a745;
+            opacity: 1;
+        }
+
+        .input-icon.invalid i {
+            color: #dc3545;
+            opacity: 1;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .password-strength {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-weak { background: #dc3545; width: 33%; }
+        .strength-medium { background: #ffc107; width: 66%; }
+        .strength-strong { background: #28a745; width: 100%; }
+
+        .requirements-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .requirements-box h6 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 12px;
+        }
+
+        .requirement-item {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .requirement-item i {
+            margin-right: 8px;
+            font-size: 10px;
+        }
+
+        .requirement-item.met {
+            color: #28a745;
+        }
+
+        .requirement-item.met i {
+            color: #28a745;
+        }
+
+        /* Navigation Buttons */
+        .step-navigation {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-step {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-prev {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .btn-prev:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn-next, .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        .footer-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .register-body {
+                padding: 25px 20px;
+            }
+
+            .step-title {
+                font-size: 18px;
+            }
+
+            .progress-steps {
+                margin-bottom: 20px;
+            }
+
+            .step-circle {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen flex items-center justify-center p-4 lg:p-8">
+<body>
+    <a href="{{ url_for('root') }}" class="home-button">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
     
-    <div class="w-full max-w-md sm:max-w-2xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
-        <!-- Logo/Header -->
-        <div class="text-center mb-6 sm:mb-8 lg:mb-10">
-            <div class="inline-block bg-gradient-to-br from-blue-600 to-indigo-700 p-3 sm:p-4 lg:p-5 rounded-2xl shadow-xl mb-4">
-                <i class="fas fa-user-plus text-white text-3xl sm:text-4xl lg:text-5xl"></i>
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Header -->
+            <div class="register-header">
+                <div class="logo-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h1>Get Started with TSG Cafe</h1>
+                <p>Transform your restaurant management in minutes</p>
             </div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">Create Account</h1>
-            <p class="text-sm sm:text-base text-gray-600">Join TSG Cafe System today</p>
-        </div>
-        
-        <!-- Registration Form -->
-        <div class="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-white/40">
-            
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="mb-6 space-y-2">
-                        {% for category, message in messages %}
-                            <div class="p-3 rounded-xl {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
-                                <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
-                                {{ message }}
-                            </div>
-                        {% endfor %}
+
+            <!-- Body -->
+            <div class="register-body">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-3">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' }} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Progress Steps -->
+                <div class="progress-steps" id="progressSteps" data-step="1">
+                    <div class="step-item active" data-step="1">
+                        <div class="step-circle">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="step-label">Personal</div>
                     </div>
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm">
-                <!-- Two Column Layout -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-                    <!-- Left Column -->
-                    <div class="space-y-4">
-                        <!-- First Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-user mr-1"></i>First Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="first_name" id="firstName" required 
-                                   class="w-full px-3 sm:px-4 py-2.5 sm:py-3 lg:py-3.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="John">
+                    <div class="step-item" data-step="2">
+                        <div class="step-circle">
+                            <i class="fas fa-building"></i>
                         </div>
-                        
-                        <!-- Last Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-user mr-1"></i>Last Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="last_name" id="lastName" required 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="Doe">
-                        </div>
-                        
-                        <!-- Full Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-id-card mr-1"></i>Full Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="full_name" id="fullName" required 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="John Doe">
-                            <p class="text-xs text-gray-500 mt-1">Displayed on your profile</p>
-                        </div>
-                        
-                        <!-- Business Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-building mr-1"></i>Business Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="business_name" id="businessName" required 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="My Restaurant">
-                            <p class="text-xs text-gray-500 mt-1">Your business name in the system</p>
-                        </div>
+                        <div class="step-label">Business</div>
                     </div>
-                    
-                    <!-- Right Column -->
-                    <div class="space-y-4">
-                        <!-- Email -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-envelope mr-1"></i>Email Address <span class="text-red-500">*</span>
-                            </label>
-                            <input type="email" name="email" id="email" required 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="john.doe@example.com">
+                    <div class="step-item" data-step="3">
+                        <div class="step-circle">
+                            <i class="fas fa-shield-alt"></i>
                         </div>
-                        
-                        <!-- Phone Number -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-phone mr-1"></i>Phone Number <span class="text-red-500">*</span>
-                            </label>
-                            <input type="tel" name="phone" id="phone" required 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                   placeholder="+92 300 1234567">
-                        </div>
-                        
-                        <!-- Address -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-map-marker-alt mr-1"></i>Address <span class="text-red-500">*</span>
-                            </label>
-                            <textarea name="address" id="address" required rows="3"
-                                      class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                      placeholder="123 Main Street, City, Country"></textarea>
-                        </div>
+                        <div class="step-label">Security</div>
                     </div>
                 </div>
-                
-                <!-- Password Section - Two Column Layout -->
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-                        <!-- Left: Password Fields -->
-                        <div class="space-y-4">
-                            <!-- Password -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-lock mr-1"></i>Password <span class="text-red-500">*</span>
+
+                <!-- Registration Form -->
+                <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm">
+                    
+                    <!-- Step 1: Personal Information -->
+                    <div class="form-step active" data-step="1">
+                        <div class="step-title">
+                            <i class="fas fa-user-circle"></i>
+                            Personal Information
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>First Name <span class="text-danger">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="password" name="password" id="password" required 
-                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
-                                           placeholder="Enter strong password">
-                                    <button type="button" onclick="togglePassword('password', 'toggleIcon1')" 
-                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                        <i class="fas fa-eye" id="toggleIcon1"></i>
-                                    </button>
-                                </div>
-                                
-                                <!-- Password Strength Indicator -->
-                                <div class="mt-2">
-                                    <div class="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
-                                        <div id="strengthBar" class="password-strength-bar"></div>
-                                    </div>
-                                    <p id="strengthText" class="text-xs mt-1 text-gray-500"></p>
+                                <div class="input-icon" id="firstNameGroup">
+                                    <input type="text" name="first_name" id="firstName" required class="form-control" placeholder="John">
+                                    <i class="fas fa-check-circle"></i>
                                 </div>
                             </div>
                             
-                            <!-- Confirm Password -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-lock mr-1"></i>Confirm Password <span class="text-red-500">*</span>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>Last Name <span class="text-danger">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="password" name="confirm_password" id="confirmPassword" required 
-                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
-                                           placeholder="Re-enter password">
-                                    <button type="button" onclick="togglePassword('confirmPassword', 'toggleIcon2')" 
-                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                                        <i class="fas fa-eye" id="toggleIcon2"></i>
+                                <div class="input-icon" id="lastNameGroup">
+                                    <input type="text" name="last_name" id="lastName" required class="form-control" placeholder="Doe">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-id-card"></i>Full Name <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-icon" id="fullNameGroup">
+                                    <input type="text" name="full_name" id="fullName" required class="form-control" placeholder="John Doe">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <small class="text-muted">This will be displayed on your profile</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope"></i>Email Address <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-icon" id="emailGroup">
+                                    <input type="email" name="email" id="email" required class="form-control" placeholder="john@example.com">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>Phone Number <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-icon" id="phoneGroup">
+                                    <input type="tel" name="phone" id="phone" required class="form-control" placeholder="+92 300 1234567">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn-step btn-next" onclick="nextStep(1)">
+                                Next <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Business Information -->
+                    <div class="form-step" data-step="2">
+                        <div class="step-title">
+                            <i class="fas fa-store"></i>
+                            Business Information
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-building"></i>Business Name <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-icon" id="businessNameGroup">
+                                    <input type="text" name="business_name" id="businessName" required class="form-control" placeholder="My Restaurant">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <small class="text-muted">Your restaurant or cafe name</small>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-map-marker-alt"></i>Business Address <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="address" id="address" required rows="3" class="form-control" placeholder="Street, City, State, Country"></textarea>
+                                <small class="text-muted">Complete business address</small>
+                            </div>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn-step btn-prev" onclick="prevStep(2)">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="button" class="btn-step btn-next" onclick="nextStep(2)">
+                                Next <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Security -->
+                    <div class="form-step" data-step="3">
+                        <div class="step-title">
+                            <i class="fas fa-lock"></i>
+                            Security Settings
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-key"></i>Password <span class="text-danger">*</span>
+                                </label>
+                                <div class="position-relative">
+                                    <input type="password" name="password" id="password" required class="form-control" placeholder="Create a strong password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                <p id="matchText" class="text-xs mt-1"></p>
+                                <div class="password-strength">
+                                    <div class="password-strength-bar" id="strengthBar"></div>
+                                </div>
+                                <small id="strengthText" class="text-muted"></small>
+                                
+                                <div class="requirements-box">
+                                    <h6><i class="fas fa-info-circle text-primary"></i> Password Requirements</h6>
+                                    <div class="requirement-item" id="req-length">
+                                        <i class="fas fa-circle"></i> At least 8 characters
+                                    </div>
+                                    <div class="requirement-item" id="req-uppercase">
+                                        <i class="fas fa-circle"></i> One uppercase letter
+                                    </div>
+                                    <div class="requirement-item" id="req-lowercase">
+                                        <i class="fas fa-circle"></i> One lowercase letter
+                                    </div>
+                                    <div class="requirement-item" id="req-number">
+                                        <i class="fas fa-circle"></i> One number
+                                    </div>
+                                    <div class="requirement-item" id="req-special">
+                                        <i class="fas fa-circle"></i> One special character (@#$%^&*)
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-lock"></i>Confirm Password <span class="text-danger">*</span>
+                                </label>
+                                <div class="position-relative">
+                                    <input type="password" name="confirm_password" id="confirmPassword" required class="form-control" placeholder="Re-enter your password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small id="matchText"></small>
                             </div>
                         </div>
-                        
-                        <!-- Right: Password Requirements -->
-                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-3">
-                                <i class="fas fa-shield-alt mr-1 text-blue-600"></i>Password Requirements
-                            </h4>
-                            <div class="text-xs text-gray-600 space-y-2">
-                                <p id="req-length" class="flex items-center"><i class="fas fa-circle text-gray-300 text-xs mr-2"></i>At least 8 characters</p>
-                                <p id="req-uppercase" class="flex items-center"><i class="fas fa-circle text-gray-300 text-xs mr-2"></i>One uppercase letter</p>
-                                <p id="req-lowercase" class="flex items-center"><i class="fas fa-circle text-gray-300 text-xs mr-2"></i>One lowercase letter</p>
-                                <p id="req-number" class="flex items-center"><i class="fas fa-circle text-gray-300 text-xs mr-2"></i>One number</p>
-                                <p id="req-special" class="flex items-center"><i class="fas fa-circle text-gray-300 text-xs mr-2"></i>One special character (!@#$%^&*)</p>
-                            </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn-step btn-prev" onclick="prevStep(3)">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="submit" class="btn-step btn-submit" id="submitBtn">
+                                <i class="fas fa-check-circle me-2"></i> Create Account
+                            </button>
                         </div>
                     </div>
+                </form>
+
+                <!-- Footer Link -->
+                <div class="footer-link">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a>
                 </div>
-                
-                <!-- Submit Button -->
-                <div class="mt-8">
-                    <button type="submit" 
-                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 shadow-lg hover:shadow-xl text-lg">
-                        <i class="fas fa-user-plus mr-2"></i>Create Account
-                    </button>
-                </div>
-                
-                <!-- Divider -->
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-4 bg-white text-gray-500">Or continue with</span>
-                    </div>
-                </div>
-                
-                <!-- Social Login Buttons -->
-                <div class="grid grid-cols-1 gap-3">
-                    <button type="button" onclick="loginWithGoogle()" 
-                            class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all">
-                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        <span class="font-medium text-gray-700">Continue with Google</span>
-                    </button>
-                </div>
-                
-                <!-- Login Link -->
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-600">
-                        Already have an account? 
-                        <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
-                            Sign in
-                        </a>
-                    </p>
-                </div>
-            </form>
-        </div>
-        
-        <!-- Footer -->
-        <div class="text-center mt-6 text-sm text-gray-600">
-            <p>&copy; 2025 TSG Cafe System. All rights reserved.</p>
+            </div>
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Password visibility toggle
-        function togglePassword(inputId, iconId) {
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Navigation Functions
+        function nextStep(step) {
+            if (validateStep(step)) {
+                currentStep = step + 1;
+                updateStepDisplay();
+            }
+        }
+
+        function prevStep(step) {
+            currentStep = step - 1;
+            updateStepDisplay();
+        }
+
+        function updateStepDisplay() {
+            // Update progress indicator
+            document.getElementById('progressSteps').setAttribute('data-step', currentStep);
+            
+            // Update step items
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                item.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    item.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Update form steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+        }
+
+        function validateStep(step) {
+            const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = stepElement.querySelectorAll('input[required], textarea[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Please fill in all required fields');
+            }
+
+            return isValid;
+        }
+
+        // Password Toggle
+        function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
+            const icon = button.querySelector('i');
             
             if (input.type === 'password') {
                 input.type = 'text';
@@ -276,14 +784,47 @@
                 icon.classList.add('fa-eye');
             }
         }
-        
-        // Password strength checker
+
+        // Input Validation
+        function validateInput(inputId, groupId, pattern) {
+            const input = document.getElementById(inputId);
+            const group = document.getElementById(groupId);
+
+            input.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    if (pattern) {
+                        if (pattern.test(this.value)) {
+                            group.classList.remove('invalid');
+                            group.classList.add('valid');
+                        } else {
+                            group.classList.remove('valid');
+                            group.classList.add('invalid');
+                        }
+                    } else {
+                        group.classList.remove('invalid');
+                        group.classList.add('valid');
+                    }
+                } else {
+                    group.classList.remove('valid', 'invalid');
+                }
+            });
+        }
+
+        // Initialize validations
+        validateInput('firstName', 'firstNameGroup');
+        validateInput('lastName', 'lastNameGroup');
+        validateInput('fullName', 'fullNameGroup');
+        validateInput('email', 'emailGroup', /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+        validateInput('phone', 'phoneGroup', /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/);
+        validateInput('businessName', 'businessNameGroup');
+
+        // Password Strength Checker
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const strengthBar = document.getElementById('strengthBar');
         const strengthText = document.getElementById('strengthText');
         const matchText = document.getElementById('matchText');
-        
+
         passwordInput.addEventListener('input', function() {
             const password = this.value;
             let strength = 0;
@@ -294,108 +835,94 @@
                 number: /[0-9]/.test(password),
                 special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
             };
-            
-            // Update requirement indicators
+
+            // Update requirements
             updateRequirement('req-length', requirements.length);
             updateRequirement('req-uppercase', requirements.uppercase);
             updateRequirement('req-lowercase', requirements.lowercase);
             updateRequirement('req-number', requirements.number);
             updateRequirement('req-special', requirements.special);
-            
+
             // Calculate strength
             Object.values(requirements).forEach(met => {
                 if (met) strength++;
             });
-            
+
             // Update strength bar
             strengthBar.className = 'password-strength-bar';
             if (strength <= 2) {
                 strengthBar.classList.add('strength-weak');
-                strengthText.textContent = 'Weak password';
-                strengthText.className = 'text-xs mt-1 text-red-600';
+                strengthText.textContent = '⚠ Weak password';
+                strengthText.className = 'text-danger small';
             } else if (strength <= 4) {
                 strengthBar.classList.add('strength-medium');
-                strengthText.textContent = 'Medium password';
-                strengthText.className = 'text-xs mt-1 text-orange-600';
+                strengthText.textContent = '⚡ Medium password';
+                strengthText.className = 'text-warning small';
             } else {
                 strengthBar.classList.add('strength-strong');
-                strengthText.textContent = 'Strong password';
-                strengthText.className = 'text-xs mt-1 text-green-600';
+                strengthText.textContent = '✓ Strong password';
+                strengthText.className = 'text-success small';
             }
-            
+
             checkPasswordMatch();
         });
-        
+
         confirmPasswordInput.addEventListener('input', checkPasswordMatch);
-        
+
         function updateRequirement(id, met) {
             const element = document.getElementById(id);
             const icon = element.querySelector('i');
             if (met) {
-                icon.classList.remove('fa-circle', 'text-gray-300');
-                icon.classList.add('fa-check-circle', 'text-green-500');
-                element.classList.add('text-green-600');
+                element.classList.add('met');
+                icon.classList.remove('fa-circle');
+                icon.classList.add('fa-check-circle');
             } else {
-                icon.classList.remove('fa-check-circle', 'text-green-500');
-                icon.classList.add('fa-circle', 'text-gray-300');
-                element.classList.remove('text-green-600');
+                element.classList.remove('met');
+                icon.classList.remove('fa-check-circle');
+                icon.classList.add('fa-circle');
             }
         }
-        
+
         function checkPasswordMatch() {
             const password = passwordInput.value;
             const confirmPassword = confirmPasswordInput.value;
-            
+
             if (confirmPassword.length > 0) {
                 if (password === confirmPassword) {
                     matchText.textContent = '✓ Passwords match';
-                    matchText.className = 'text-xs mt-1 text-green-600';
+                    matchText.className = 'text-success small';
                 } else {
                     matchText.textContent = '✗ Passwords do not match';
-                    matchText.className = 'text-xs mt-1 text-red-600';
+                    matchText.className = 'text-danger small';
                 }
             } else {
                 matchText.textContent = '';
             }
         }
-        
-        // Google OAuth (placeholder - will be implemented)
-        function loginWithGoogle() {
-            showNotification('Google OAuth integration coming soon! Please use the registration form for now.', 'info');
-        }
-        
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-20 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
-                type === 'success' ? 'bg-green-500 text-white' :
-                type === 'error' ? 'bg-red-500 text-white' :
-                type === 'warning' ? 'bg-yellow-500 text-white' :
-                'bg-blue-500 text-white'
-            }`;
-            
-            notification.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <i class="fas ${
-                        type === 'success' ? 'fa-check-circle' :
-                        type === 'error' ? 'fa-exclamation-circle' :
-                        type === 'warning' ? 'fa-exclamation-triangle' :
-                        'fa-info-circle'
-                    } text-xl"></i>
-                    <p class="flex-1">${message}</p>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 5000);
-        }
+
+        // Form Submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+            btn.disabled = true;
+        });
+
+        // Auto-hide alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
     </script>
 </body>
 </html>

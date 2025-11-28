@@ -3,57 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to TSG Cafe ERP</title>
+    <title>Welcome to {{ settings.get('company_name', 'TSG Cafe ERP') }}</title> 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Navigation Bar */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-buttons .btn {
+            margin-left: 10px;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-login {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-login:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Hero Section */
         .hero-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 100px 0;
+            padding: 150px 0 100px 0;
+            position: relative;
+            overflow: hidden;
+            margin-top: 70px;
         }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-section .lead {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Feature Cards */
+        .feature-section {
+            padding: 80px 0;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+
         .feature-icon {
-            font-size: 3rem;
-            color: #667eea;
-            margin-bottom: 1rem;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: transform 0.3s ease;
         }
+
         .card {
             border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            background: white;
+            height: 100%;
         }
+
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .card h5 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .cta-section h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section .btn-cta {
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .cta-section .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            color: #667eea;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #e2e8f0;
+            padding: 4rem 0 2rem 0;
+        }
+
+        .footer-section {
+            margin-bottom: 2rem;
+        }
+
+        .footer-heading {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-heading::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #cbd5e0;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .footer-links a:hover {
+            color: #667eea;
+            padding-left: 5px;
+        }
+
+        .footer-links a i {
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .social-links a:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: #a0aec0;
+        }
+
+        .company-description {
+            color: #cbd5e0;
+            line-height: 1.8;
+            margin-top: 1rem;
+        }
+
+        .contact-info {
+            color: #cbd5e0;
+            margin-top: 1rem;
+        }
+
+        .contact-info i {
+            color: #667eea;
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .contact-info div {
+            margin-bottom: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-section .lead {
+                font-size: 1.2rem;
+            }
+
+            .nav-buttons .btn {
+                margin: 5px;
+                padding: 8px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero-section text-center">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-custom">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Welcome to TSG Cafe ERP</h1>
-            <p class="lead mb-5">The complete multi-tenant restaurant management solution</p>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-utensils me-2"></i>{{ settings.get('company_name', 'TSG Cafe ERP') }}
+            </a>
+            <div class="nav-buttons">
+                <a href="{{ url_for('tenant.register') }}" class="btn btn-signup">
+                    <i class="fas fa-user-plus me-2"></i>Sign Up
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
             <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <p class="mb-4">Start your restaurant management journey today. Create your business account and get access to powerful tools for POS, inventory, finance, and more.</p>
-                    <a href="{{ url_for('tenant.register') }}" class="btn btn-light btn-lg me-3">
-                        <i class="fas fa-rocket me-2"></i>Get Started Free
-                    </a>
-                    <a href="{{ url_for('tenant.plans') }}" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-info-circle me-2"></i>View Plans
-                    </a>
+                <div class="col-lg-10 text-center">
+                    <h1 class="display-3 fw-bold mb-4">{{ settings.get('hero_title', 'Transform Your Restaurant Operations') }}</h1>
+                    <p class="lead mb-4">{{ settings.get('hero_subtitle', 'The complete multi-tenant restaurant management solution') }}</p>
+                    <p class="mb-5">{{ settings.get('hero_description', 'Streamline your restaurant management with our powerful, cloud-based ERP system. Built for efficiency, designed for growth.') }}</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="py-5">
+    <section class="feature-section">
         <div class="container">
             <div class="row text-center mb-5">
                 <div class="col-12">
-                    <h2 class="fw-bold">Everything You Need to Run Your Restaurant</h2>
-                    <p class="text-muted">Powerful features designed for modern restaurant management</p>
+                    <h2 class="fw-bold mb-3" style="font-size: 2.5rem; color: #2d3748;">Everything You Need to Run Your Restaurant</h2>
+                    <p class="text-muted" style="font-size: 1.2rem;">Powerful features designed for modern restaurant management</p>
                 </div>
             </div>
             <div class="row g-4">
@@ -115,24 +438,189 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="bg-light py-5">
-        <div class="container text-center">
-            <h3 class="fw-bold mb-4">Ready to Transform Your Restaurant?</h3>
-            <p class="text-muted mb-4">Join thousands of restaurants already using TSG Cafe ERP</p>
-            <a href="{{ url_for('tenant.register') }}" class="btn btn-primary btn-lg">
-                <i class="fas fa-arrow-right me-2"></i>Start Your Free Trial
-            </a>
-        </div>
-    </section>
-
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2025 TSG Cafe ERP. Built with ❤️ for restaurants worldwide.</p>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <!-- Company Info -->
+                <div class="col-lg-4 col-md-6 footer-section">
+                    <h4 class="footer-heading">
+                        <i class="fas fa-utensils me-2"></i>{{ settings.get('company_name', 'TSG Cafe ERP') }}
+                    </h4>
+                    <p class="company-description">
+                        {{ settings.get('company_description', 'The leading multi-tenant restaurant management solution trusted by thousands of restaurants worldwide.') }}
+                    </p>
+                    <div class="social-links">
+                        {% if settings.get('social_facebook') and settings.get('social_facebook') != '#' %}
+                        <a href="{{ settings.get('social_facebook') }}" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        {% endif %}
+                        {% if settings.get('social_twitter') and settings.get('social_twitter') != '#' %}
+                        <a href="{{ settings.get('social_twitter') }}" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        {% endif %}
+                        {% if settings.get('social_linkedin') and settings.get('social_linkedin') != '#' %}
+                        <a href="{{ settings.get('social_linkedin') }}" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        {% endif %}
+                        {% if settings.get('social_instagram') and settings.get('social_instagram') != '#' %}
+                        <a href="{{ settings.get('social_instagram') }}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        {% endif %}
+                        {% if settings.get('social_youtube') and settings.get('social_youtube') != '#' %}
+                        <a href="{{ settings.get('social_youtube') }}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 footer-section">
+                    <h4 class="footer-heading">Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>About Us</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Careers</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Press</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Partners</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div class="col-lg-2 col-md-6 footer-section">
+                    <h4 class="footer-heading">Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Help Center</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Documentation</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>API Reference</a></li>
+                        {% if settings.get('tutorial_getting_started') or settings.get('tutorial_pos_system') or settings.get('tutorial_inventory') or settings.get('tutorial_reports') %}
+                        <li><a href="#" onclick="showTutorials(event)"><i class="fas fa-chevron-right"></i>Video Tutorials</a></li>
+                        {% endif %}
+                        <li><a href="#"><i class="fas fa-chevron-right"></i>Community</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="col-lg-4 col-md-6 footer-section">
+                    <h4 class="footer-heading">Contact Us</h4>
+                    <div class="contact-info">
+                        <div><i class="fas fa-map-marker-alt"></i>{{ settings.get('contact_address', '123 Restaurant Ave, Food City, FC 12345') }}</div>
+                        <div><i class="fas fa-phone"></i>{{ settings.get('contact_phone', '+1 (555) 123-4567') }}</div>
+                        <div><i class="fas fa-envelope"></i>{{ settings.get('contact_email', 'support@tsgcafeerp.com') }}</div>
+                        <div><i class="fas fa-clock"></i>{{ settings.get('contact_hours', 'Mon - Fri: 9:00 AM - 6:00 PM') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                        <p class="mb-0">{{ settings.get('copyright_text', '© 2025 Trisync Global. All rights reserved.') }}</p>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <a href="#" class="text-decoration-none me-3" style="color: #cbd5e0;">Privacy Policy</a>
+                        <a href="#" class="text-decoration-none me-3" style="color: #cbd5e0;">Terms of Service</a>
+                        <a href="#" class="text-decoration-none" style="color: #cbd5e0;">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <!-- Video Tutorials Modal -->
+    <div class="modal fade" id="tutorialsModal" tabindex="-1" aria-labelledby="tutorialsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0;">
+                    <h5 class="modal-title" id="tutorialsModalLabel">
+                        <i class="fas fa-video me-2"></i>Video Tutorials
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="list-group">
+                        {% if settings.get('tutorial_getting_started') and settings.get('tutorial_getting_started') != '' %}
+                        <a href="{{ settings.get('tutorial_getting_started') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center mb-2" style="border-radius: 12px; border: 1px solid #e5e7eb; transition: all 0.3s;">
+                            <div class="me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-rocket text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Getting Started Tutorial</h6>
+                                <small class="text-muted">Introduction video for new users</small>
+                            </div>
+                            <i class="fas fa-external-link-alt text-muted"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if settings.get('tutorial_pos_system') and settings.get('tutorial_pos_system') != '' %}
+                        <a href="{{ settings.get('tutorial_pos_system') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center mb-2" style="border-radius: 12px; border: 1px solid #e5e7eb; transition: all 0.3s;">
+                            <div class="me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-cash-register text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">POS System Tutorial</h6>
+                                <small class="text-muted">How to use the POS system</small>
+                            </div>
+                            <i class="fas fa-external-link-alt text-muted"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if settings.get('tutorial_inventory') and settings.get('tutorial_inventory') != '' %}
+                        <a href="{{ settings.get('tutorial_inventory') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center mb-2" style="border-radius: 12px; border: 1px solid #e5e7eb; transition: all 0.3s;">
+                            <div class="me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-boxes text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Inventory Management Tutorial</h6>
+                                <small class="text-muted">Managing inventory and stock</small>
+                            </div>
+                            <i class="fas fa-external-link-alt text-muted"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if settings.get('tutorial_reports') and settings.get('tutorial_reports') != '' %}
+                        <a href="{{ settings.get('tutorial_reports') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center mb-2" style="border-radius: 12px; border: 1px solid #e5e7eb; transition: all 0.3s;">
+                            <div class="me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-chart-bar text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Reports & Analytics Tutorial</h6>
+                                <small class="text-muted">Understanding reports and analytics</small>
+                            </div>
+                            <i class="fas fa-external-link-alt text-muted"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if not (settings.get('tutorial_getting_started') or settings.get('tutorial_pos_system') or settings.get('tutorial_inventory') or settings.get('tutorial_reports')) %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-video text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="text-muted mt-3">No video tutorials available yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showTutorials(event) {
+            event.preventDefault();
+            const tutorialsModal = new bootstrap.Modal(document.getElementById('tutorialsModal'));
+            tutorialsModal.show();
+        }
+        
+        // Add hover effects to tutorial links
+        document.addEventListener('DOMContentLoaded', function() {
+            const tutorialLinks = document.querySelectorAll('.list-group-item-action');
+            tutorialLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                });
+                link.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

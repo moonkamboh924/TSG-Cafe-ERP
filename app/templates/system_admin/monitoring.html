@@ -1,0 +1,290 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}System Monitoring - TSG ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 via-blue-700 to-indigo-800 bg-clip-text text-transparent">
+                        System Monitoring
+                    </h1>
+                    <p class="text-gray-600 mt-2">Real-time system health and performance metrics</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="px-4 py-2 bg-green-100 rounded-xl flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm font-semibold text-green-700">System Online</span>
+                    </div>
+                    <button onclick="refreshMonitoring()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-check-circle text-white text-xl"></i>
+                    </div>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Healthy</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-1" id="systemUptime">0%</h3>
+                <p class="text-gray-600 text-sm">System Uptime</p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-database text-white text-xl"></i>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Operational</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-1" id="dbStatus">Healthy</h3>
+                <p class="text-gray-600 text-sm">Database Status</p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-users text-white text-xl"></i>
+                    </div>
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">Active</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-1" id="activeUsers">0</h3>
+                <p class="text-gray-600 text-sm">Active Sessions</p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-bolt text-white text-xl"></i>
+                    </div>
+                    <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Normal</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-1" id="responseTime">0ms</h3>
+                <p class="text-gray-600 text-sm">Avg Response Time</p>
+            </div>
+        </div>
+
+        <!-- System Components Status -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">System Components</h2>
+                    <p class="text-sm text-gray-600">Component health status</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Web Server</h3>
+                                <p class="text-xs text-gray-600">Flask 3.0.0</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold text-sm">Operational</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Database</h3>
+                                <p class="text-xs text-gray-600">SQLite</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold text-sm">Operational</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Scheduler Service</h3>
+                                <p class="text-xs text-gray-600">Background Jobs</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold text-sm">Operational</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">File Storage</h3>
+                                <p class="text-xs text-gray-600">Local Storage</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold text-sm">Operational</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Log -->
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Recent System Activity</h2>
+                    <p class="text-sm text-gray-600">Last 24 hours</p>
+                </div>
+                <div class="space-y-3 max-h-96 overflow-y-auto" id="activityLog">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Performance Metrics</h2>
+                <p class="text-sm text-gray-600">Real-time system performance</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">CPU Usage</span>
+                        <span class="text-sm font-bold text-gray-800" id="cpuUsagePercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="cpuUsageBar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Memory Usage</span>
+                        <span class="text-sm font-bold text-gray-800" id="memoryUsagePercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="memoryUsageBar" class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Disk Usage</span>
+                        <span class="text-sm font-bold text-gray-800" id="diskUsagePercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="diskUsageBar" class="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load monitoring data
+async function loadMonitoringData() {
+    try {
+        const response = await fetch('/system-admin/monitoring/api/system-health');
+        const data = await response.json();
+        
+        // Update system health cards
+        document.getElementById('dbStatus').textContent = data.database_healthy ? 'Healthy' : 'Issues';
+        document.getElementById('activeUsers').textContent = data.active_users || 0;
+        
+        // Update uptime
+        if (data.uptime) {
+            document.getElementById('systemUptime').textContent = data.uptime.uptime_percent.toFixed(1) + '%';
+        }
+        
+        // Update response time
+        if (data.avg_response_time) {
+            document.getElementById('responseTime').textContent = data.avg_response_time.toFixed(1) + 'ms';
+        }
+        
+        // Update CPU usage
+        if (data.cpu_usage !== undefined) {
+            document.getElementById('cpuUsagePercent').textContent = data.cpu_usage + '%';
+            document.getElementById('cpuUsageBar').style.width = data.cpu_usage + '%';
+        }
+        
+        // Update memory usage
+        if (data.memory_usage) {
+            document.getElementById('memoryUsagePercent').textContent = data.memory_usage.percent + '%';
+            document.getElementById('memoryUsageBar').style.width = data.memory_usage.percent + '%';
+        }
+        
+        // Update disk usage
+        if (data.disk_usage) {
+            document.getElementById('diskUsagePercent').textContent = data.disk_usage.percent + '%';
+            document.getElementById('diskUsageBar').style.width = data.disk_usage.percent + '%';
+        }
+        
+        // Load activity logs
+        loadActivityLogs();
+        
+    } catch (error) {
+        console.error('Error loading monitoring data:', error);
+    }
+}
+
+async function loadActivityLogs() {
+    try {
+        const response = await fetch('/system-admin/monitoring/api/activity-logs');
+        const data = await response.json();
+        
+        const activityLog = document.getElementById('activityLog');
+        
+        if (data.logs && data.logs.length > 0) {
+            activityLog.innerHTML = data.logs.slice(0, 10).map(log => {
+                const timestamp = new Date(log.created_at).toLocaleString();
+                return `
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-800 font-medium">${log.action} on ${log.entity}</p>
+                            <p class="text-xs text-gray-600">${timestamp}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            activityLog.innerHTML = '<p class="text-gray-500 text-center py-4">No recent activity</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading activity logs:', error);
+        document.getElementById('activityLog').innerHTML = '<p class="text-red-500 text-center py-4">Failed to load activity logs</p>';
+    }
+}
+
+function refreshMonitoring() {
+    showNotification('Refreshing monitoring data...', 'info');
+    loadMonitoringData();
+    setTimeout(() => {
+        showNotification('Monitoring data updated!', 'success');
+    }, 1000);
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-4 rounded-xl shadow-2xl z-50 ${
+        type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white font-semibold`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(loadMonitoringData, 30000);
+
+// Load monitoring data on page load
+document.addEventListener('DOMContentLoaded', loadMonitoringData);
+</script>
+{% endblock %}

@@ -305,9 +305,18 @@ def weekly_summary():
 @login_required
 @require_permissions('dashboard.view')
 def recent_activities():
-    activities = AuditLog.query.order_by(
-        AuditLog.created_at.desc()
-    ).limit(25).all()
+    # MULTI-TENANT: Filter audit logs by business_id
+    # System admins see all, regular users see only their business
+    if current_user.role == 'system_administrator':
+        activities = AuditLog.query.order_by(
+            AuditLog.created_at.desc()
+        ).limit(25).all()
+    else:
+        activities = AuditLog.query.filter(
+            AuditLog.business_id == current_user.business_id
+        ).order_by(
+            AuditLog.created_at.desc()
+        ).limit(25).all()
     
     return jsonify([activity.to_dict() for activity in activities])
 
@@ -381,6 +390,7 @@ def revenue_details():
         from ..models import CreditSale
         credit_sales = db.session.query(func.sum(Sale.total)).filter(
             and_(
+                Sale.business_id == current_user.business_id,
                 func.date(Sale.created_at) == today,
                 Sale.payment_method == 'credit'
             )
@@ -388,12 +398,16 @@ def revenue_details():
         
         # Credit payments received today (actual cash flow from credit payments table)
         credit_payments_today = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
-            func.date(CreditPayment.payment_date) == today
+            and_(
+                CreditPayment.business_id == current_user.business_id,
+                func.date(CreditPayment.payment_date) == today
+            )
         ).scalar() or 0
         
         # Credit payments breakdown by method
         credit_payments_cash = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
             and_(
+                CreditPayment.business_id == current_user.business_id,
                 func.date(CreditPayment.payment_date) == today,
                 CreditPayment.payment_method == 'cash'
             )
@@ -401,6 +415,7 @@ def revenue_details():
         
         credit_payments_online = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
             and_(
+                CreditPayment.business_id == current_user.business_id,
                 func.date(CreditPayment.payment_date) == today,
                 CreditPayment.payment_method.in_(['online', 'bank_transfer', 'account'])
             )
@@ -409,7 +424,10 @@ def revenue_details():
         # Outstanding credit amount (total unpaid credit)
         from ..models import CreditPayment
         outstanding_credit = db.session.query(func.sum(CreditSale.remaining_amount)).filter(
-            CreditSale.status.in_(['pending', 'partial'])
+            and_(
+                CreditSale.business_id == current_user.business_id,
+                CreditSale.status.in_(['pending', 'partial'])
+            )
         ).scalar() or 0
         
         # MULTI-TENANT: Recent transactions (last 10)
@@ -605,15 +623,21 @@ def expense_details():
     try:
         today = datetime.now(timezone.utc).date()
         
-        # Today's total expenses
+        # MULTI-TENANT: Today's total expenses
         total_expenses = db.session.query(func.sum(Expense.amount)).filter(
-            func.date(Expense.incurred_at) == today
+            and_(
+                Expense.business_id == current_user.business_id,
+                func.date(Expense.incurred_at) == today
+            )
         ).scalar() or 0
         
-        # Calculate yesterday's expenses for comparison
+        # MULTI-TENANT: Calculate yesterday's expenses for comparison
         yesterday = today - timedelta(days=1)
         yesterday_expenses = db.session.query(func.sum(Expense.amount)).filter(
-            func.date(Expense.incurred_at) == yesterday
+            and_(
+                Expense.business_id == current_user.business_id,
+                func.date(Expense.incurred_at) == yesterday
+            )
         ).scalar() or 0
         
         # Calculate growth percentage
@@ -622,13 +646,16 @@ def expense_details():
         else:
             growth_percentage = 0 if total_expenses == 0 else 100
         
-        # Expense breakdown by category
+        # MULTI-TENANT: Expense breakdown by category
         expense_categories = db.session.query(
             Expense.category,
             func.sum(Expense.amount).label('total'),
             func.count(Expense.id).label('count')
         ).filter(
-            func.date(Expense.incurred_at) == today
+            and_(
+                Expense.business_id == current_user.business_id,
+                func.date(Expense.incurred_at) == today
+            )
         ).group_by(Expense.category).all()
         
         categories_data = []

@@ -25,8 +25,14 @@ class Business(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
-    users = db.relationship('User', backref='business', lazy=True, foreign_keys='User.business_id')
+    # Relationships with CASCADE DELETE
+    users = db.relationship('User', backref='business', lazy=True, foreign_keys='User.business_id', cascade='all, delete-orphan')
+    menu_categories = db.relationship('MenuCategory', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    menu_items = db.relationship('MenuItem', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    inventory_items = db.relationship('InventoryItem', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    sales = db.relationship('Sale', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    expenses = db.relationship('Expense', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    credit_sales = db.relationship('CreditSale', backref='business_ref', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):
         return {
@@ -46,7 +52,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     employee_id = db.Column(db.String(10), nullable=True, index=True)  # Unique per business
     username = db.Column(db.String(80), nullable=False, index=True)  # Unique per business
     email = db.Column(db.String(120), nullable=False, index=True)  # Unique per business
@@ -284,18 +290,19 @@ class MenuCategory(db.Model):
     __tablename__ = 'menu_categories'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     name = db.Column(db.String(100), nullable=False)
     order_index = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    items = db.relationship('MenuItem', backref='category', lazy=True)
+    items = db.relationship('MenuItem', backref='category', lazy=True, cascade='all, delete-orphan')
 
 class MenuItem(db.Model):
     __tablename__ = 'menu_items'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     sku = db.Column(db.String(50), nullable=False, index=True)  # Unique per business
     name = db.Column(db.String(100), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('menu_categories.id'), nullable=False)
@@ -350,7 +357,7 @@ class Supplier(db.Model):
     __tablename__ = 'suppliers'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
@@ -363,7 +370,7 @@ class PurchaseOrder(db.Model):
     __tablename__ = 'purchase_orders'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     po_number = db.Column(db.String(50), nullable=False, index=True)  # Unique per business
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
@@ -377,7 +384,7 @@ class PurchaseOrderLine(db.Model):
     __tablename__ = 'purchase_order_lines'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     po_id = db.Column(db.Integer, db.ForeignKey('purchase_orders.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), nullable=False)
     qty = db.Column(db.Numeric(10, 2), nullable=False)
@@ -390,8 +397,8 @@ class InventoryLot(db.Model):
     __tablename__ = 'inventory_lots'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
-    item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), nullable=False)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
+    item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id', ondelete='CASCADE'), nullable=False)
     qty_on_hand = db.Column(db.Numeric(10, 2), nullable=False)
     unit_cost = db.Column(db.Numeric(10, 2), nullable=False)
     received_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -402,7 +409,7 @@ class Sale(db.Model):
     __tablename__ = 'sales'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     invoice_no = db.Column(db.String(50), nullable=False, index=True)  # Unique per business
     customer_name = db.Column(db.String(100))
     customer_phone = db.Column(db.String(20))
@@ -436,7 +443,7 @@ class SaleLine(db.Model):
     __tablename__ = 'sale_lines'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), nullable=False)
     qty = db.Column(db.Numeric(10, 2), nullable=False)
@@ -459,7 +466,7 @@ class Expense(db.Model):
     __tablename__ = 'expenses'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     category = db.Column(db.String(50), nullable=False)
     note = db.Column(db.String(255))
     amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -482,7 +489,7 @@ class DailyClosing(db.Model):
     __tablename__ = 'daily_closings'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     date = db.Column(db.Date, unique=True, nullable=False, index=True)
     opening_cash = db.Column(db.Numeric(10, 2), nullable=False)
     sales_total = db.Column(db.Numeric(10, 2), nullable=False)
@@ -511,6 +518,7 @@ class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
     
     id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     action = db.Column(db.String(50), nullable=False)
     entity = db.Column(db.String(50), nullable=False)
@@ -534,7 +542,7 @@ class BillTemplate(db.Model):
     __tablename__ = 'bill_templates'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     template_type = db.Column(db.String(20), nullable=False, default='receipt')  # receipt, invoice, kitchen
     header_name = db.Column(db.String(100), default='My Business')
     header_tagline = db.Column(db.String(200), default='Authentic Pakistani Cuisine')
@@ -588,7 +596,7 @@ class SystemSetting(db.Model):
     __tablename__ = 'system_settings'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     key = db.Column(db.String(100), nullable=False, index=True)  # Unique per business
     value = db.Column(db.Text)
     description = db.Column(db.String(255))
@@ -645,7 +653,7 @@ class InventoryItem(db.Model):
     __tablename__ = 'inventory_items'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     sku = db.Column(db.String(50), nullable=False, index=True)  # Unique per business
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)  # Raw Materials, Packaging, etc.
@@ -705,7 +713,7 @@ class MenuRecipe(db.Model):
     __tablename__ = 'menu_recipes'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     menu_item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), nullable=False)
     inventory_item_id = db.Column(db.Integer, db.ForeignKey('inventory_items.id'), nullable=False)
     quantity = db.Column(db.Numeric(10, 3), nullable=False)  # Quantity needed per menu item
@@ -728,7 +736,7 @@ class CreditSale(db.Model):
     __tablename__ = 'credit_sales'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20))
@@ -768,7 +776,7 @@ class CreditPayment(db.Model):
     __tablename__ = 'credit_payments'
     
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'), nullable=True, index=True)  # MULTI-TENANT
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     credit_sale_id = db.Column(db.Integer, db.ForeignKey('credit_sales.id'), nullable=False)
     payment_amount = db.Column(db.Numeric(10, 2), nullable=False)
     payment_method = db.Column(db.String(20), nullable=False)  # cash, online
@@ -795,6 +803,7 @@ class PasswordResetRequest(db.Model):
     __tablename__ = 'password_reset_requests'
     
     id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Request details
@@ -834,6 +843,7 @@ class AccountDeletionRequest(db.Model):
     __tablename__ = 'account_deletion_requests'
     
     id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=True, index=True)  # MULTI-TENANT
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Request details
@@ -863,3 +873,68 @@ class AccountDeletionRequest(db.Model):
             'approved_at': self.approved_at.isoformat() if self.approved_at else None,
             'approved_by': self.approved_by.full_name if self.approved_by else None
         }
+
+# ============================================================================
+# SYSTEM MONITORING & METRICS
+# ============================================================================
+
+class SystemMetric(db.Model):
+    """Track system-wide metrics for monitoring dashboard"""
+    __tablename__ = 'system_metrics'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    metric_type = db.Column(db.String(50), nullable=False, index=True)  # daily_logins, api_requests, db_queries
+    metric_value = db.Column(db.Integer, default=0, nullable=False)
+    metric_date = db.Column(db.Date, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    # Composite unique constraint to prevent duplicates
+    __table_args__ = (
+        db.UniqueConstraint('metric_type', 'metric_date', name='unique_metric_per_day'),
+    )
+    
+    @classmethod
+    def increment_metric(cls, metric_type, value=1):
+        """Increment a metric for today"""
+        today = datetime.now(timezone.utc).date()
+        
+        metric = cls.query.filter_by(
+            metric_type=metric_type,
+            metric_date=today
+        ).first()
+        
+        if metric:
+            metric.metric_value += value
+        else:
+            metric = cls(
+                metric_type=metric_type,
+                metric_value=value,
+                metric_date=today
+            )
+            db.session.add(metric)
+        
+        db.session.commit()
+        return metric
+    
+    @classmethod
+    def get_metric(cls, metric_type, days=1):
+        """Get metric value for the last N days"""
+        start_date = datetime.now(timezone.utc).date() - timedelta(days=days-1)
+        
+        metrics = cls.query.filter(
+            cls.metric_type == metric_type,
+            cls.metric_date >= start_date
+        ).all()
+        
+        return sum(m.metric_value for m in metrics)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'metric_type': self.metric_type,
+            'metric_value': self.metric_value,
+            'metric_date': self.metric_date.isoformat(),
+            'created_at': self.created_at.isoformat()
+        }
+
+

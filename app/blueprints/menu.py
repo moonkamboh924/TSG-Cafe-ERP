@@ -147,7 +147,11 @@ def create_item():
 @login_required
 @require_permissions('menu.edit')
 def update_item(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     data = request.get_json()
     
     try:
@@ -194,7 +198,11 @@ def update_item(item_id):
 @login_required
 @require_permissions('menu.edit')
 def delete_item(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     
     try:
         # Soft delete - mark as inactive
@@ -219,7 +227,11 @@ def delete_item(item_id):
 @login_required
 @require_permissions('menu.view')
 def get_item(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     return jsonify({
         'success': True,
         'item': item.to_dict()
@@ -279,7 +291,11 @@ def list_inventory_categories():
 @login_required
 @require_permissions('menu.view')
 def get_item_recipe(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     return jsonify({
         'success': True,
         'recipe': [recipe.to_dict() for recipe in item.recipe_items]
@@ -289,7 +305,11 @@ def get_item_recipe(item_id):
 @login_required
 @require_permissions('menu.edit')
 def update_item_recipe(item_id):
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     data = request.get_json()
     
     try:

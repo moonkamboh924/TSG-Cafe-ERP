@@ -3,150 +3,904 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Your Business - TSG Cafe ERP</title>
+    <title>Create Your Account - TSG Cafe ERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .registration-form {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .form-header {
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .registration-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .card-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            padding: 25px 30px 20px;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 43px;
+            left: 25%;
+            right: 25%;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 0;
+        }
+
+        .progress-steps::after {
+            content: '';
+            position: absolute;
+            top: 43px;
+            left: 25%;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            z-index: 1;
+        }
+
+        .progress-steps[data-step="1"]::after { width: 0; }
+        .progress-steps[data-step="2"]::after { width: 25%; }
+        .progress-steps[data-step="3"]::after { width: 50%; }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #dee2e6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-number {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 11px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Form Body */
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 25px;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            color: #cbd5e0;
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .input-group.valid .input-icon {
+            color: #28a745;
+        }
+
+        .input-group.invalid .input-icon {
+            color: #dc3545;
+        }
+
+        .input-feedback {
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .input-feedback.success {
+            color: #28a745;
+        }
+
+        .input-feedback.error {
+            color: #dc3545;
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            background: none;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            padding: 0;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background: #dc3545; width: 33%; }
+        .strength-medium { background: #ffc107; width: 66%; }
+        .strength-strong { background: #28a745; width: 100%; }
+
+        .password-requirements {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .requirement {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .requirement i {
+            margin-right: 8px;
+            font-size: 10px;
+        }
+
+        .requirement.met {
+            color: #28a745;
+        }
+
+        /* Plan Selection */
+        .plans {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .plan-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .plan-card:hover {
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f7faff 0%, #f0f4ff 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .plan-radio {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .plan-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .plan-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .plan-info h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .plan-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .plan-price span {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .plan-features {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .plan-feature {
+            font-size: 12px;
+            color: #4a5568;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-feature i {
+            color: #28a745;
+            margin-right: 8px;
+            font-size: 10px;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .btn-back:hover {
+            background: #edf2f7;
+        }
+
+        .btn-next, .btn-submit {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
-        .availability-check {
-            font-size: 0.875rem;
+
+        .btn-next:hover, .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
         }
-        .available { color: #28a745; }
-        .unavailable { color: #dc3545; }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Footer */
+        .card-footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .card-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 576px) {
+            .card-body {
+                padding: 20px;
+            }
+
+            .progress-steps {
+                padding: 20px 15px 15px;
+            }
+        }
     </style>
 </head>
-<body class="bg-light">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="registration-form">
-                    <div class="form-header p-4 text-center">
-                        <h2 class="mb-0"><i class="fas fa-store me-2"></i>Register Your Business</h2>
-                        <p class="mb-0 mt-2">Start your restaurant management journey</p>
+<body>
+    <a href="{{ url_for('root') }}" class="home-button">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <div class="container">
+        <div class="registration-card">
+            <!-- Header -->
+            <div class="card-header">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h1>Create Your Account</h1>
+                <p>Join TSG Cafe and transform your restaurant</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="progress-steps" id="progressSteps" data-step="1">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Account</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Security</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Plan</div>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div style="padding: 0 30px; padding-top: 20px;">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
                     </div>
-                    
-                    <div class="p-4">
-                        <!-- Flash Messages -->
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
+                {% endif %}
+            {% endwith %}
 
-                        <form method="POST" id="registrationForm">
-                            <!-- Business Name -->
-                            <div class="mb-3">
-                                <label for="business_name" class="form-label">
-                                    <i class="fas fa-building me-1"></i>Business Name *
-                                </label>
-                                <input type="text" class="form-control" id="business_name" name="business_name" 
-                                       value="{{ business_name or '' }}" required>
-                                <div class="availability-check" id="business_name_check"></div>
-                            </div>
+            <!-- Form -->
+            <form method="POST" id="registrationForm">
+                <div class="card-body">
+                    <!-- Step 1: Account Info -->
+                    <div class="form-step active" data-step="1">
+                        <h2 class="step-title">Let's start with the basics</h2>
+                        <p class="step-description">Tell us about your business and contact information</p>
 
-                            <!-- Owner Name -->
-                            <div class="mb-3">
-                                <label for="owner_name" class="form-label">
-                                    <i class="fas fa-user me-1"></i>Owner Full Name *
-                                </label>
-                                <input type="text" class="form-control" id="owner_name" name="owner_name" 
-                                       value="{{ owner_name or '' }}" required>
-                            </div>
+                        <div class="input-group" id="businessNameGroup">
+                            <label class="form-label">Business Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="business_name" 
+                                   name="business_name" 
+                                   value="{{ business_name or '' }}" 
+                                   placeholder="e.g., Delicious Cafe"
+                                   required>
+                            <i class="fas fa-check-circle input-icon"></i>
+                            <div class="input-feedback" id="businessNameFeedback"></div>
+                        </div>
 
-                            <!-- Owner Email -->
-                            <div class="mb-3">
-                                <label for="owner_email" class="form-label">
-                                    <i class="fas fa-envelope me-1"></i>Owner Email *
-                                </label>
-                                <input type="email" class="form-control" id="owner_email" name="owner_email" 
-                                       value="{{ owner_email or '' }}" required>
-                                <div class="availability-check" id="email_check"></div>
-                            </div>
+                        <div class="input-group" id="ownerNameGroup">
+                            <label class="form-label">Your Full Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="owner_name" 
+                                   name="owner_name" 
+                                   value="{{ owner_name or '' }}" 
+                                   placeholder="John Doe"
+                                   required>
+                            <i class="fas fa-check-circle input-icon"></i>
+                        </div>
 
-                            <!-- Subscription Plan -->
-                            <div class="mb-4">
-                                <label class="form-label">
-                                    <i class="fas fa-crown me-1"></i>Subscription Plan
-                                </label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_free" 
-                                               value="free" {{ 'checked' if not subscription_plan or subscription_plan == 'free' }}>
-                                        <label class="btn btn-outline-success w-100" for="plan_free">
-                                            <div>Free</div>
-                                            <small>$0/month</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-4">
-                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_basic" 
-                                               value="basic" {{ 'checked' if subscription_plan == 'basic' }}>
-                                        <label class="btn btn-outline-primary w-100" for="plan_basic">
-                                            <div>Basic</div>
-                                            <small>$29/month</small>
-                                        </label>
-                                    </div>
-                                    <div class="col-4">
-                                        <input type="radio" class="btn-check" name="subscription_plan" id="plan_premium" 
-                                               value="premium" {{ 'checked' if subscription_plan == 'premium' }}>
-                                        <label class="btn btn-outline-warning w-100" for="plan_premium">
-                                            <div>Premium</div>
-                                            <small>$99/month</small>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        <a href="{{ url_for('tenant.plans') }}" target="_blank">Compare plans</a>
-                                    </small>
-                                </div>
-                            </div>
+                        <div class="input-group" id="emailGroup">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="owner_email" 
+                                   name="owner_email" 
+                                   value="{{ owner_email or '' }}" 
+                                   placeholder="john@example.com"
+                                   required>
+                            <i class="fas fa-check-circle input-icon"></i>
+                            <div class="input-feedback" id="emailFeedback"></div>
+                        </div>
 
-                            <!-- Terms -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="terms" required>
-                                    <label class="form-check-label" for="terms">
-                                        I agree to the <a href="#" target="_blank">Terms of Service</a> and 
-                                        <a href="#" target="_blank">Privacy Policy</a>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <button type="submit" class="btn btn-primary w-100 py-2" id="submitBtn">
-                                <i class="fas fa-rocket me-2"></i>Create My Business Account
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-next" onclick="nextStep(1)">
+                                Continue <i class="fas fa-arrow-right ms-2"></i>
                             </button>
-                        </form>
+                        </div>
+                    </div>
 
-                        <div class="text-center mt-4">
-                            <p class="text-muted">
-                                Already have an account? 
-                                <a href="{{ url_for('auth.login') }}">Sign in here</a>
-                            </p>
+                    <!-- Step 2: Password -->
+                    <div class="form-step" data-step="2">
+                        <h2 class="step-title">Secure your account</h2>
+                        <p class="step-description">Create a strong password to protect your data</p>
+
+                        <div class="input-group">
+                            <label class="form-label">Password</label>
+                            <div style="position: relative;">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Create a strong password"
+                                       required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="strengthBar"></div>
+                            </div>
+                            <div class="input-feedback" id="strengthText"></div>
+                            
+                            <div class="password-requirements">
+                                <div class="requirement" id="req-length">
+                                    <i class="fas fa-circle"></i> At least 8 characters
+                                </div>
+                                <div class="requirement" id="req-uppercase">
+                                    <i class="fas fa-circle"></i> One uppercase letter
+                                </div>
+                                <div class="requirement" id="req-lowercase">
+                                    <i class="fas fa-circle"></i> One lowercase letter
+                                </div>
+                                <div class="requirement" id="req-number">
+                                    <i class="fas fa-circle"></i> One number
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="form-label">Confirm Password</label>
+                            <div style="position: relative;">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirm_password" 
+                                       name="confirm_password" 
+                                       placeholder="Confirm your password"
+                                       required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="input-feedback" id="matchText"></div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-back" onclick="prevStep(2)">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-next" onclick="nextStep(2)">
+                                Continue <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Plan Selection -->
+                    <div class="form-step" data-step="3">
+                        <h2 class="step-title">Choose your plan</h2>
+                        <p class="step-description">Select the plan that best fits your needs</p>
+
+                        <div class="plans">
+                            <div class="plan-card" onclick="selectPlan('free')" id="freePlan">
+                                <input type="radio" 
+                                       class="plan-radio" 
+                                       name="subscription_plan" 
+                                       id="plan_free" 
+                                       value="free" 
+                                       {{ 'checked' if not subscription_plan or subscription_plan == 'free' }}>
+                                <div class="plan-header">
+                                    <div class="plan-icon" style="background: #d4edda;">
+                                        <i class="fas fa-gift" style="color: #28a745;"></i>
+                                    </div>
+                                    <div class="plan-info">
+                                        <h3>Free</h3>
+                                        <div class="plan-price">$0 <span>/ month</span></div>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Basic POS system
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Up to 50 menu items
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> 1 user account
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="plan-card" onclick="selectPlan('basic')" id="basicPlan">
+                                <input type="radio" 
+                                       class="plan-radio" 
+                                       name="subscription_plan" 
+                                       id="plan_basic" 
+                                       value="basic" 
+                                       {{ 'checked' if subscription_plan == 'basic' }}>
+                                <div class="plan-header">
+                                    <div class="plan-icon" style="background: #cfe2ff;">
+                                        <i class="fas fa-rocket" style="color: #0d6efd;"></i>
+                                    </div>
+                                    <div class="plan-info">
+                                        <h3>Basic</h3>
+                                        <div class="plan-price">$29 <span>/ month</span></div>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Advanced POS features
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Unlimited menu items
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Up to 5 users
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Sales reports
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="plan-card" onclick="selectPlan('premium')" id="premiumPlan">
+                                <input type="radio" 
+                                       class="plan-radio" 
+                                       name="subscription_plan" 
+                                       id="plan_premium" 
+                                       value="premium" 
+                                       {{ 'checked' if subscription_plan == 'premium' }}>
+                                <div class="plan-header">
+                                    <div class="plan-icon" style="background: #fff3cd;">
+                                        <i class="fas fa-crown" style="color: #ffc107;"></i>
+                                    </div>
+                                    <div class="plan-info">
+                                        <h3>Premium</h3>
+                                        <div class="plan-price">$99 <span>/ month</span></div>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Everything in Basic
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Unlimited users
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Advanced analytics
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Priority support
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-back" onclick="prevStep(3)">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="submit" class="btn btn-submit" id="submitBtn">
+                                <i class="fas fa-check-circle me-2"></i> Create Account
+                            </button>
                         </div>
                     </div>
                 </div>
+            </form>
+
+            <!-- Footer -->
+            <div class="card-footer">
+                Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Real-time availability checking
+        let currentStep = 1;
+
+        // Step Navigation
+        function nextStep(step) {
+            if (validateStep(step)) {
+                currentStep = step + 1;
+                updateStepDisplay();
+            }
+        }
+
+        function prevStep(step) {
+            currentStep = step - 1;
+            updateStepDisplay();
+        }
+
+        function updateStepDisplay() {
+            // Update progress indicator
+            document.getElementById('progressSteps').setAttribute('data-step', currentStep);
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((stepEl, index) => {
+                stepEl.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    stepEl.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    stepEl.classList.add('active');
+                }
+            });
+
+            // Update form steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+        }
+
+        function validateStep(step) {
+            const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = stepElement.querySelectorAll('input[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = '#dc3545';
+                } else {
+                    input.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            if (step === 2) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
+                    return false;
+                }
+                if (password.length < 8) {
+                    alert('Password must be at least 8 characters!');
+                    return false;
+                }
+            }
+
+            if (!isValid) {
+                alert('Please fill in all required fields');
+            }
+
+            return isValid;
+        }
+
+        // Input Validation
+        function validateInput(inputId, groupId, pattern) {
+            const input = document.getElementById(inputId);
+            const group = document.getElementById(groupId);
+
+            input.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    if (pattern && !pattern.test(this.value)) {
+                        group.classList.remove('valid');
+                        group.classList.add('invalid');
+                    } else {
+                        group.classList.remove('invalid');
+                        group.classList.add('valid');
+                    }
+                } else {
+                    group.classList.remove('valid', 'invalid');
+                }
+            });
+        }
+
+        validateInput('business_name', 'businessNameGroup');
+        validateInput('owner_name', 'ownerNameGroup');
+        validateInput('owner_email', 'emailGroup', /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+
+        // Availability Check
         let checkTimeout;
         
         function checkAvailability() {
@@ -159,9 +913,7 @@
             checkTimeout = setTimeout(() => {
                 fetch('{{ url_for("tenant.check_availability") }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         business_name: businessName,
                         owner_email: ownerEmail
@@ -169,32 +921,26 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Business name availability
-                    const businessCheck = document.getElementById('business_name_check');
+                    const businessFeedback = document.getElementById('businessNameFeedback');
                     if (businessName) {
                         if (data.business_name_available) {
-                            businessCheck.innerHTML = '<i class="fas fa-check available"></i> Business name is available';
-                            businessCheck.className = 'availability-check available';
+                            businessFeedback.textContent = '✓ Available';
+                            businessFeedback.className = 'input-feedback success';
                         } else {
-                            businessCheck.innerHTML = '<i class="fas fa-times unavailable"></i> Business name is already taken';
-                            businessCheck.className = 'availability-check unavailable';
+                            businessFeedback.textContent = '✗ Already taken';
+                            businessFeedback.className = 'input-feedback error';
                         }
-                    } else {
-                        businessCheck.innerHTML = '';
                     }
                     
-                    // Email availability
-                    const emailCheck = document.getElementById('email_check');
+                    const emailFeedback = document.getElementById('emailFeedback');
                     if (ownerEmail) {
                         if (data.email_available) {
-                            emailCheck.innerHTML = '<i class="fas fa-check available"></i> Email is available';
-                            emailCheck.className = 'availability-check available';
+                            emailFeedback.textContent = '✓ Available';
+                            emailFeedback.className = 'input-feedback success';
                         } else {
-                            emailCheck.innerHTML = '<i class="fas fa-times unavailable"></i> Email is already registered';
-                            emailCheck.className = 'availability-check unavailable';
+                            emailFeedback.textContent = '✗ Already registered';
+                            emailFeedback.className = 'input-feedback error';
                         }
-                    } else {
-                        emailCheck.innerHTML = '';
                     }
                 })
                 .catch(error => console.error('Error:', error));
@@ -203,6 +949,123 @@
         
         document.getElementById('business_name').addEventListener('input', checkAvailability);
         document.getElementById('owner_email').addEventListener('input', checkAvailability);
+
+        // Password Toggle
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Password Strength
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            updateRequirement('req-length', requirements.length);
+            updateRequirement('req-uppercase', requirements.uppercase);
+            updateRequirement('req-lowercase', requirements.lowercase);
+            updateRequirement('req-number', requirements.number);
+
+            let strength = Object.values(requirements).filter(v => v).length;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+
+            strengthBar.className = 'password-strength-bar';
+            if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.className = 'input-feedback error';
+            } else if (strength === 3) {
+                strengthBar.classList.add('strength-medium');
+                strengthText.textContent = 'Medium password';
+                strengthText.className = 'input-feedback';
+                strengthText.style.color = '#ffc107';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.className = 'input-feedback success';
+            }
+
+            checkPasswordMatch();
+        });
+
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+        function updateRequirement(id, met) {
+            const element = document.getElementById(id);
+            const icon = element.querySelector('i');
+            if (met) {
+                element.classList.add('met');
+                icon.classList.replace('fa-circle', 'fa-check-circle');
+            } else {
+                element.classList.remove('met');
+                icon.classList.replace('fa-check-circle', 'fa-circle');
+            }
+        }
+
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const matchText = document.getElementById('matchText');
+
+            if (confirmPassword.length > 0) {
+                if (password === confirmPassword) {
+                    matchText.textContent = '✓ Passwords match';
+                    matchText.className = 'input-feedback success';
+                } else {
+                    matchText.textContent = '✗ Passwords do not match';
+                    matchText.className = 'input-feedback error';
+                }
+            } else {
+                matchText.textContent = '';
+            }
+        }
+
+        // Plan Selection
+        function selectPlan(plan) {
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById(plan + 'Plan').classList.add('selected');
+            document.getElementById('plan_' + plan).checked = true;
+        }
+
+        // Set initial selected plan
+        const checkedPlan = document.querySelector('input[name="subscription_plan"]:checked');
+        if (checkedPlan) {
+            const planValue = checkedPlan.value;
+            document.getElementById(planValue + 'Plan').classList.add('selected');
+        }
+
+        // Form Submission
+        document.getElementById('registrationForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+            btn.disabled = true;
+        });
+
+        // Auto-hide alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                new bootstrap.Alert(alert).close();
+            });
+        }, 5000);
     </script>
 </body>
 </html>

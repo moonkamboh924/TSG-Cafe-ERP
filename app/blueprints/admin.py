@@ -34,7 +34,7 @@ def get_global_settings():
     settings = {
         'restaurant_name': SystemSetting.get_setting('restaurant_name', 'My Business'),
         'restaurant_subtitle': SystemSetting.get_setting('restaurant_subtitle', 'Powered by Trisync Global'),
-        'copyright_company': SystemSetting.get_setting('copyright_company', 'Trysync global'),
+        'copyright_company': SystemSetting.get_setting('copyright_company', 'Trisync Global'),
         'restaurant_address': SystemSetting.get_setting('restaurant_address', '123 Main Street, Lahore'),
         'restaurant_phone': SystemSetting.get_setting('restaurant_phone', '+92 300 1234567'),
         'tax_rate': SystemSetting.get_setting('tax_rate', '16'),
@@ -196,7 +196,15 @@ def create_user():
 @login_required
 @require_permissions('admin.edit')
 def update_user(user_id):
-    user = User.query.get_or_404(user_id)
+    # MULTI-TENANT: Get user and verify ownership
+    # System administrators can access any user, others only from their business
+    if current_user.role == 'system_administrator':
+        user = User.query.get_or_404(user_id)
+    else:
+        user = User.query.filter_by(
+            id=user_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     
     # Non-system administrators cannot view/edit/delete system administrators
     if user.role == 'system_administrator' and current_user.role != 'system_administrator':
@@ -1051,8 +1059,14 @@ def bill_preview():
 def print_bill(sale_id):
     """Print bill with logo using template settings"""
     try:
-        # Get the sale data
-        sale = Sale.query.get_or_404(sale_id)
+        # MULTI-TENANT: Get the sale data and verify ownership
+        if current_user.role == 'system_administrator':
+            sale = Sale.query.get_or_404(sale_id)
+        else:
+            sale = Sale.query.filter_by(
+                id=sale_id,
+                business_id=current_user.business_id
+            ).first_or_404()
         
         # Get the template (default to receipt)
         template = BillTemplate.get_template('receipt')

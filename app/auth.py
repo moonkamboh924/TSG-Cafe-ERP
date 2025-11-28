@@ -5,7 +5,7 @@ Handles login, logout, and redirects registration to tenant system
 from flask import Blueprint, render_template, request, flash, redirect, url_for, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
-from .models import User, SystemSetting, AuditLog
+from .models import User, SystemSetting, AuditLog, SystemMetric
 from .extensions import db
 from datetime import datetime, timezone
 from functools import wraps
@@ -114,7 +114,14 @@ def login():
                 
                 # Successful login - reset failed attempts
                 user.reset_failed_login()
+                user.last_login = datetime.now(timezone.utc)
                 db.session.commit()
+                
+                # Track login metric
+                try:
+                    SystemMetric.increment_metric('daily_logins')
+                except:
+                    pass  # Don't fail login if metric tracking fails
                 
                 login_user(user, remember=True)
                 log_audit('login', 'user', user.id)
@@ -183,9 +190,8 @@ def forgot_password():
             reset_request = PasswordResetRequest(
                 business_id=user.business_id,
                 user_id=user.id,
-                email=email,
                 status='pending',
-                created_at=datetime.now(timezone.utc)
+                requested_at=datetime.now(timezone.utc)
             )
             db.session.add(reset_request)
             db.session.commit()

@@ -15,7 +15,12 @@ def validate_inventory_availability(menu_item_id, quantity):
     Returns True if sufficient stock, False otherwise
     """
     try:
-        item = MenuItem.query.get(menu_item_id)
+        from flask_login import current_user
+        # MULTI-TENANT: Verify item belongs to user's business
+        item = MenuItem.query.filter_by(
+            id=menu_item_id,
+            business_id=current_user.business_id
+        ).first()
         if not item or not item.recipe_items:
             return True  # No recipe to validate
         
@@ -36,7 +41,12 @@ def deduct_inventory_for_menu_item(menu_item_id, quantity):
     Returns True if successful, False if insufficient stock or error
     """
     try:
-        item = MenuItem.query.get(menu_item_id)
+        from flask_login import current_user
+        # MULTI-TENANT: Verify item belongs to user's business
+        item = MenuItem.query.filter_by(
+            id=menu_item_id,
+            business_id=current_user.business_id
+        ).first()
         if not item or not item.recipe_items:
             return True  # No recipe to deduct from
         
@@ -119,7 +129,11 @@ def check_inventory_availability(item_id):
     """Check inventory availability for a specific menu item"""
     quantity = request.args.get('quantity', 1, type=float)
     
-    item = MenuItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    item = MenuItem.query.filter_by(
+        id=item_id,
+        business_id=current_user.business_id
+    ).first_or_404()
     
     # Check if item has recipe
     if not item.recipe_items:
@@ -446,7 +460,14 @@ def get_sales():
 @login_required
 @require_permissions('pos.view')
 def get_sale(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
+    # MULTI-TENANT: Verify sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        sale = Sale.query.get_or_404(sale_id)
+    else:
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     return jsonify({
         'success': True,
         'sale': sale.to_dict()
@@ -456,7 +477,14 @@ def get_sale(sale_id):
 @login_required
 @require_permissions('pos.view')
 def update_sale(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
+    # MULTI-TENANT: Verify sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        sale = Sale.query.get_or_404(sale_id)
+    else:
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     data = request.get_json()
     
     try:
@@ -524,7 +552,14 @@ def update_sale(sale_id):
 @login_required
 @require_permissions('pos.delete')
 def delete_sale(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
+    # MULTI-TENANT: Verify sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        sale = Sale.query.get_or_404(sale_id)
+    else:
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     
     try:
         # Delete sale lines first
@@ -666,7 +701,14 @@ def get_credit_sales():
 @require_permissions('pos.view')
 def get_credit_sale(credit_sale_id):
     """Get individual credit sale details"""
-    credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    # MULTI-TENANT: Verify credit sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    else:
+        credit_sale = CreditSale.query.filter_by(
+            id=credit_sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     return jsonify({
         'success': True,
         'credit_sale': credit_sale.to_dict()
@@ -677,7 +719,14 @@ def get_credit_sale(credit_sale_id):
 @require_permissions('pos.edit')
 def update_credit_sale(credit_sale_id):
     """Update credit sale details"""
-    credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    # MULTI-TENANT: Verify credit sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    else:
+        credit_sale = CreditSale.query.filter_by(
+            id=credit_sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     data = request.get_json()
     
     try:
@@ -713,7 +762,14 @@ def update_credit_sale(credit_sale_id):
 @require_permissions('pos.delete')
 def delete_credit_sale(credit_sale_id):
     """Delete credit sale with optional force parameter"""
-    credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    # MULTI-TENANT: Verify credit sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+    else:
+        credit_sale = CreditSale.query.filter_by(
+            id=credit_sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     force_delete = request.args.get('force', 'false').lower() == 'true'
     
     # Check if any payments have been made (unless force delete)
@@ -847,8 +903,9 @@ def pay_credit_sale(credit_sale_id):
         return jsonify({'error': f'Validation error: {str(e)}'}), 400
     
     try:
-        # Create payment record
+        # Create payment record with business_id for multi-tenant tracking
         payment = CreditPayment(
+            business_id=current_user.business_id,
             credit_sale_id=credit_sale.id,
             payment_amount=payment_amount,
             payment_method=payment_method,
@@ -889,7 +946,9 @@ def pay_credit_sale(credit_sale_id):
         tax_rate = float(SystemSetting.get_setting('tax_rate', 16)) / 100
         tax_multiplier = 1 + tax_rate
         
+        # MULTI-TENANT: Add business_id to payment sale
         payment_sale = Sale(
+            business_id=current_user.business_id,
             invoice_no=payment_invoice_no,
             customer_name=credit_sale.customer_name,
             customer_phone=credit_sale.customer_phone,

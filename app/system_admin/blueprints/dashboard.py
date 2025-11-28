@@ -16,6 +16,8 @@ except ImportError:
     AuditLog = None
 from ...extensions import db
 from ..decorators import require_system_admin, system_admin_api_required
+from ...utils.system_monitor import SystemMonitor
+from ...middleware import get_average_response_time
 
 bp = Blueprint('system_admin_dashboard', __name__, url_prefix='/system-admin')
 
@@ -75,7 +77,8 @@ def system_stats():
         six_months_ago = datetime.now(timezone.utc) - timedelta(days=180)
         monthly_growth = []
         
-        for i in range(6):
+        # Generate months in chronological order (oldest to newest)
+        for i in range(5, -1, -1):  # 5 down to 0 for correct order
             month_start = datetime.now(timezone.utc) - timedelta(days=30*(i+1))
             month_end = datetime.now(timezone.utc) - timedelta(days=30*i)
             
@@ -84,7 +87,7 @@ def system_stats():
                 Business.created_at < month_end
             ).count()
             
-            monthly_growth.insert(0, {
+            monthly_growth.append({
                 'month': month_start.strftime('%b %Y'),
                 'count': month_businesses
             })
@@ -112,25 +115,37 @@ def system_health():
     """Get system health metrics"""
     
     try:
+        # Get system resource stats
+        system_stats = SystemMonitor.get_system_stats()
+        
         # Database health
-        db_status = "healthy"  # You can add actual DB health checks here
+        db_status = "healthy"
+        try:
+            db.session.execute(db.text('SELECT 1'))
+        except:
+            db_status = "error"
         
         # Recent errors (if you have error logging)
         recent_errors = 0  # Implement based on your error logging
         
-        # System uptime (placeholder)
-        uptime = "99.9%"  # Implement based on your monitoring
-        
         # Active sessions (approximate)
         active_sessions = User.query.filter_by(is_active=True).count()
+        
+        # Average response time
+        avg_response_time = get_average_response_time()
         
         return jsonify({
             'database_status': db_status,
             'recent_errors': recent_errors,
-            'uptime': uptime,
+            'uptime': system_stats['uptime'],
+            'cpu_usage': system_stats['cpu'],
+            'memory_usage': system_stats['memory'],
+            'disk_usage': system_stats['disk'],
+            'avg_response_time': avg_response_time,
             'active_sessions': active_sessions,
             'last_updated': datetime.now(timezone.utc).isoformat()
         })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+

@@ -8,11 +8,20 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">Business Management</h1>
-                <p class="text-gray-600 mt-2">Monitor and manage all registered businesses across the platform.</p>
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-building text-white text-xl"></i>
+                    </div>
+                    Business Management
+                </h1>
+                <p class="text-gray-600 mt-2 ml-15">Monitor and manage all registered businesses across the platform.</p>
             </div>
             <div class="flex gap-3">
-                <button id="refreshBusinesses" class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition flex items-center gap-2">
+                <button id="exportBusinesses" class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </button>
+                <button id="refreshBusinesses" class="bg-gradient-to-r from-blue-500 to-blue-600 border border-blue-600 px-4 py-2 rounded-xl text-sm font-medium text-white hover:from-blue-600 hover:to-blue-700 transition flex items-center gap-2 shadow-sm">
                     <i class="fas fa-rotate"></i>
                     Refresh
                 </button>
@@ -21,17 +30,41 @@
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
-                <p class="text-sm text-gray-500">Total Businesses</p>
-                <p class="text-3xl font-semibold text-gray-900" id="statsTotal">{{ total_businesses }}</p>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Total Businesses</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2" id="statsTotal">{{ total_businesses }}</p>
+                        <p class="text-xs text-green-600 mt-2"><i class="fas fa-arrow-up mr-1"></i>All registered</p>
+                    </div>
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-building text-white text-2xl"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
-                <p class="text-sm text-gray-500">Active Businesses</p>
-                <p class="text-3xl font-semibold text-green-600" id="statsActive">{{ active_businesses }}</p>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Active Businesses</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2" id="statsActive">{{ active_businesses }}</p>
+                        <p class="text-xs text-gray-500 mt-2"><i class="fas fa-check-circle mr-1"></i>Currently active</p>
+                    </div>
+                    <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-check-double text-white text-2xl"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
-                <p class="text-sm text-gray-500">Recently Created</p>
-                <p class="text-3xl font-semibold text-blue-600">{{ recent_businesses|length }}</p>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Recently Created</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2">{{ recent_businesses|length }}</p>
+                        <p class="text-xs text-blue-600 mt-2"><i class="fas fa-star mr-1"></i>Last 30 days</p>
+                    </div>
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-plus-circle text-white text-2xl"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -108,40 +141,221 @@
     </div>
 </div>
 
-<!-- Details Modal -->
+<!-- Details Modal - Enhanced -->
 <div id="businessDetailsModal" class="fixed inset-0 bg-black/50 hidden z-50 p-6 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-3xl mx-auto shadow-2xl">
-        <div class="flex justify-between items-center border-b px-6 py-4">
-            <div>
-                <h3 class="text-xl font-bold text-gray-800" id="detailsName">Business Details</h3>
-                <p class="text-sm text-gray-500">Created <span id="detailsCreated">—</span></p>
-            </div>
-            <button class="text-gray-400 hover:text-gray-600" onclick="businessApp.closeDetails()"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-                <p class="text-gray-500">Owner Email</p>
-                <p class="font-semibold text-gray-900" id="detailsEmail">—</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Subscription Plan</p>
-                <p class="font-semibold text-indigo-600" id="detailsPlan">—</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Status</p>
-                <p class="font-semibold" id="detailsStatus">—</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Users</p>
-                <p class="font-semibold" id="detailsUsers">—</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Last Updated</p>
-                <p class="font-semibold" id="detailsUpdated">—</p>
+    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl max-w-6xl mx-auto shadow-2xl">
+        <!-- Header Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-6 rounded-t-2xl">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h3 class="text-2xl font-bold" id="detailsName">Business Details</h3>
+                    <p class="text-blue-100 text-sm mt-1">Created <span id="detailsCreated">—</span></p>
+                    <div class="flex gap-2 mt-3">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium" id="detailsStatusBadge">Active</span>
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium" id="detailsPlanBadge">Premium</span>
+                    </div>
+                </div>
+                <button class="text-white/80 hover:text-white transition" onclick="businessApp.closeDetails()">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
             </div>
         </div>
-        <div class="flex justify-end px-6 py-4 border-t">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-xl" onclick="businessApp.closeDetails()">Close</button>
+
+        <!-- Stats Cards Section -->
+        <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase">Total Users</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsUsersCount">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase">Total Sales</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsSalesCount">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase">Revenue</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsRevenue">₹0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-rupee-sign text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase">Menu Items</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsMenuItems">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-utensils text-amber-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Business Information -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Basic Information Card -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-building text-blue-600"></i>
+                            Business Information
+                        </h4>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Owner Email</p>
+                            <p class="font-semibold text-gray-900 mt-1" id="detailsEmail">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Subscription Plan</p>
+                            <p class="font-semibold text-indigo-600 mt-1" id="detailsPlan">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Status</p>
+                            <p class="font-semibold mt-1" id="detailsStatus">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Active Users</p>
+                            <p class="font-semibold text-gray-900 mt-1" id="detailsActiveUsers">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Last Updated</p>
+                            <p class="font-semibold text-gray-900 mt-1" id="detailsUpdated">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">Business ID</p>
+                            <p class="font-mono text-sm text-gray-700 mt-1" id="detailsBusinessId">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline Card -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-clock text-purple-600"></i>
+                            Recent Activity
+                        </h4>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4" id="detailsActivityTimeline">
+                            <div class="flex items-start gap-3">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-600">Loading activity data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Quick Actions & Stats -->
+            <div class="space-y-6">
+                <!-- Quick Actions Card -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-bolt text-yellow-600"></i>
+                            Quick Actions
+                        </h4>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <button onclick="businessApp.editFromDetails()" class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit Business</span>
+                        </button>
+                        <button onclick="businessApp.viewUsersFromDetails()" class="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-users"></i>
+                            <span>View Users</span>
+                        </button>
+                        <button onclick="businessApp.toggleStatusFromDetails()" class="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-power-off"></i>
+                            <span id="detailsToggleBtn">Toggle Status</span>
+                        </button>
+                        <button onclick="businessApp.generateReport()" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-file-download"></i>
+                            <span>Download Report</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Statistics Card -->
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-pink-600"></i>
+                            System Stats
+                        </h4>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Expenses</span>
+                            <span class="font-semibold text-gray-900" id="detailsExpenses">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Credit Sales</span>
+                            <span class="font-semibold text-orange-600" id="detailsCreditSales">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Pending Credits</span>
+                            <span class="font-semibold text-red-600" id="detailsPendingCredits">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                            <span class="text-sm font-medium text-gray-900">Net Profit</span>
+                            <span class="font-bold text-green-600 text-lg" id="detailsNetProfit">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Details Card -->
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 shadow-sm">
+                    <div class="p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-crown text-yellow-500 text-xl"></i>
+                            <h4 class="font-semibold text-gray-900">Subscription</h4>
+                        </div>
+                        <p class="text-2xl font-bold text-indigo-600 mb-2" id="detailsSubPlan">Premium</p>
+                        <p class="text-xs text-gray-600 mb-3">Active since <span id="detailsSubSince">—</span></p>
+                        <button class="w-full px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition text-sm font-medium shadow-sm">
+                            <i class="fas fa-arrow-up mr-2"></i>Upgrade Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <button onclick="businessApp.deleteFromDetails()" class="px-4 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition font-medium">
+                <i class="fas fa-trash mr-2"></i>Delete Business
+            </button>
+            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" onclick="businessApp.closeDetails()">
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -383,43 +597,230 @@ function businessManager() {
         },
 
         rowTemplate(biz) {
+            const statusColor = biz.is_active ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200';
+            const planColors = {
+                'free': 'bg-slate-100 text-slate-700 border-slate-200',
+                'basic': 'bg-blue-100 text-blue-700 border-blue-200',
+                'premium': 'bg-purple-100 text-purple-700 border-purple-200',
+                'enterprise': 'bg-amber-100 text-amber-700 border-amber-200'
+            };
+            const planColor = planColors[biz.subscription_plan.toLowerCase()] || planColors['free'];
+            
             return `
             <td class="px-6 py-4">
-                <div class="font-semibold text-gray-900">${biz.business_name}</div>
-                <div class="text-sm text-gray-500">Created ${new Date(biz.created_at).toLocaleDateString()}</div>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                        ${biz.business_name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900">${biz.business_name}</div>
+                        <div class="text-xs text-gray-500"><i class="far fa-calendar mr-1"></i>${new Date(biz.created_at).toLocaleDateString()}</div>
+                    </div>
+                </div>
             </td>
             <td class="px-6 py-4">
-                <div class="text-gray-900">${biz.owner_email || '—'}</div>
+                <div class="flex items-center gap-2">
+                    <i class="far fa-envelope text-gray-400 text-sm"></i>
+                    <div class="text-gray-900 text-sm">${biz.owner_email || '—'}</div>
+                </div>
             </td>
             <td class="px-6 py-4">
-                <span class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">${biz.subscription_plan}</span>
+                <span class="px-3 py-1 rounded-lg text-xs font-semibold border ${planColor}">
+                    <i class="fas fa-crown mr-1"></i>${biz.subscription_plan}
+                </span>
             </td>
-            <td class="px-6 py-4 text-gray-700">${biz.user_count}</td>
             <td class="px-6 py-4">
-                <span class="px-3 py-1 rounded-full text-xs font-medium ${biz.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-                    ${biz.is_active ? 'Active' : 'Inactive'}
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-users text-gray-400 text-sm"></i>
+                    <span class="font-medium text-gray-700">${biz.user_count}</span>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-3 py-1 rounded-lg text-xs font-semibold border ${statusColor}">
+                    <i class="fas fa-circle mr-1 text-xs"></i>${biz.is_active ? 'Active' : 'Inactive'}
                 </span>
             </td>
             <td class="px-6 py-4 text-right">
-                <div class="flex justify-end gap-3 text-sm">
-                    <button class="text-blue-600 hover:text-blue-800" onclick="businessApp.openDetails(${biz.id})">Details</button>
-                    <button class="text-slate-600 hover:text-slate-800" onclick="businessApp.openEdit(${biz.id})">Edit</button>
-                    <button class="text-red-600 hover:text-red-800" onclick="businessApp.openDelete(${biz.id}, '${biz.business_name}')">Delete</button>
+                <div class="flex justify-end gap-2">
+                    <button class="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium" onclick="businessApp.openDetails(${biz.id})">
+                        <i class="fas fa-eye mr-1"></i>Details
+                    </button>
+                    <button class="px-3 py-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition text-sm font-medium" onclick="businessApp.openEdit(${biz.id})">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                    <button class="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium" onclick="businessApp.openDelete(${biz.id}, '${biz.business_name}')">
+                        <i class="fas fa-trash mr-1"></i>Delete
+                    </button>
                 </div>
             </td>`;
         },
 
         async openDetails(id) {
-            await this.fetchBusiness(id, (business) => {
+            await this.fetchBusiness(id, async (business) => {
+                this.selectedBusiness = business;
                 document.getElementById('detailsName').textContent = business.business_name;
                 document.getElementById('detailsEmail').textContent = business.owner_email || '—';
                 document.getElementById('detailsPlan').textContent = business.subscription_plan;
                 document.getElementById('detailsStatus').textContent = business.is_active ? 'Active' : 'Inactive';
-                document.getElementById('detailsUsers').textContent = business.user_count;
+                document.getElementById('detailsActiveUsers').textContent = business.user_count || '0';
                 document.getElementById('detailsCreated').textContent = new Date(business.created_at).toLocaleString();
                 document.getElementById('detailsUpdated').textContent = business.updated_at ? new Date(business.updated_at).toLocaleString() : '—';
+                
+                // New enhanced fields
+                document.getElementById('detailsBusinessId').textContent = business.id;
+                document.getElementById('detailsUsersCount').textContent = business.user_count || '0';
+                document.getElementById('detailsStatusBadge').textContent = business.is_active ? 'Active' : 'Inactive';
+                document.getElementById('detailsStatusBadge').className = `px-3 py-1 backdrop-blur-sm rounded-full text-xs font-medium ${business.is_active ? 'bg-green-500/30 text-green-100' : 'bg-gray-500/30 text-gray-100'}`;
+                document.getElementById('detailsPlanBadge').textContent = business.subscription_plan;
+                document.getElementById('detailsSubPlan').textContent = business.subscription_plan;
+                document.getElementById('detailsSubSince').textContent = new Date(business.created_at).toLocaleDateString();
+                document.getElementById('detailsToggleBtn').textContent = business.is_active ? 'Deactivate' : 'Activate';
+                
+                // Load analytics data
+                await this.loadBusinessAnalytics(id);
+                
                 document.getElementById('businessDetailsModal').classList.remove('hidden');
             });
+        },
+
+        async loadBusinessAnalytics(businessId) {
+            try {
+                const response = await fetch(`/system-admin/businesses/api/businesses/${businessId}/analytics`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update stats cards
+                    document.getElementById('detailsSalesCount').textContent = data.total_sales || 0;
+                    document.getElementById('detailsRevenue').textContent = '₹' + (data.total_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsMenuItems').textContent = data.menu_items || 0;
+                    document.getElementById('detailsExpenses').textContent = '₹' + (data.total_expenses || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsCreditSales').textContent = '₹' + (data.credit_sales || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsPendingCredits').textContent = '₹' + (data.pending_credits || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    
+                    const netProfit = (data.total_revenue || 0) - (data.total_expenses || 0);
+                    document.getElementById('detailsNetProfit').textContent = '₹' + netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsNetProfit').className = `font-bold text-lg ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+                    
+                    // Update activity timeline
+                    const timeline = document.getElementById('detailsActivityTimeline');
+                    if (data.recent_activities && data.recent_activities.length > 0) {
+                        timeline.innerHTML = data.recent_activities.map((activity, index) => {
+                            const colors = ['blue', 'green', 'purple', 'pink', 'indigo'];
+                            const color = colors[index % colors.length];
+                            return `
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-${color}-500 rounded-full mt-2"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">${activity.action}</p>
+                                        <p class="text-xs text-gray-500 mt-1">${new Date(activity.timestamp).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        timeline.innerHTML = '<p class="text-sm text-gray-500">No recent activity</p>';
+                    }
+                } else {
+                    // Set default values if analytics fails
+                    document.getElementById('detailsSalesCount').textContent = '—';
+                    document.getElementById('detailsRevenue').textContent = '₹0';
+                    document.getElementById('detailsMenuItems').textContent = '—';
+                    document.getElementById('detailsExpenses').textContent = '₹0';
+                    document.getElementById('detailsCreditSales').textContent = '₹0';
+                    document.getElementById('detailsPendingCredits').textContent = '₹0';
+                    document.getElementById('detailsNetProfit').textContent = '₹0';
+                    document.getElementById('detailsActivityTimeline').innerHTML = '<p class="text-sm text-gray-500">Analytics data unavailable</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+                document.getElementById('detailsActivityTimeline').innerHTML = '<p class="text-sm text-red-500">Failed to load activity data</p>';
+            }
+        },
+
+        editFromDetails() {
+            if (this.selectedBusiness) {
+                this.closeDetails();
+                this.openEdit(this.selectedBusiness.id);
+            }
+        },
+
+        viewUsersFromDetails() {
+            if (this.selectedBusiness) {
+                this.openUsers(this.selectedBusiness.id);
+            }
+        },
+
+        async toggleStatusFromDetails() {
+            if (this.selectedBusiness) {
+                try {
+                    const response = await fetch(`/system-admin/businesses/api/businesses/${this.selectedBusiness.id}/toggle-status`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to toggle status');
+                    notify(data.message, 'success');
+                    this.closeDetails();
+                    this.loadBusinesses(this.currentPage);
+                } catch (error) {
+                    notify(error.message, 'error');
+                }
+            }
+        },
+
+        deleteFromDetails() {
+            if (this.selectedBusiness) {
+                this.closeDetails();
+                this.openDelete(this.selectedBusiness.id, this.selectedBusiness.business_name);
+            }
+        },
+
+        generateReport() {
+            if (this.selectedBusiness) {
+                notify('Report generation feature coming soon!', 'info');
+                // Future: Generate and download business report
+            }
+        },
+
+        async exportBusinessData() {
+            try {
+                notify('Exporting business data...', 'info');
+                const response = await fetch('/system-admin/businesses/api/businesses');
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || 'Failed to fetch data');
+                
+                // Convert to CSV
+                const businesses = data.businesses;
+                const csvHeader = 'Business ID,Business Name,Owner Email,Subscription Plan,Status,Users,Created Date,Last Updated\n';
+                const csvRows = businesses.map(biz => {
+                    return [
+                        biz.id,
+                        `"${biz.business_name}"`,
+                        `"${biz.owner_email || ''}"`,
+                        biz.subscription_plan,
+                        biz.is_active ? 'Active' : 'Inactive',
+                        biz.user_count,
+                        new Date(biz.created_at).toLocaleDateString(),
+                        biz.updated_at ? new Date(biz.updated_at).toLocaleDateString() : 'N/A'
+                    ].join(',');
+                }).join('\n');
+                
+                const csvContent = csvHeader + csvRows;
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `businesses_export_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                notify('Business data exported successfully!', 'success');
+            } catch (error) {
+                notify('Failed to export data: ' + error.message, 'error');
+            }
         },
 
         async openEdit(id) {
@@ -604,6 +1005,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refreshButton) {
         refreshButton.addEventListener('click', () => {
             businessApp.loadBusinesses(businessApp.currentPage, true);
+        });
+    }
+    const exportButton = document.getElementById('exportBusinesses');
+    if (exportButton) {
+        exportButton.addEventListener('click', () => {
+            businessApp.exportBusinessData();
         });
     }
 });
