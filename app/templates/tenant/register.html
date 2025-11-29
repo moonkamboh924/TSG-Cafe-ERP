@@ -284,17 +284,33 @@
         }
 
         .input-feedback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
             font-size: 12px;
+            font-weight: bold;
             margin-top: 6px;
-            font-weight: 500;
         }
 
         .input-feedback.success {
-            color: #28a745;
+            background: #28a745;
+            color: white;
+        }
+        
+        .input-feedback.success::before {
+            content: '✓';
         }
 
         .input-feedback.error {
-            color: #dc3545;
+            background: #dc3545;
+            color: white;
+        }
+        
+        .input-feedback.error::before {
+            content: '✗';
         }
 
         /* Password Toggle */
@@ -924,10 +940,10 @@
                     const businessFeedback = document.getElementById('businessNameFeedback');
                     if (businessName) {
                         if (data.business_name_available) {
-                            businessFeedback.textContent = '✓ Available';
+                            businessFeedback.textContent = '';
                             businessFeedback.className = 'input-feedback success';
                         } else {
-                            businessFeedback.textContent = '✗ Already taken';
+                            businessFeedback.textContent = '';
                             businessFeedback.className = 'input-feedback error';
                         }
                     }
@@ -935,10 +951,10 @@
                     const emailFeedback = document.getElementById('emailFeedback');
                     if (ownerEmail) {
                         if (data.email_available) {
-                            emailFeedback.textContent = '✓ Available';
+                            emailFeedback.textContent = '';
                             emailFeedback.className = 'input-feedback success';
                         } else {
-                            emailFeedback.textContent = '✗ Already registered';
+                            emailFeedback.textContent = '';
                             emailFeedback.className = 'input-feedback error';
                         }
                     }
