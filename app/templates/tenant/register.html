@@ -132,8 +132,8 @@
             content: '';
             position: absolute;
             top: 43px;
-            left: 25%;
-            right: 25%;
+            left: 16.66%;
+            right: 16.66%;
             height: 2px;
             background: #dee2e6;
             z-index: 0;
@@ -143,7 +143,7 @@
             content: '';
             position: absolute;
             top: 43px;
-            left: 25%;
+            left: 16.66%;
             height: 2px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             transition: width 0.3s ease;
@@ -151,8 +151,9 @@
         }
 
         .progress-steps[data-step="1"]::after { width: 0; }
-        .progress-steps[data-step="2"]::after { width: 25%; }
-        .progress-steps[data-step="3"]::after { width: 50%; }
+        .progress-steps[data-step="2"]::after { width: 22.22%; }
+        .progress-steps[data-step="3"]::after { width: 44.44%; }
+        .progress-steps[data-step="4"]::after { width: 66.66%; }
 
         .step {
             flex: 1;
@@ -626,6 +627,10 @@
                 </div>
                 <div class="step" data-step="3">
                     <div class="step-number">3</div>
+                    <div class="step-label">Verify</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
                     <div class="step-label">Plan</div>
                 </div>
             </div>
@@ -765,8 +770,54 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Plan Selection -->
+                    <!-- Step 3: Verification -->
                     <div class="form-step" data-step="3">
+                        <h2 class="step-title">Verify your email</h2>
+                        <p class="step-description">We've sent a verification code to your email</p>
+
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-envelope" style="font-size: 36px; color: white;"></i>
+                            </div>
+                            <p style="font-size: 14px; color: #718096; margin-bottom: 5px;">
+                                Verification code sent to
+                            </p>
+                            <p style="font-size: 15px; font-weight: 600; color: #2d3748;" id="verificationEmail">
+                                <!-- Email will be populated by JavaScript -->
+                            </p>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="form-label">Verification Code</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="verification_code" 
+                                   name="verification_code" 
+                                   placeholder="Enter 6-digit code"
+                                   maxlength="6"
+                                   style="text-align: center; font-size: 24px; letter-spacing: 10px; font-weight: 600; border-radius: 25px;"
+                                   required>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 15px;">
+                            <p style="font-size: 13px; color: #718096;">
+                                Didn't receive the code? 
+                                <a href="#" onclick="resendCode(); return false;" style="color: #667eea; font-weight: 600; text-decoration: none;">Resend</a>
+                            </p>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-back" onclick="prevStep(3)">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-next" onclick="nextStep(3)">
+                                Verify <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Plan Selection -->
+                    <div class="form-step" data-step="4">
                         <h2 class="step-title">Choose your plan</h2>
                         <p class="step-description">Select the plan that best fits your needs</p>
 
@@ -866,7 +917,7 @@
                         </div>
 
                         <div class="btn-group">
-                            <button type="button" class="btn btn-back" onclick="prevStep(3)">
+                            <button type="button" class="btn btn-back" onclick="prevStep(4)">
                                 <i class="fas fa-arrow-left me-2"></i> Back
                             </button>
                             <button type="submit" class="btn btn-submit" id="submitBtn">
@@ -1058,6 +1109,11 @@
                 step.classList.remove('active');
             });
             document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+            
+            // Update verification email when entering verification step
+            if (currentStep === 3) {
+                updateVerificationEmail();
+            }
         }
 
         function validateStep(step) {
@@ -1087,11 +1143,37 @@
                 }
             }
 
+            if (step === 3) {
+                const verificationCode = document.getElementById('verification_code').value;
+                if (verificationCode.length !== 6) {
+                    showCustomModal('Verification Error', 'Please enter the 6-digit verification code');
+                    return false;
+                }
+                // Here you would typically verify the code with the server
+                // For now, we'll just validate the format
+            }
+
             if (!isValid) {
                 showCustomModal('Required Fields', 'Please fill in all required fields');
             }
 
             return isValid;
+        }
+
+        // Verification functions
+        function resendCode() {
+            const email = document.getElementById('owner_email').value;
+            showCustomModal('Code Sent', 'A new verification code has been sent to ' + email);
+            // Here you would make an API call to resend the code
+        }
+
+        // Update verification email display
+        function updateVerificationEmail() {
+            const email = document.getElementById('owner_email').value;
+            const verificationEmailElement = document.getElementById('verificationEmail');
+            if (verificationEmailElement && email) {
+                verificationEmailElement.textContent = email;
+            }
         }
 
         // Input Validation
