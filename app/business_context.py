@@ -13,6 +13,13 @@ def get_current_business_id():
         return current_user.business_id
     return None
 
+def get_current_business():
+    """Get the Business object of the currently logged-in user"""
+    if current_user.is_authenticated and hasattr(current_user, 'business_id') and current_user.business_id:
+        from .models import Business
+        return Business.query.get(current_user.business_id)
+    return None
+
 def require_business_context(f):
     """Decorator to ensure user has a business context"""
     @wraps(f)

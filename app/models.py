@@ -20,6 +20,8 @@ class Business(db.Model):
     # Subscription & Status
     subscription_plan = db.Column(db.String(20), default='free', nullable=False)  # free, basic, premium
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    trial_end_date = db.Column(db.DateTime, nullable=True)  # Trial period expiration
+    subscription_status = db.Column(db.String(20), default='trial', nullable=False)  # trial, active, past_due, cancelled, suspended
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -33,6 +35,26 @@ class Business(db.Model):
     sales = db.relationship('Sale', backref='business_ref', lazy=True, cascade='all, delete-orphan')
     expenses = db.relationship('Expense', backref='business_ref', lazy=True, cascade='all, delete-orphan')
     credit_sales = db.relationship('CreditSale', backref='business_ref', lazy=True, cascade='all, delete-orphan')
+    subscriptions = db.relationship('Subscription', backref='business_sub', lazy=True, cascade='all, delete-orphan')
+    
+    def is_trial_active(self):
+        """Check if business is still in trial period"""
+        if self.subscription_status == 'trial' and self.trial_end_date:
+            return datetime.now(timezone.utc) < self.trial_end_date
+        return False
+    
+    def is_subscription_active(self):
+        """Check if subscription is active and business can use the system"""
+        if self.subscription_status in ['trial', 'active']:
+            if self.subscription_status == 'trial':
+                return self.is_trial_active()
+            return True
+        return False
+    
+    def get_plan_limits(self):
+        """Get plan limits based on subscription plan"""
+        from .services.subscription_service import SubscriptionService
+        return SubscriptionService.get_plan_limits(self.subscription_plan)
     
     def to_dict(self):
         return {
@@ -935,6 +957,221 @@ class SystemMetric(db.Model):
             'metric_value': self.metric_value,
             'metric_date': self.metric_date.isoformat(),
             'created_at': self.created_at.isoformat()
+        }
+
+# ============================================================================
+# SUBSCRIPTION & BILLING MODELS
+# ============================================================================
+
+class Subscription(db.Model):
+    """Subscription records for businesses"""
+    __tablename__ = 'subscriptions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
+    plan = db.Column(db.String(20), nullable=False)  # free, basic, premium
+    status = db.Column(db.String(20), default='active', nullable=False)  # active, cancelled, past_due, suspended
+    
+    # Billing cycle
+    billing_cycle = db.Column(db.String(20), default='monthly', nullable=False)  # monthly, yearly
+    amount = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    currency = db.Column(db.String(3), default='USD', nullable=False)
+    
+    # Dates
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=True)  # For cancelled subscriptions
+    next_billing_date = db.Column(db.DateTime, nullable=True)
+    trial_end_date = db.Column(db.DateTime, nullable=True)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+    
+    # Payment info
+    payment_method = db.Column(db.String(50), nullable=True)  # stripe, paypal, etc.
+    payment_method_id = db.Column(db.String(100), nullable=True)  # External payment method ID
+    last_payment_date = db.Column(db.DateTime, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    invoices = db.relationship('Invoice', backref='subscription', lazy=True, cascade='all, delete-orphan')
+    
+    def is_active(self):
+        """Check if subscription is currently active"""
+        return self.status == 'active' and (self.end_date is None or datetime.now(timezone.utc) < self.end_date)
+    
+    def is_trial(self):
+        """Check if subscription is in trial period"""
+        if self.trial_end_date:
+            return datetime.now(timezone.utc) < self.trial_end_date
+        return False
+    
+    def days_until_renewal(self):
+        """Calculate days until next billing"""
+        if self.next_billing_date:
+            delta = self.next_billing_date - datetime.now(timezone.utc)
+            return max(0, delta.days)
+        return None
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'business_id': self.business_id,
+            'plan': self.plan,
+            'status': self.status,
+            'billing_cycle': self.billing_cycle,
+            'amount': float(self.amount),
+            'currency': self.currency,
+            'start_date': self.start_date.isoformat(),
+            'end_date': self.end_date.isoformat() if self.end_date else None,
+            'next_billing_date': self.next_billing_date.isoformat() if self.next_billing_date else None,
+            'trial_end_date': self.trial_end_date.isoformat() if self.trial_end_date else None,
+            'is_active': self.is_active(),
+            'is_trial': self.is_trial(),
+            'days_until_renewal': self.days_until_renewal()
+        }
+
+class Invoice(db.Model):
+    """Invoice/billing history for subscriptions"""
+    __tablename__ = 'invoices'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('subscriptions.id', ondelete='CASCADE'), nullable=False, index=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
+    invoice_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    
+    # Billing details
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), default='USD', nullable=False)
+    tax_amount = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    
+    # Status
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, paid, failed, refunded
+    payment_status = db.Column(db.String(20), default='unpaid', nullable=False)  # unpaid, paid, partial, refunded
+    
+    # Dates
+    billing_period_start = db.Column(db.DateTime, nullable=False)
+    billing_period_end = db.Column(db.DateTime, nullable=False)
+    due_date = db.Column(db.DateTime, nullable=False)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    
+    # Payment info
+    payment_method = db.Column(db.String(50), nullable=True)
+    transaction_id = db.Column(db.String(100), nullable=True)  # External payment processor transaction ID
+    payment_details = db.Column(db.Text, nullable=True)  # JSON string with additional payment details
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def is_overdue(self):
+        """Check if invoice is overdue"""
+        if self.status != 'paid':
+            return datetime.now(timezone.utc) > self.due_date
+        return False
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'invoice_number': self.invoice_number,
+            'amount': float(self.amount),
+            'currency': self.currency,
+            'tax_amount': float(self.tax_amount),
+            'total_amount': float(self.total_amount),
+            'status': self.status,
+            'payment_status': self.payment_status,
+            'billing_period_start': self.billing_period_start.isoformat(),
+            'billing_period_end': self.billing_period_end.isoformat(),
+            'due_date': self.due_date.isoformat(),
+            'paid_at': self.paid_at.isoformat() if self.paid_at else None,
+            'is_overdue': self.is_overdue(),
+            'created_at': self.created_at.isoformat()
+        }
+
+class PaymentMethod(db.Model):
+    """Stored payment methods for businesses"""
+    __tablename__ = 'payment_methods'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
+    
+    # Payment method details
+    type = db.Column(db.String(20), nullable=False)  # card, bank_account, paypal
+    provider = db.Column(db.String(50), nullable=False)  # stripe, paypal, etc.
+    provider_payment_method_id = db.Column(db.String(100), nullable=False)  # External ID from payment provider
+    
+    # Card/account details (masked)
+    last4 = db.Column(db.String(4), nullable=True)  # Last 4 digits
+    brand = db.Column(db.String(20), nullable=True)  # visa, mastercard, etc.
+    exp_month = db.Column(db.Integer, nullable=True)
+    exp_year = db.Column(db.Integer, nullable=True)
+    
+    # Status
+    is_default = db.Column(db.Boolean, default=False, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def is_expired(self):
+        """Check if card is expired"""
+        if self.exp_month and self.exp_year:
+            now = datetime.now(timezone.utc)
+            return now.year > self.exp_year or (now.year == self.exp_year and now.month > self.exp_month)
+        return False
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'provider': self.provider,
+            'last4': self.last4,
+            'brand': self.brand,
+            'exp_month': self.exp_month,
+            'exp_year': self.exp_year,
+            'is_default': self.is_default,
+            'is_active': self.is_active,
+            'is_expired': self.is_expired()
+        }
+
+class PlanFeature(db.Model):
+    """Plan features and limits configuration"""
+    __tablename__ = 'plan_features'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    plan = db.Column(db.String(20), nullable=False, index=True)  # free, basic, premium
+    feature_key = db.Column(db.String(50), nullable=False)  # max_users, max_locations, etc.
+    feature_value = db.Column(db.String(100), nullable=False)  # Limit value or 'unlimited'
+    feature_type = db.Column(db.String(20), default='limit', nullable=False)  # limit, boolean, string
+    description = db.Column(db.String(255), nullable=True)
+    
+    # Unique constraint
+    __table_args__ = (
+        db.UniqueConstraint('plan', 'feature_key', name='unique_plan_feature'),
+    )
+    
+    @classmethod
+    def get_feature(cls, plan, feature_key):
+        """Get feature value for a specific plan"""
+        feature = cls.query.filter_by(plan=plan, feature_key=feature_key).first()
+        if feature:
+            if feature.feature_type == 'limit':
+                return int(feature.feature_value) if feature.feature_value != 'unlimited' else -1
+            elif feature.feature_type == 'boolean':
+                return feature.feature_value.lower() == 'true'
+            return feature.feature_value
+        return None
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'plan': self.plan,
+            'feature_key': self.feature_key,
+            'feature_value': self.feature_value,
+            'feature_type': self.feature_type,
+            'description': self.description
         }
 
 

@@ -61,6 +61,10 @@ def create_app(config_object="config.Config"):
     app.register_blueprint(finance.bp, url_prefix="/finance")
     app.register_blueprint(reports.bp, url_prefix="/reports")
     app.register_blueprint(profile.bp, url_prefix="/profile")
+    
+    # Register subscription management blueprint
+    from .blueprints import subscriptions as subscriptions_bp
+    app.register_blueprint(subscriptions_bp.bp)
 
     # Register auth blueprint
     from .auth import bp as auth_bp

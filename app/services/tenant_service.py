@@ -102,10 +102,18 @@ class TenantService:
             # Update business owner_id
             business.owner_id = owner_user.id
             
+            # Create subscription for the business
+            from .subscription_service import SubscriptionService
+            subscription = SubscriptionService.create_subscription(
+                business_id=business.id,
+                plan=subscription_plan,
+                billing_cycle='monthly'
+            )
+            
             # Create default system settings for this tenant
             TenantService._create_default_settings(business.id, business_name)
             
-            # Create default menu categories and items
+            # Create default menu structure
             TenantService._create_default_menu_structure(business.id)
             
             db.session.commit()
@@ -120,6 +128,7 @@ class TenantService:
                     'temp_password': user_password if requires_password_change else None,
                     'full_name': owner_user.full_name
                 },
+                'subscription': subscription.to_dict(),
                 'message': 'Tenant created successfully'
             }
             
