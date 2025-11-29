@@ -881,99 +881,119 @@
 
                     <!-- Step 4: Plan Selection -->
                     <div class="form-step" data-step="4">
-                        <h2 class="step-title">Choose your plan</h2>
-                        <p class="step-description">Select the plan that best fits your needs</p>
+                        <h2 class="step-title">Choose your business plan</h2>
+                        <p class="step-description">Select the plan that best fits your business type</p>
 
                         <div class="plans">
-                            <div class="plan-card" onclick="selectPlan('free')" id="freePlan">
+                            <div class="plan-card" onclick="selectPlan('cafe')" id="cafePlan">
                                 <input type="radio" 
                                        class="plan-radio" 
                                        name="subscription_plan" 
-                                       id="plan_free" 
-                                       value="free" 
-                                       {{ 'checked' if not subscription_plan or subscription_plan == 'free' }}>
+                                       id="plan_cafe" 
+                                       value="cafe" 
+                                       checked>
                                 <div class="plan-header">
-                                    <div class="plan-icon" style="background: #d4edda;">
-                                        <i class="fas fa-gift" style="color: #28a745;"></i>
+                                    <div class="plan-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
+                                        <i class="fas fa-coffee" style="color: white;"></i>
                                     </div>
                                     <div class="plan-info">
-                                        <h3>Free</h3>
-                                        <div class="plan-price">$0 <span>/ month</span></div>
-                                    </div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Basic POS system
-                                    </div>
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Up to 50 menu items
-                                    </div>
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check"></i> 1 user account
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="plan-card" onclick="selectPlan('basic')" id="basicPlan">
-                                <input type="radio" 
-                                       class="plan-radio" 
-                                       name="subscription_plan" 
-                                       id="plan_basic" 
-                                       value="basic" 
-                                       {{ 'checked' if subscription_plan == 'basic' }}>
-                                <div class="plan-header">
-                                    <div class="plan-icon" style="background: #cfe2ff;">
-                                        <i class="fas fa-rocket" style="color: #0d6efd;"></i>
-                                    </div>
-                                    <div class="plan-info">
-                                        <h3>Basic</h3>
+                                        <h3>Cafe</h3>
                                         <div class="plan-price">$29 <span>/ month</span></div>
                                     </div>
                                 </div>
                                 <div class="plan-features">
                                     <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Advanced POS features
+                                        <i class="fas fa-check"></i> Up to 10 users
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> 100 menu items
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Basic POS system
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Inventory tracking
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> 14-day free trial
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="plan-card featured" onclick="selectPlan('restaurant')" id="restaurantPlan">
+                                <div class="popular-badge">Most Popular</div>
+                                <input type="radio" 
+                                       class="plan-radio" 
+                                       name="subscription_plan" 
+                                       id="plan_restaurant" 
+                                       value="restaurant">
+                                <div class="plan-header">
+                                    <div class="plan-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <i class="fas fa-utensils" style="color: white;"></i>
+                                    </div>
+                                    <div class="plan-info">
+                                        <h3>Restaurant</h3>
+                                        <div class="plan-price">$79 <span>/ month</span></div>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Up to 50 users
                                     </div>
                                     <div class="plan-feature">
                                         <i class="fas fa-check"></i> Unlimited menu items
                                     </div>
                                     <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Up to 5 users
+                                        <i class="fas fa-check"></i> Table management
                                     </div>
                                     <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Sales reports
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="plan-card" onclick="selectPlan('premium')" id="premiumPlan">
-                                <input type="radio" 
-                                       class="plan-radio" 
-                                       name="subscription_plan" 
-                                       id="plan_premium" 
-                                       value="premium" 
-                                       {{ 'checked' if subscription_plan == 'premium' }}>
-                                <div class="plan-header">
-                                    <div class="plan-icon" style="background: #fff3cd;">
-                                        <i class="fas fa-crown" style="color: #ffc107;"></i>
-                                    </div>
-                                    <div class="plan-info">
-                                        <h3>Premium</h3>
-                                        <div class="plan-price">$99 <span>/ month</span></div>
-                                    </div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Everything in Basic
-                                    </div>
-                                    <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Unlimited users
+                                        <i class="fas fa-check"></i> Kitchen display system
                                     </div>
                                     <div class="plan-feature">
                                         <i class="fas fa-check"></i> Advanced analytics
                                     </div>
                                     <div class="plan-feature">
-                                        <i class="fas fa-check"></i> Priority support
+                                        <i class="fas fa-check"></i> 14-day free trial
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="plan-card" onclick="selectPlan('hotel')" id="hotelPlan">
+                                <input type="radio" 
+                                       class="plan-radio" 
+                                       name="subscription_plan" 
+                                       id="plan_hotel" 
+                                       value="hotel">
+                                <div class="plan-header">
+                                    <div class="plan-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">
+                                        <i class="fas fa-hotel" style="color: white;"></i>
+                                    </div>
+                                    <div class="plan-info">
+                                        <h3>Hotel</h3>
+                                        <div class="plan-price">$199 <span>/ month</span></div>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Unlimited users
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Unlimited locations
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Room service integration
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> Banquet management
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> API access
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> 24/7 support
+                                    </div>
+                                    <div class="plan-feature">
+                                        <i class="fas fa-check"></i> 14-day free trial
                                     </div>
                                 </div>
                             </div>

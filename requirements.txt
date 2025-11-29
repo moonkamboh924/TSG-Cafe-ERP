@@ -25,4 +25,6 @@ requests==2.31.0
 # Caching for verification codes
 Flask-Caching==2.1.0
 redis==5.0.1
+# Payment processing
+stripe==7.7.0
 

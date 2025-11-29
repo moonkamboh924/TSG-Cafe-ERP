@@ -74,6 +74,10 @@ def create_app(config_object="config.Config"):
     from .blueprints import tenant_registration
     app.register_blueprint(tenant_registration.bp, url_prefix="/tenant")
     
+    # Register billing blueprint
+    from .blueprints.billing import billing_bp
+    app.register_blueprint(billing_bp)
+    
     # Register system admin blueprints
     try:
         from .system_admin.blueprints.dashboard import bp as system_admin_dashboard_bp

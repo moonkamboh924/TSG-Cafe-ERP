@@ -107,7 +107,7 @@ class TenantService:
             subscription = SubscriptionService.create_subscription(
                 business_id=business.id,
                 plan=subscription_plan,
-                billing_cycle='monthly'
+                subscription_months=1  # Default to 1 month
             )
             
             # Create default system settings for this tenant

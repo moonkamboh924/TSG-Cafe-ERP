@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Billing & Subscription - {{ business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-credit-card me-2"></i>Billing & Subscription
+            </h1>
+        </div>
+    </div>
+
+    <!-- Subscription Status Card -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-star me-2"></i>Current Subscription
+                    </h5>
+                    
+                    {% if subscription %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Plan:</strong> 
+                                <span class="badge bg-primary text-capitalize">{{ subscription.plan }}</span>
+                            </p>
+                            <p class="mb-2">
+                                <strong>Status:</strong>
+                                {% if subscription.status == 'active' %}
+                                    <span class="badge bg-success">Active</span>
+                                {% elif subscription.status == 'trial' %}
+                                    <span class="badge bg-info">Trial</span>
+                                {% elif subscription.status == 'past_due' %}
+                                    <span class="badge bg-warning">Past Due</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ subscription.status|capitalize }}</span>
+                                {% endif %}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Amount:</strong> ${{ "%.2f"|format(subscription.amount) }} / {{ subscription.billing_cycle.replace('_', ' ') }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if subscription.is_trial() %}
+                            <p class="mb-2">
+                                <strong>Trial Ends:</strong> {{ subscription.trial_end_date.strftime('%B %d, %Y') }}
+                            </p>
+                            {% endif %}
+                            {% if subscription.next_billing_date %}
+                            <p class="mb-2">
+                                <strong>Next Billing:</strong> {{ subscription.next_billing_date.strftime('%B %d, %Y') }}
+                            </p>
+                            {% endif %}
+                            <p class="mb-2">
+                                <strong>Since:</strong> {{ subscription.start_date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('billing.upgrade') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-up me-2"></i>Upgrade Plan
+                        </a>
+                        {% if subscription.status == 'active' %}
+                        <button type="button" class="btn btn-outline-danger" onclick="cancelSubscription()">
+                            <i class="fas fa-times me-2"></i>Cancel Subscription
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No active subscription. <a href="{{ url_for('billing.upgrade') }}">Choose a plan</a> to continue.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-wallet me-2"></i>Payment Methods
+                    </h5>
+                    
+                    {% if payment_methods %}
+                    <div class="list-group list-group-flush">
+                        {% for pm in payment_methods %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fab fa-cc-{{ pm.brand|lower }} me-2"></i>
+                                    •••• {{ pm.last4 }}
+                                    {% if pm.is_default %}
+                                        <span class="badge bg-success ms-2">Default</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ pm.exp_month }}/{{ pm.exp_year }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No payment methods on file.</p>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('billing.payment_method_page') }}" class="btn btn-outline-primary btn-sm mt-3 w-100">
+                        <i class="fas fa-plus me-2"></i>Add Payment Method
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>Recent Invoices
+                        </h5>
+                        <a href="{{ url_for('billing.invoices') }}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if invoices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices %}
+                                <tr>
+                                    <td>{{ invoice.invoice_number }}</td>
+                                    <td>{{ invoice.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>${{ "%.2f"|format(invoice.total_amount) }}</td>
+                                    <td>
+                                        {% if invoice.status == 'paid' %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif invoice.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif invoice.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ invoice.status|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('billing.view_invoice', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>No invoices yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelSubscription() {
+    if (confirm('Are you sure you want to cancel your subscription? You will have access until the end of your current billing period.')) {
+        fetch('{{ url_for("billing.cancel_subscription") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Subscription cancelled successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error cancelling subscription');
+            console.error(error);
+        });
+    }
+}
+</script>
+{% endblock %}

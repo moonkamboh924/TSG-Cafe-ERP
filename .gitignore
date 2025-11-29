@@ -24,22 +24,23 @@ wheels/
 *.egg
 
 # Flask
-# instance/ (keep for initial deployment with seeded data)
+instance/
 .webassets-cache
 
 # Environment variables
 .env
 .env.local
 
-# Database (keep development database for initial deployment)
-# *.db
-# *.sqlite
-# *.sqlite3
+# Database
+*.db
+*.sqlite
+*.sqlite3
 # SQLite temporary files
 *.db-shm
 *.db-wal
 # Database backups
 *.db.backup_*
+instance/backups/
 
 # Logs
 logs/

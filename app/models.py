@@ -22,6 +22,7 @@ class Business(db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     trial_end_date = db.Column(db.DateTime, nullable=True)  # Trial period expiration
     subscription_status = db.Column(db.String(20), default='trial', nullable=False)  # trial, active, past_due, cancelled, suspended
+    stripe_customer_id = db.Column(db.String(100), nullable=True, index=True)  # Stripe customer ID
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

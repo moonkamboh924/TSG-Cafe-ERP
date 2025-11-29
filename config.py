@@ -75,6 +75,11 @@ class Config:
     CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes default
     CACHE_REDIS_URL = os.environ.get('REDIS_URL')  # For Redis cache
     
+    # Stripe Configuration (Payment Processing)
+    STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+    
     # Logging
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
 

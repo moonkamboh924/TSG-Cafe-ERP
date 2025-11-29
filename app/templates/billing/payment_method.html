@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Methods - {{ business.business_name }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-wallet me-2"></i>Payment Methods
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Add New Payment Method -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Payment Method
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="payment-form">
+                        <div class="mb-3">
+                            <label class="form-label">Card Information</label>
+                            <div id="card-element" class="form-control" style="height: 40px; padding-top: 10px;">
+                                <!-- Stripe Elements will be inserted here -->
+                            </div>
+                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="setDefault" checked>
+                            <label class="form-check-label" for="setDefault">
+                                Set as default payment method
+                            </label>
+                        </div>
+
+                        <button type="submit" id="submit-button" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Payment Method
+                        </button>
+                        <a href="{{ url_for('billing.index') }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Payment Methods -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Saved Payment Methods
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_methods %}
+                    <div class="list-group">
+                        {% for pm in payment_methods %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fab fa-cc-{{ pm.brand|lower }} fa-2x me-3"></i>
+                                    <span class="fw-bold">•••• •••• •••• {{ pm.last4 }}</span>
+                                    {% if pm.is_default %}
+                                        <span class="badge bg-success ms-2">Default</span>
+                                    {% endif %}
+                                    {% if pm.is_expired() %}
+                                        <span class="badge bg-danger ms-2">Expired</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <small class="text-muted me-3">Expires {{ pm.exp_month }}/{{ pm.exp_year }}</small>
+                                    {% if not pm.is_default %}
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removePaymentMethod({{ pm.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-credit-card fa-3x mb-3"></i>
+                        <p>No payment methods saved yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Security Info -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-shield-alt me-2 text-success"></i>Secure Payment
+                    </h6>
+                    <p class="small text-muted mb-0">
+                        Your payment information is encrypted and secure. We use Stripe to process payments and never store your full card details.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Accepted Cards -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Accepted Cards</h6>
+                    <div class="d-flex justify-content-around">
+                        <i class="fab fa-cc-visa fa-2x text-primary"></i>
+                        <i class="fab fa-cc-mastercard fa-2x text-warning"></i>
+                        <i class="fab fa-cc-amex fa-2x text-info"></i>
+                        <i class="fab fa-cc-discover fa-2x text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize Stripe
+const stripe = Stripe('{{ stripe_key }}');
+const elements = stripe.elements();
+
+// Create card element
+const cardElement = elements.create('card', {
+    style: {
+        base: {
+            fontSize: '16px',
+            color: '#32325d',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    }
+});
+
+cardElement.mount('#card-element');
+
+// Handle real-time validation errors
+cardElement.on('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+});
+
+// Handle form submission
+const form = document.getElementById('payment-form');
+const submitButton = document.getElementById('submit-button');
+
+form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    try {
+        // Create payment method
+        const {paymentMethod, error} = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardElement,
+        });
+        
+        if (error) {
+            // Show error
+            document.getElementById('card-errors').textContent = error.message;
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
+        } else {
+            // Send to server
+            const response = await fetch('{{ url_for("billing.add_payment_method") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    payment_method_id: paymentMethod.id,
+                    set_default: document.getElementById('setDefault').checked
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Payment method added successfully!');
+                window.location.href = '{{ url_for("billing.index") }}';
+            } else {
+                document.getElementById('card-errors').textContent = data.error;
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
+    }
+});
+
+function removePaymentMethod(id) {
+    if (confirm('Are you sure you want to remove this payment method?')) {
+        // TODO: Implement remove payment method
+        alert('Remove payment method functionality coming soon');
+    }
+}
+</script>
+{% endblock %}

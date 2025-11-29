@@ -74,9 +74,9 @@ def register():
                 subscription_plan=subscription_plan
             )
             
-            # Show success page with credentials
-            return render_template('tenant/registration_success.html', 
-                                 tenant_info=result)
+            # Show success notification and redirect to login
+            flash(f'Registration successful! Welcome to TSG Cafe ERP. Your username is: {result["owner"]["username"]}', 'success')
+            return redirect(url_for('auth.login'))
             
         except ValueError as e:
             flash(str(e), 'error')
