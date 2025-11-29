@@ -287,47 +287,14 @@
             font-size: 12px;
             margin-top: 6px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .input-feedback.success {
             color: #28a745;
         }
-        
-        .input-feedback.success::before {
-            content: '✓';
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            background: #28a745;
-            color: white;
-            border-radius: 50%;
-            font-size: 11px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
 
         .input-feedback.error {
             color: #dc3545;
-        }
-        
-        .input-feedback.error::before {
-            content: '✗';
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            font-size: 11px;
-            font-weight: bold;
-            flex-shrink: 0;
         }
 
         /* Password Toggle */
@@ -957,10 +924,10 @@
                     const businessFeedback = document.getElementById('businessNameFeedback');
                     if (businessName) {
                         if (data.business_name_available) {
-                            businessFeedback.textContent = 'Available';
+                            businessFeedback.textContent = '✓ Available';
                             businessFeedback.className = 'input-feedback success';
                         } else {
-                            businessFeedback.textContent = 'Already taken';
+                            businessFeedback.textContent = '✗ Already taken';
                             businessFeedback.className = 'input-feedback error';
                         }
                     }
@@ -968,10 +935,10 @@
                     const emailFeedback = document.getElementById('emailFeedback');
                     if (ownerEmail) {
                         if (data.email_available) {
-                            emailFeedback.textContent = 'Available';
+                            emailFeedback.textContent = '✓ Available';
                             emailFeedback.className = 'input-feedback success';
                         } else {
-                            emailFeedback.textContent = 'Already registered';
+                            emailFeedback.textContent = '✗ Already registered';
                             emailFeedback.className = 'input-feedback error';
                         }
                     }
