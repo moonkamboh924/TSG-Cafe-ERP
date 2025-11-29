@@ -18,52 +18,142 @@ from ..models import Business, Subscription, Invoice, PaymentMethod, PlanFeature
 class SubscriptionService:
     """Service class for subscription management"""
     
-    # Plan pricing configuration
+    # Plan pricing configuration by business type
     PLAN_PRICING = {
-        'free': {
-            'name': 'Free',
-            'monthly_price': 0,
-            'yearly_price': 0,
-            'trial_days': 0,
-            'description': 'Perfect for getting started'
+        'cafe': {
+            'name': 'Cafe',
+            'icon': 'fa-coffee',
+            'description': 'Perfect for coffee shops and small cafes',
+            'features': [
+                'Up to 10 users',
+                'Menu management (100 items)',
+                'Basic POS system',
+                'Inventory tracking',
+                'Daily sales reports',
+                'Email support'
+            ],
+            'pricing': {
+                1: 29,    # 1 month
+                3: 79,    # 3 months (10% discount)
+                6: 149,   # 6 months (15% discount)
+                12: 279   # 12 months (20% discount)
+            },
+            'trial_days': 14
         },
-        'basic': {
-            'name': 'Basic',
-            'monthly_price': 29,
-            'yearly_price': 290,  # 2 months free
-            'trial_days': 14,
-            'description': 'Ideal for small restaurants'
+        'restaurant': {
+            'name': 'Restaurant',
+            'icon': 'fa-utensils',
+            'description': 'Complete solution for full-service restaurants',
+            'features': [
+                'Up to 50 users',
+                'Unlimited menu items',
+                'Advanced POS with table management',
+                'Inventory management',
+                'Kitchen display system',
+                'Multi-location support (up to 3)',
+                'Advanced analytics & reports',
+                'Priority support',
+                'Custom branding'
+            ],
+            'pricing': {
+                1: 79,    # 1 month
+                3: 219,   # 3 months (10% discount)
+                6: 409,   # 6 months (15% discount)
+                12: 759   # 12 months (20% discount)
+            },
+            'trial_days': 14
         },
-        'premium': {
-            'name': 'Premium',
-            'monthly_price': 99,
-            'yearly_price': 990,  # 2 months free
-            'trial_days': 14,
-            'description': 'Complete solution for growing businesses'
+        'hotel': {
+            'name': 'Hotel',
+            'icon': 'fa-hotel',
+            'description': 'Enterprise solution for hotels and resorts',
+            'features': [
+                'Unlimited users',
+                'Unlimited menu items',
+                'Multi-restaurant management',
+                'Room service integration',
+                'Banquet & catering management',
+                'Unlimited locations',
+                'Advanced inventory & procurement',
+                'Real-time analytics dashboard',
+                'API access',
+                'Dedicated account manager',
+                '24/7 priority support',
+                'Custom integrations'
+            ],
+            'pricing': {
+                1: 199,   # 1 month
+                3: 549,   # 3 months (10% discount)
+                6: 1029,  # 6 months (15% discount)
+                12: 1909  # 12 months (20% discount)
+            },
+            'trial_days': 14
+        }
+    }
+    
+    # Subscription period configuration
+    SUBSCRIPTION_PERIODS = {
+        1: {
+            'name': '1 Month',
+            'display': 'Monthly',
+            'days': 30,
+            'discount': 0
+        },
+        3: {
+            'name': '3 Months',
+            'display': 'Quarterly',
+            'days': 90,
+            'discount': 10,
+            'badge': 'Save 10%'
+        },
+        6: {
+            'name': '6 Months',
+            'display': 'Semi-Annual',
+            'days': 180,
+            'discount': 15,
+            'badge': 'Save 15%'
+        },
+        12: {
+            'name': '12 Months',
+            'display': 'Annual',
+            'days': 365,
+            'discount': 20,
+            'badge': 'Best Value - Save 20%',
+            'popular': True
         }
     }
     
     # Plan limits configuration
     PLAN_LIMITS = {
-        'free': {
-            'max_users': 5,
-            'max_menu_items': 50,
+        'cafe': {
+            'max_users': 10,
+            'max_menu_items': 100,
             'max_locations': 1,
-            'max_monthly_sales': 1000,
+            'max_tables': 20,
+            'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
+            'kitchen_display': False,
+            'table_management': False,
+            'room_service': False,
+            'banquet_management': False,
             'advanced_reports': False,
             'api_access': False,
             'custom_branding': False,
             'priority_support': False,
-            'data_retention_days': 90,
-            'export_data': False
+            'data_retention_days': 180,
+            'export_data': True
         },
-        'basic': {
-            'max_users': 25,
-            'max_menu_items': 500,
+        'restaurant': {
+            'max_users': 50,
+            'max_menu_items': -1,  # unlimited
             'max_locations': 3,
+            'max_tables': 100,
             'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
+            'kitchen_display': True,
+            'table_management': True,
+            'room_service': False,
+            'banquet_management': False,
             'advanced_reports': True,
             'api_access': False,
             'custom_branding': True,
@@ -71,12 +161,17 @@ class SubscriptionService:
             'data_retention_days': 365,
             'export_data': True
         },
-        'premium': {
+        'hotel': {
             'max_users': -1,  # unlimited
             'max_menu_items': -1,  # unlimited
             'max_locations': -1,  # unlimited
+            'max_tables': -1,  # unlimited
             'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
+            'kitchen_display': True,
+            'table_management': True,
+            'room_service': True,
+            'banquet_management': True,
             'advanced_reports': True,
             'api_access': True,
             'custom_branding': True,
@@ -89,41 +184,55 @@ class SubscriptionService:
     @classmethod
     def get_plan_limits(cls, plan):
         """Get limits for a specific plan"""
-        return cls.PLAN_LIMITS.get(plan, cls.PLAN_LIMITS['free'])
+        return cls.PLAN_LIMITS.get(plan, cls.PLAN_LIMITS['cafe'])
     
     @classmethod
-    def get_plan_pricing(cls, plan, billing_cycle='monthly'):
-        """Get pricing for a specific plan"""
-        plan_info = cls.PLAN_PRICING.get(plan, cls.PLAN_PRICING['free'])
-        price_key = 'monthly_price' if billing_cycle == 'monthly' else 'yearly_price'
-        return plan_info.get(price_key, 0)
+    def get_plan_pricing(cls, plan, subscription_months=1):
+        """Get pricing for a specific plan and subscription period"""
+        plan_info = cls.PLAN_PRICING.get(plan)
+        if not plan_info:
+            return 0
+        return plan_info['pricing'].get(subscription_months, 0)
     
     @classmethod
-    def create_subscription(cls, business_id, plan='free', billing_cycle='monthly', payment_method_id=None):
+    def calculate_monthly_price(cls, plan, subscription_months=1):
+        """Calculate monthly price for a subscription period"""
+        total_price = cls.get_plan_pricing(plan, subscription_months)
+        return round(total_price / subscription_months, 2) if subscription_months > 0 else 0
+    
+    @classmethod
+    def get_discount_percentage(cls, subscription_months):
+        """Get discount percentage for subscription period"""
+        period_info = cls.SUBSCRIPTION_PERIODS.get(subscription_months, {})
+        return period_info.get('discount', 0)
+    
+    @classmethod
+    def create_subscription(cls, business_id, plan='cafe', subscription_months=1, payment_method_id=None):
         """Create a new subscription for a business"""
         business = Business.query.get(business_id)
         if not business:
             raise ValueError('Business not found')
         
         # Get plan pricing
-        amount = cls.get_plan_pricing(plan, billing_cycle)
-        trial_days = cls.PLAN_PRICING.get(plan, {}).get('trial_days', 0)
+        amount = cls.get_plan_pricing(plan, subscription_months)
+        plan_info = cls.PLAN_PRICING.get(plan, {})
+        trial_days = plan_info.get('trial_days', 0)
         
         # Calculate dates
         start_date = datetime.now(timezone.utc)
         trial_end_date = start_date + timedelta(days=trial_days) if trial_days > 0 else None
         
-        if billing_cycle == 'monthly':
-            next_billing_date = start_date + timedelta(days=30)
-        else:  # yearly
-            next_billing_date = start_date + timedelta(days=365)
+        # Calculate next billing date based on subscription months
+        period_info = cls.SUBSCRIPTION_PERIODS.get(subscription_months, {})
+        billing_days = period_info.get('days', 30)
+        next_billing_date = start_date + timedelta(days=billing_days)
         
         # Create subscription
         subscription = Subscription(
             business_id=business_id,
             plan=plan,
             status='active',
-            billing_cycle=billing_cycle,
+            billing_cycle=f'{subscription_months}_months',
             amount=Decimal(str(amount)),
             currency='USD',
             start_date=start_date,

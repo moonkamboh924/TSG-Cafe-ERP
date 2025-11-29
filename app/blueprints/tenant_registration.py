@@ -172,42 +172,12 @@ def verify_codes():
 @bp.route('/plans')
 def plans():
     """Subscription plans page"""
-    plans = {
-        'free': {
-            'name': 'Free',
-            'price': 0,
-            'features': [
-                'Up to 5 users',
-                'Basic POS system',
-                'Menu management',
-                'Basic reports',
-                'Email support'
-            ]
-        },
-        'basic': {
-            'name': 'Basic',
-            'price': 29,
-            'features': [
-                'Up to 25 users',
-                'Advanced POS system',
-                'Inventory management',
-                'Financial reports',
-                'Priority support',
-                'Data backup'
-            ]
-        },
-        'premium': {
-            'name': 'Premium',
-            'price': 99,
-            'features': [
-                'Unlimited users',
-                'Multi-location support',
-                'Advanced analytics',
-                'Custom reports',
-                'API access',
-                '24/7 support',
-                'Custom integrations'
-            ]
-        }
-    }
-    return render_template('tenant/plans.html', plans=plans)
+    from ..services.subscription_service import SubscriptionService
+    
+    plans = SubscriptionService.PLAN_PRICING
+    periods = SubscriptionService.SUBSCRIPTION_PERIODS
+    
+    return render_template('tenant/plans.html', 
+                         plans=plans, 
+                         periods=periods)
+
