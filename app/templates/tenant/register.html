@@ -284,15 +284,25 @@
         }
 
         .input-feedback {
+            position: absolute;
+            right: -35px;
+            top: 50%;
+            transform: translateY(-50%);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
-            margin-top: 6px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .input-feedback.success,
+        .input-feedback.error {
+            opacity: 1;
         }
 
         .input-feedback.success {
