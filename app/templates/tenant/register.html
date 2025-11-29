@@ -34,11 +34,13 @@
         }
 
         .home-button {
-            position: fixed;
-            top: 20px;
-            left: 20px !important;  /* Force left position */
-            right: auto;  /* Override any right positioning */
-            z-index: 1000;
+            position: fixed !important;
+            top: 20px !important;
+            left: 20px !important;
+            right: unset !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            z-index: 10000 !important;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.3);
