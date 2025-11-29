@@ -243,16 +243,18 @@
         .form-label {
             font-weight: 600;
             color: #2d3748;
-            font-size: 13px;
-            margin-bottom: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: block;
         }
 
         .form-control {
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            padding: 11px 14px;
+            padding: 12px 14px;
             font-size: 14px;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .form-control:focus {
@@ -263,7 +265,11 @@
 
         .input-group {
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 28px;
+        }
+        
+        .input-group.password-group {
+            margin-bottom: 36px;
         }
 
         .input-icon {
@@ -359,27 +365,72 @@
         .strength-strong { background: #28a745; width: 100%; }
 
         .password-requirements {
-            margin-top: 12px;
-            padding: 12px;
-            background: #f7fafc;
-            border-radius: 8px;
+            position: static;
+            width: 100%;
+            margin-top: 20px;
+            padding: 18px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+            z-index: 1;
         }
 
-        .requirement {
-            font-size: 12px;
-            color: #718096;
-            margin-bottom: 6px;
+        .password-requirements::before {
+            display: none;
+        }
+
+        .password-requirements::after {
+            display: none;
+        }
+
+        .password-requirements h6 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
             display: flex;
             align-items: center;
         }
 
+        .requirement {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            line-height: 1.5;
+        }
+
+        .requirement:last-child {
+            margin-bottom: 0;
+        }
+
         .requirement i {
-            margin-right: 8px;
+            margin-right: 10px;
             font-size: 10px;
+            width: 14px;
         }
 
         .requirement.met {
             color: #28a745;
+            font-weight: 600;
+        }
+
+        .requirement.met i {
+            color: #28a745;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .password-requirements {
+                padding: 14px;
+            }
+            
+            .requirement {
+                font-size: 12px;
+            }
         }
 
         /* Plan Selection */
@@ -649,7 +700,7 @@
                         <h2 class="step-title">Secure your account</h2>
                         <p class="step-description">Create a strong password to protect your data</p>
 
-                        <div class="input-group">
+                        <div class="input-group password-group" style="position: relative;">
                             <label class="form-label">Password</label>
                             <div style="position: relative;">
                                 <input type="password" 
@@ -657,17 +708,17 @@
                                        id="password" 
                                        name="password" 
                                        placeholder="Create a strong password"
+                                       style="padding-right: 80px;"
                                        required>
                                 <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <i class="fas fa-check-circle" id="passwordCheck" style="position: absolute; right: 45px; top: 50%; transform: translateY(-50%); color: #28a745; opacity: 0; transition: opacity 0.3s ease; font-size: 18px;"></i>
                             </div>
-                            <div class="password-strength">
-                                <div class="password-strength-bar" id="strengthBar"></div>
-                            </div>
-                            <div class="input-feedback" id="strengthText"></div>
+                            <div class="input-feedback" id="strengthText" style="margin-top: 6px; font-size: 12px; font-weight: 600;"></div>
                             
                             <div class="password-requirements">
+                                <h6><i class="fas fa-key" style="margin-right: 6px;"></i>Password must contain:</h6>
                                 <div class="requirement" id="req-length">
                                     <i class="fas fa-circle"></i> At least 8 characters
                                 </div>
@@ -691,12 +742,14 @@
                                        id="confirm_password" 
                                        name="confirm_password" 
                                        placeholder="Confirm your password"
+                                       style="padding-right: 80px;"
                                        required>
                                 <button type="button" class="password-toggle" onclick="togglePassword('confirm_password', this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <i class="fas fa-check-circle" id="confirmPasswordCheck" style="position: absolute; right: 45px; top: 50%; transform: translateY(-50%); color: #28a745; opacity: 0; transition: opacity 0.3s ease; font-size: 18px;"></i>
                             </div>
-                            <div class="input-feedback" id="matchText"></div>
+                            <div class="input-feedback" id="matchText" style="margin-top: 6px; font-size: 12px; font-weight: 600;"></div>
                         </div>
 
                         <div class="btn-group">
@@ -946,7 +999,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const businessFeedback = document.getElementById('businessNameFeedback');
-                    if (businessName) {
+                    if (businessName && businessFeedback) {
                         if (data.business_name_available) {
                             businessFeedback.textContent = '';
                             businessFeedback.className = 'input-feedback success';
@@ -957,7 +1010,7 @@
                     }
                     
                     const emailFeedback = document.getElementById('emailFeedback');
-                    if (ownerEmail) {
+                    if (ownerEmail && emailFeedback) {
                         if (data.email_available) {
                             emailFeedback.textContent = '';
                             emailFeedback.className = 'input-feedback success';
@@ -971,9 +1024,6 @@
             }, 500);
         }
         
-        document.getElementById('business_name').addEventListener('input', checkAvailability);
-        document.getElementById('owner_email').addEventListener('input', checkAvailability);
-
         // Password Toggle
         function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
@@ -988,78 +1038,109 @@
             }
         }
 
-        // Password Strength
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirm_password');
-
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            const requirements = {
-                length: password.length >= 8,
-                uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /[0-9]/.test(password)
-            };
-
-            updateRequirement('req-length', requirements.length);
-            updateRequirement('req-uppercase', requirements.uppercase);
-            updateRequirement('req-lowercase', requirements.lowercase);
-            updateRequirement('req-number', requirements.number);
-
-            let strength = Object.values(requirements).filter(v => v).length;
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-
-            strengthBar.className = 'password-strength-bar';
-            if (strength <= 2) {
-                strengthBar.classList.add('strength-weak');
-                strengthText.textContent = 'Weak password';
-                strengthText.className = 'input-feedback error';
-            } else if (strength === 3) {
-                strengthBar.classList.add('strength-medium');
-                strengthText.textContent = 'Medium password';
-                strengthText.className = 'input-feedback';
-                strengthText.style.color = '#ffc107';
-            } else {
-                strengthBar.classList.add('strength-strong');
-                strengthText.textContent = 'Strong password';
-                strengthText.className = 'input-feedback success';
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Availability Check Event Listeners
+            const businessNameInput = document.getElementById('business_name');
+            const ownerEmailInput = document.getElementById('owner_email');
+            
+            if (businessNameInput) {
+                businessNameInput.addEventListener('input', checkAvailability);
+            }
+            if (ownerEmailInput) {
+                ownerEmailInput.addEventListener('input', checkAvailability);
             }
 
-            checkPasswordMatch();
-        });
+            // Password Strength
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            
+            if (!passwordInput || !confirmPasswordInput) return;
 
-        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const requirements = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password)
+                };
 
-        function updateRequirement(id, met) {
-            const element = document.getElementById(id);
-            const icon = element.querySelector('i');
-            if (met) {
-                element.classList.add('met');
-                icon.classList.replace('fa-circle', 'fa-check-circle');
-            } else {
-                element.classList.remove('met');
-                icon.classList.replace('fa-check-circle', 'fa-circle');
-            }
-        }
+                updateRequirement('req-length', requirements.length);
+                updateRequirement('req-uppercase', requirements.uppercase);
+                updateRequirement('req-lowercase', requirements.lowercase);
+                updateRequirement('req-number', requirements.number);
 
-        function checkPasswordMatch() {
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            const matchText = document.getElementById('matchText');
+                let strength = Object.values(requirements).filter(v => v).length;
+                const strengthText = document.getElementById('strengthText');
+                const passwordCheck = document.getElementById('passwordCheck');
 
-            if (confirmPassword.length > 0) {
-                if (password === confirmPassword) {
-                    matchText.textContent = '✓ Passwords match';
-                    matchText.className = 'input-feedback success';
+                if (password.length === 0) {
+                    strengthText.textContent = '';
+                    strengthText.style.display = 'none';
+                    passwordCheck.style.opacity = '0';
+                } else if (strength <= 2) {
+                    strengthText.textContent = 'Weak';
+                    strengthText.style.display = 'block';
+                    strengthText.style.color = '#dc3545';
+                    passwordCheck.style.opacity = '0';
+                } else if (strength === 3) {
+                    strengthText.textContent = 'Medium';
+                    strengthText.style.display = 'block';
+                    strengthText.style.color = '#ffc107';
+                    passwordCheck.style.opacity = '0';
                 } else {
-                    matchText.textContent = '✗ Passwords do not match';
-                    matchText.className = 'input-feedback error';
+                    strengthText.textContent = 'Strong';
+                    strengthText.style.display = 'block';
+                    strengthText.style.color = '#28a745';
+                    passwordCheck.style.opacity = '1';
                 }
-            } else {
-                matchText.textContent = '';
+
+                checkPasswordMatch();
+            });
+
+            confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+            function updateRequirement(id, met) {
+                const element = document.getElementById(id);
+                if (!element) return;
+                const icon = element.querySelector('i');
+                if (met) {
+                    element.classList.add('met');
+                    icon.classList.replace('fa-circle', 'fa-check-circle');
+                } else {
+                    element.classList.remove('met');
+                    icon.classList.replace('fa-check-circle', 'fa-circle');
+                }
             }
-        }
+
+            function checkPasswordMatch() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const matchText = document.getElementById('matchText');
+                const confirmPasswordCheck = document.getElementById('confirmPasswordCheck');
+
+                if (!matchText || !confirmPasswordCheck) return;
+
+                if (confirmPassword.length > 0) {
+                    if (password === confirmPassword && password.length > 0) {
+                        matchText.textContent = 'Match';
+                        matchText.style.display = 'block';
+                        matchText.style.color = '#28a745';
+                        confirmPasswordCheck.style.opacity = '1';
+                    } else {
+                        matchText.textContent = 'Does not match';
+                        matchText.style.display = 'block';
+                        matchText.style.color = '#dc3545';
+                        confirmPasswordCheck.style.opacity = '0';
+                    }
+                } else {
+                    matchText.textContent = '';
+                    matchText.style.display = 'none';
+                    confirmPasswordCheck.style.opacity = '0';
+                }
+            }
+        });
 
         // Plan Selection
         function selectPlan(plan) {
