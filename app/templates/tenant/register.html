@@ -36,7 +36,8 @@
         .home-button {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 20px !important;  /* Force left position */
+            right: auto;  /* Override any right positioning */
             z-index: 1000;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
@@ -612,7 +613,7 @@
                     <i class="fas fa-rocket"></i>
                 </div>
                 <h1>Create Your Account</h1>
-                <p>Join TSG Cafe and transform your restaurant</p>
+                <p>Join TSG Cafe ERP and transform your restaurant</p>
             </div>
 
             <!-- Progress Steps -->
@@ -698,163 +699,14 @@
 
                         <div class="input-group" id="phoneGroup">
                             <label class="form-label" style="margin-top: -3px;">Mobile Number</label>
-                            <div style="display: flex; gap: 10px; margin-left: 10px; margin-top: -10px;">
-                                <select class="form-control" id="country_code" name="country_code" style="width: 140px; border-radius: 25px; padding-right: 30px;">
-                                    <option value="+93">🇦🇫 +93 (AFG)</option>
-                                    <option value="+355">🇦🇱 +355 (ALB)</option>
-                                    <option value="+213">🇩🇿 +213 (DZA)</option>
-                                    <option value="+1">🇺🇸 +1 (USA)</option>
-                                    <option value="+376">🇦🇩 +376 (AND)</option>
-                                    <option value="+244">🇦🇴 +244 (AGO)</option>
-                                    <option value="+54">🇦🇷 +54 (ARG)</option>
-                                    <option value="+374">🇦🇲 +374 (ARM)</option>
-                                    <option value="+61">🇦🇺 +61 (AUS)</option>
-                                    <option value="+43">🇦🇹 +43 (AUT)</option>
-                                    <option value="+994">🇦🇿 +994 (AZE)</option>
-                                    <option value="+973">🇧🇭 +973 (BHR)</option>
-                                    <option value="+880">🇧🇩 +880 (BGD)</option>
-                                    <option value="+375">🇧🇾 +375 (BLR)</option>
-                                    <option value="+32">🇧🇪 +32 (BEL)</option>
-                                    <option value="+501">🇧🇿 +501 (BLZ)</option>
-                                    <option value="+229">🇧🇯 +229 (BEN)</option>
-                                    <option value="+975">🇧🇹 +975 (BTN)</option>
-                                    <option value="+591">🇧🇴 +591 (BOL)</option>
-                                    <option value="+387">🇧🇦 +387 (BIH)</option>
-                                    <option value="+267">🇧🇼 +267 (BWA)</option>
-                                    <option value="+55">🇧🇷 +55 (BRA)</option>
-                                    <option value="+673">🇧🇳 +673 (BRN)</option>
-                                    <option value="+359">🇧🇬 +359 (BGR)</option>
-                                    <option value="+226">🇧🇫 +226 (BFA)</option>
-                                    <option value="+257">🇧🇮 +257 (BDI)</option>
-                                    <option value="+855">🇰🇭 +855 (KHM)</option>
-                                    <option value="+237">🇨🇲 +237 (CMR)</option>
-                                    <option value="+1">🇨🇦 +1 (CAN)</option>
-                                    <option value="+56">🇨🇱 +56 (CHL)</option>
-                                    <option value="+86">🇨🇳 +86 (CHN)</option>
-                                    <option value="+57">🇨🇴 +57 (COL)</option>
-                                    <option value="+506">🇨🇷 +506 (CRI)</option>
-                                    <option value="+385">🇭🇷 +385 (HRV)</option>
-                                    <option value="+53">🇨🇺 +53 (CUB)</option>
-                                    <option value="+357">🇨🇾 +357 (CYP)</option>
-                                    <option value="+420">🇨🇿 +420 (CZE)</option>
-                                    <option value="+45">🇩🇰 +45 (DNK)</option>
-                                    <option value="+253">🇩🇯 +253 (DJI)</option>
-                                    <option value="+593">🇪🇨 +593 (ECU)</option>
-                                    <option value="+20">🇪🇬 +20 (EGY)</option>
-                                    <option value="+503">🇸🇻 +503 (SLV)</option>
-                                    <option value="+372">🇪🇪 +372 (EST)</option>
-                                    <option value="+251">🇪🇹 +251 (ETH)</option>
-                                    <option value="+358">🇫🇮 +358 (FIN)</option>
-                                    <option value="+33">🇫🇷 +33 (FRA)</option>
-                                    <option value="+995">🇬🇪 +995 (GEO)</option>
-                                    <option value="+49">🇩🇪 +49 (DEU)</option>
-                                    <option value="+233">🇬🇭 +233 (GHA)</option>
-                                    <option value="+30">🇬🇷 +30 (GRC)</option>
-                                    <option value="+502">🇬🇹 +502 (GTM)</option>
-                                    <option value="+509">🇭🇹 +509 (HTI)</option>
-                                    <option value="+504">🇭🇳 +504 (HND)</option>
-                                    <option value="+852">🇭🇰 +852 (HKG)</option>
-                                    <option value="+36">🇭🇺 +36 (HUN)</option>
-                                    <option value="+354">🇮🇸 +354 (ISL)</option>
-                                    <option value="+91">🇮🇳 +91 (IND)</option>
-                                    <option value="+62">🇮🇩 +62 (IDN)</option>
-                                    <option value="+98">🇮🇷 +98 (IRN)</option>
-                                    <option value="+964">🇮🇶 +964 (IRQ)</option>
-                                    <option value="+353">🇮🇪 +353 (IRL)</option>
-                                    <option value="+972">🇮🇱 +972 (ISR)</option>
-                                    <option value="+39">🇮🇹 +39 (ITA)</option>
-                                    <option value="+81">🇯🇵 +81 (JPN)</option>
-                                    <option value="+962">🇯🇴 +962 (JOR)</option>
-                                    <option value="+7">🇰🇿 +7 (KAZ)</option>
-                                    <option value="+254">🇰🇪 +254 (KEN)</option>
-                                    <option value="+965">🇰🇼 +965 (KWT)</option>
-                                    <option value="+996">🇰🇬 +996 (KGZ)</option>
-                                    <option value="+856">🇱🇦 +856 (LAO)</option>
-                                    <option value="+371">🇱🇻 +371 (LVA)</option>
-                                    <option value="+961">🇱🇧 +961 (LBN)</option>
-                                    <option value="+231">🇱🇷 +231 (LBR)</option>
-                                    <option value="+218">🇱🇾 +218 (LBY)</option>
-                                    <option value="+370">🇱🇹 +370 (LTU)</option>
-                                    <option value="+352">🇱🇺 +352 (LUX)</option>
-                                    <option value="+60">🇲🇾 +60 (MYS)</option>
-                                    <option value="+960">🇲🇻 +960 (MDV)</option>
-                                    <option value="+223">🇲🇱 +223 (MLI)</option>
-                                    <option value="+356">🇲🇹 +356 (MLT)</option>
-                                    <option value="+52">🇲🇽 +52 (MEX)</option>
-                                    <option value="+373">🇲🇩 +373 (MDA)</option>
-                                    <option value="+377">🇲🇨 +377 (MCO)</option>
-                                    <option value="+976">🇲🇳 +976 (MNG)</option>
-                                    <option value="+382">🇲🇪 +382 (MNE)</option>
-                                    <option value="+212">🇲🇦 +212 (MAR)</option>
-                                    <option value="+258">🇲🇿 +258 (MOZ)</option>
-                                    <option value="+95">🇲🇲 +95 (MMR)</option>
-                                    <option value="+264">🇳🇦 +264 (NAM)</option>
-                                    <option value="+977">🇳🇵 +977 (NPL)</option>
-                                    <option value="+31">🇳🇱 +31 (NLD)</option>
-                                    <option value="+64">🇳🇿 +64 (NZL)</option>
-                                    <option value="+505">🇳🇮 +505 (NIC)</option>
-                                    <option value="+227">🇳🇪 +227 (NER)</option>
-                                    <option value="+234">🇳🇬 +234 (NGA)</option>
-                                    <option value="+850">🇰🇵 +850 (PRK)</option>
-                                    <option value="+47">🇳🇴 +47 (NOR)</option>
-                                    <option value="+968">🇴🇲 +968 (OMN)</option>
-                                    <option value="+92" selected>🇵🇰 +92 (PAK)</option>
-                                    <option value="+970">🇵🇸 +970 (PSE)</option>
-                                    <option value="+507">🇵🇦 +507 (PAN)</option>
-                                    <option value="+595">🇵🇾 +595 (PRY)</option>
-                                    <option value="+51">🇵🇪 +51 (PER)</option>
-                                    <option value="+63">🇵🇭 +63 (PHL)</option>
-                                    <option value="+48">🇵🇱 +48 (POL)</option>
-                                    <option value="+351">🇵🇹 +351 (PRT)</option>
-                                    <option value="+974">🇶🇦 +974 (QAT)</option>
-                                    <option value="+40">🇷🇴 +40 (ROU)</option>
-                                    <option value="+7">🇷🇺 +7 (RUS)</option>
-                                    <option value="+250">🇷🇼 +250 (RWA)</option>
-                                    <option value="+966">🇸🇦 +966 (SAU)</option>
-                                    <option value="+221">🇸🇳 +221 (SEN)</option>
-                                    <option value="+381">🇷🇸 +381 (SRB)</option>
-                                    <option value="+65">🇸🇬 +65 (SGP)</option>
-                                    <option value="+421">🇸🇰 +421 (SVK)</option>
-                                    <option value="+386">🇸🇮 +386 (SVN)</option>
-                                    <option value="+252">🇸🇴 +252 (SOM)</option>
-                                    <option value="+27">🇿🇦 +27 (ZAF)</option>
-                                    <option value="+82">🇰🇷 +82 (KOR)</option>
-                                    <option value="+211">🇸🇸 +211 (SSD)</option>
-                                    <option value="+34">🇪🇸 +34 (ESP)</option>
-                                    <option value="+94">🇱🇰 +94 (LKA)</option>
-                                    <option value="+249">🇸🇩 +249 (SDN)</option>
-                                    <option value="+46">🇸🇪 +46 (SWE)</option>
-                                    <option value="+41">🇨🇭 +41 (CHE)</option>
-                                    <option value="+963">🇸🇾 +963 (SYR)</option>
-                                    <option value="+886">🇹🇼 +886 (TWN)</option>
-                                    <option value="+992">🇹🇯 +992 (TJK)</option>
-                                    <option value="+255">🇹🇿 +255 (TZA)</option>
-                                    <option value="+66">🇹🇭 +66 (THA)</option>
-                                    <option value="+228">🇹🇬 +228 (TGO)</option>
-                                    <option value="+216">🇹🇳 +216 (TUN)</option>
-                                    <option value="+90">🇹🇷 +90 (TUR)</option>
-                                    <option value="+993">🇹🇲 +993 (TKM)</option>
-                                    <option value="+256">🇺🇬 +256 (UGA)</option>
-                                    <option value="+380">🇺🇦 +380 (UKR)</option>
-                                    <option value="+971">🇦🇪 +971 (ARE)</option>
-                                    <option value="+44">🇬🇧 +44 (GBR)</option>
-                                    <option value="+598">🇺🇾 +598 (URY)</option>
-                                    <option value="+998">🇺🇿 +998 (UZB)</option>
-                                    <option value="+58">🇻🇪 +58 (VEN)</option>
-                                    <option value="+84">🇻🇳 +84 (VNM)</option>
-                                    <option value="+967">🇾🇪 +967 (YEM)</option>
-                                    <option value="+260">🇿🇲 +260 (ZMB)</option>
-                                    <option value="+263">🇿🇼 +263 (ZWE)</option>
-                                </select>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="phone_number" 
-                                       name="phone_number" 
-                                       value="{{ phone_number or '' }}" 
-                                       placeholder="300 1234567"
-                                       style="flex: 1; border-radius: 25px;"
-                                       required>
-                            </div>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone_number" 
+                                   name="phone_number" 
+                                   value="{{ phone_number or '' }}" 
+                                   placeholder="+92 300 1234567"
+                                   style="margin-left: 10px; margin-top: -10px; border-radius: 25px;"
+                                   required>
                             <i class="fas fa-check-circle input-icon"></i>
                         </div>
 
@@ -934,37 +786,68 @@
 
                     <!-- Step 3: Verification -->
                     <div class="form-step" data-step="3">
-                        <h2 class="step-title">Verify your email</h2>
-                        <p class="step-description">We've sent a verification code to your email</p>
+                        <h2 class="step-title">Verify Your Identity</h2>
+                        <p class="step-description">We've sent verification codes to secure your account</p>
 
-                        <div style="text-align: center; margin-bottom: 30px;">
-                            <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-envelope" style="font-size: 36px; color: white;"></i>
+                        <!-- Email Verification -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-envelope" style="font-size: 22px; color: white;"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: #718096; margin-bottom: 3px;">Email Verification</p>
+                                    <p style="font-size: 14px; font-weight: 600; color: #2d3748; margin: 0;" id="verificationEmail">
+                                        <!-- Email will be populated by JavaScript -->
+                                    </p>
+                                </div>
                             </div>
-                            <p style="font-size: 14px; color: #718096; margin-bottom: 5px;">
-                                Verification code sent to
-                            </p>
-                            <p style="font-size: 15px; font-weight: 600; color: #2d3748;" id="verificationEmail">
-                                <!-- Email will be populated by JavaScript -->
-                            </p>
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="margin-top: 0;">Email Code</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="email_verification_code" 
+                                       name="email_verification_code" 
+                                       placeholder="Enter 6-digit code"
+                                       maxlength="6"
+                                       style="text-align: center; font-size: 20px; letter-spacing: 8px; font-weight: 600; border-radius: 25px;"
+                                       required>
+                            </div>
                         </div>
 
-                        <div class="input-group">
-                            <label class="form-label">Verification Code</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="verification_code" 
-                                   name="verification_code" 
-                                   placeholder="Enter 6-digit code"
-                                   maxlength="6"
-                                   style="text-align: center; font-size: 24px; letter-spacing: 10px; font-weight: 600; border-radius: 25px;"
-                                   required>
+                        <!-- Mobile Verification -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-mobile-alt" style="font-size: 22px; color: white;"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: #718096; margin-bottom: 3px;">Mobile Verification</p>
+                                    <p style="font-size: 14px; font-weight: 600; color: #2d3748; margin: 0;" id="verificationPhone">
+                                        <!-- Phone will be populated by JavaScript -->
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="margin-top: 0;">Mobile Code</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="mobile_verification_code" 
+                                       name="mobile_verification_code" 
+                                       placeholder="Enter 6-digit code"
+                                       maxlength="6"
+                                       style="text-align: center; font-size: 20px; letter-spacing: 8px; font-weight: 600; border-radius: 25px;"
+                                       required>
+                            </div>
                         </div>
 
                         <div style="text-align: center; margin-top: 15px;">
                             <p style="font-size: 13px; color: #718096;">
-                                Didn't receive the code? 
-                                <a href="#" onclick="resendCode(); return false;" style="color: #667eea; font-weight: 600; text-decoration: none;">Resend</a>
+                                Didn't receive the codes? 
+                                <a href="#" onclick="resendCodes(); return false;" style="color: #667eea; font-weight: 600; text-decoration: none;">Resend Both Codes</a>
+                            </p>
+                            <p style="font-size: 12px; color: #a0aec0; margin-top: 8px;">
+                                Note: Each verification code is unique and different for email and mobile.
                             </p>
                         </div>
 
@@ -1240,8 +1123,13 @@
         let currentStep = 1;
 
         // Step Navigation
-        function nextStep(step) {
-            if (validateStep(step)) {
+        async function nextStep(step) {
+            const isValid = await validateStep(step);
+            if (isValid) {
+                // If moving from password step (step 2) to verification step (step 3)
+                if (step === 2) {
+                    await sendVerificationCodes();
+                }
                 currentStep = step + 1;
                 updateStepDisplay();
             }
@@ -1272,13 +1160,137 @@
             });
             document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
             
-            // Update verification email when entering verification step
+            // Update verification email and phone when entering verification step
             if (currentStep === 3) {
                 updateVerificationEmail();
+                // Start countdown timer if codes exist
+                if (sessionStorage.getItem('codesExpirationTime')) {
+                    startCountdownTimer();
+                }
             }
         }
 
-        function validateStep(step) {
+        // Send verification codes automatically
+        async function sendVerificationCodes() {
+            const email = document.getElementById('owner_email').value;
+            const phone = document.getElementById('phone_number').value;
+            const businessName = document.getElementById('business_name').value;
+            
+            if (!email || !phone) {
+                showCustomModal('Error', 'Email and phone number are required.');
+                return false;
+            }
+            
+            try {
+                // Call backend API to send verification codes
+                const response = await fetch('{{ url_for("tenant.send_verification_codes") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        phone: phone,
+                        business_name: businessName
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.both_sent) {
+                    // Store expiration time (3 minutes from now)
+                    const expirationTime = Date.now() + (3 * 60 * 1000);
+                    sessionStorage.setItem('codesExpirationTime', expirationTime);
+                    sessionStorage.setItem('verificationEmail', email);
+                    sessionStorage.setItem('verificationPhone', phone);
+                    
+                    // Start countdown timer
+                    startCountdownTimer();
+                    
+                    // Log codes in development mode
+                    if (result.email.code && result.sms.code) {
+                        console.log('Email Code:', result.email.code, 'for', email);
+                        console.log('Mobile Code:', result.sms.code, 'for', phone);
+                    }
+                    
+                    showCustomModal('Verification Codes Sent', 
+                        'Two different verification codes have been sent:\n• Email code sent to ' + email + '\n• SMS code sent to ' + phone + '\n\nCodes will expire in 3 minutes. Please check both and enter the codes in the next step.');
+                    
+                    return true;
+                } else {
+                    let errorMsg = 'Failed to send verification codes:\n';
+                    if (!result.email.success) errorMsg += '• Email: ' + result.email.message + '\n';
+                    if (!result.sms.success) errorMsg += '• SMS: ' + result.sms.message;
+                    
+                    showCustomModal('Error', errorMsg);
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('Error sending verification codes:', error);
+                showCustomModal('Error', 'Failed to send verification codes. Please try again.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Countdown timer for code expiration
+        let countdownInterval;
+        
+        function startCountdownTimer() {
+            // Clear any existing interval
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // Create timer display if it doesn't exist
+            let timerDisplay = document.getElementById('codeTimer');
+            if (!timerDisplay) {
+                timerDisplay = document.createElement('p');
+                timerDisplay.id = 'codeTimer';
+                timerDisplay.style.cssText = 'text-align: center; margin-top: 15px; font-size: 14px; font-weight: 600; color: #667eea;';
+                
+                // Insert before the resend link
+                const resendSection = document.querySelector('.form-step[data-step="3"]').querySelector('div[style*="text-align: center"]');
+                if (resendSection) {
+                    resendSection.insertBefore(timerDisplay, resendSection.firstChild);
+                }
+            }
+            
+            countdownInterval = setInterval(updateCountdown, 1000);
+            updateCountdown(); // Update immediately
+        }
+        
+        function updateCountdown() {
+            const expirationTime = parseInt(sessionStorage.getItem('codesExpirationTime'));
+            const timerDisplay = document.getElementById('codeTimer');
+            
+            if (!expirationTime || !timerDisplay) {
+                if (countdownInterval) clearInterval(countdownInterval);
+                return;
+            }
+            
+            const timeLeft = expirationTime - Date.now();
+            
+            if (timeLeft <= 0) {
+                // Codes expired
+                clearInterval(countdownInterval);
+                timerDisplay.innerHTML = '<span style="color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Codes expired! Please resend.</span>';
+                sessionStorage.removeItem('emailVerificationCode');
+                sessionStorage.removeItem('mobileVerificationCode');
+                sessionStorage.removeItem('codesExpirationTime');
+            } else {
+                // Show remaining time
+                const minutes = Math.floor(timeLeft / 60000);
+                const seconds = Math.floor((timeLeft % 60000) / 1000);
+                const timeColor = timeLeft < 60000 ? '#dc3545' : '#667eea'; // Red if less than 1 minute
+                timerDisplay.innerHTML = '<i class="fas fa-clock"></i> Codes expire in: <span style="color: ' + timeColor + ';">' + 
+                    minutes + ':' + (seconds < 10 ? '0' : '') + seconds + '</span>';
+            }
+        }
+
+        async function validateStep(step) {
             const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
             const inputs = stepElement.querySelectorAll('input[required]');
             let isValid = true;
@@ -1306,13 +1318,7 @@
             }
 
             if (step === 3) {
-                const verificationCode = document.getElementById('verification_code').value;
-                if (verificationCode.length !== 6) {
-                    showCustomModal('Verification Error', 'Please enter the 6-digit verification code');
-                    return false;
-                }
-                // Here you would typically verify the code with the server
-                // For now, we'll just validate the format
+                return await validateVerificationCodes();
             }
 
             if (!isValid) {
@@ -1322,19 +1328,139 @@
             return isValid;
         }
 
-        // Verification functions
-        function resendCode() {
+        // Verification functions - Resend codes
+        async function resendCodes() {
             const email = document.getElementById('owner_email').value;
-            showCustomModal('Code Sent', 'A new verification code has been sent to ' + email);
-            // Here you would make an API call to resend the code
+            const phone = document.getElementById('phone_number').value;
+            const businessName = document.getElementById('business_name').value;
+            
+            if (!email || !phone) {
+                showCustomModal('Error', 'Email and phone number are required.');
+                return;
+            }
+            
+            try {
+                // Call backend API to resend verification codes
+                const response = await fetch('{{ url_for("tenant.send_verification_codes") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        phone: phone,
+                        business_name: businessName
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.both_sent) {
+                    // Store new expiration time (3 minutes from now)
+                    const expirationTime = Date.now() + (3 * 60 * 1000);
+                    sessionStorage.setItem('codesExpirationTime', expirationTime);
+                    
+                    // Restart countdown timer
+                    startCountdownTimer();
+                    
+                    // Log codes in development mode
+                    if (result.email.code && result.sms.code) {
+                        console.log('Resent Email Code:', result.email.code, 'for', email);
+                        console.log('Resent Mobile Code:', result.sms.code, 'for', phone);
+                    }
+                    
+                    showCustomModal('Codes Sent', 
+                        'Two new verification codes have been sent:\n• Email code sent to ' + email + '\n• SMS code sent to ' + phone + '\n\nCodes will expire in 3 minutes.');
+                } else {
+                    let errorMsg = 'Failed to resend verification codes:\n';
+                    if (!result.email.success) errorMsg += '• Email: ' + result.email.message + '\n';
+                    if (!result.sms.success) errorMsg += '• SMS: ' + result.sms.message;
+                    
+                    showCustomModal('Error', errorMsg);
+                }
+                
+            } catch (error) {
+                console.error('Error resending verification codes:', error);
+                showCustomModal('Error', 'Failed to resend verification codes. Please try again.');
+            }
+        }
+        
+        // Verify verification codes with backend
+        async function validateVerificationCodes() {
+            const emailCode = document.getElementById('email_verification_code').value;
+            const mobileCode = document.getElementById('mobile_verification_code').value;
+            const email = document.getElementById('owner_email').value;
+            const phone = document.getElementById('phone_number').value;
+            
+            if (emailCode.length !== 6) {
+                showCustomModal('Verification Error', 'Please enter the 6-digit email verification code');
+                return false;
+            }
+            if (mobileCode.length !== 6) {
+                showCustomModal('Verification Error', 'Please enter the 6-digit mobile verification code');
+                return false;
+            }
+            
+            // Check if codes have expired (client-side check)
+            const expirationTime = parseInt(sessionStorage.getItem('codesExpirationTime'));
+            if (!expirationTime || Date.now() > expirationTime) {
+                showCustomModal('Codes Expired', 'Your verification codes have expired. Please click "Resend Both Codes" to receive new codes.');
+                return false;
+            }
+            
+            try {
+                // Call backend API to verify codes
+                const response = await fetch('{{ url_for("tenant.verify_codes") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        phone: phone,
+                        email_code: emailCode,
+                        sms_code: mobileCode
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.both_verified) {
+                    // Clear stored data
+                    sessionStorage.removeItem('codesExpirationTime');
+                    if (countdownInterval) clearInterval(countdownInterval);
+                    
+                    showCustomModal('Success', 'Verification codes verified successfully!');
+                    return true;
+                } else {
+                    let errorMsg = 'Verification failed:\n';
+                    if (!result.email_verified) errorMsg += '• ' + result.email_message + '\n';
+                    if (!result.sms_verified) errorMsg += '• ' + result.sms_message;
+                    
+                    showCustomModal('Verification Error', errorMsg);
+                    return false;
+                }
+                
+            } catch (error) {
+                console.error('Error verifying codes:', error);
+                showCustomModal('Error', 'Failed to verify codes. Please try again.');
+                return false;
+            }
         }
 
-        // Update verification email display
+        // Update verification email and phone display
         function updateVerificationEmail() {
             const email = document.getElementById('owner_email').value;
+            const phone = document.getElementById('phone_number').value;
+            
             const verificationEmailElement = document.getElementById('verificationEmail');
             if (verificationEmailElement && email) {
                 verificationEmailElement.textContent = email;
+            }
+            
+            const verificationPhoneElement = document.getElementById('verificationPhone');
+            if (verificationPhoneElement && phone) {
+                verificationPhoneElement.textContent = phone;
             }
         }
 

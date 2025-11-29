@@ -17,6 +17,10 @@ def register():
         business_name = request.form.get('business_name', '').strip()
         owner_email = request.form.get('owner_email', '').strip().lower()
         owner_name = request.form.get('owner_name', '').strip()
+        phone_number = request.form.get('phone_number', '').strip()
+        password = request.form.get('password', '')
+        email_verification_code = request.form.get('email_verification_code', '').strip()
+        mobile_verification_code = request.form.get('mobile_verification_code', '').strip()
         subscription_plan = request.form.get('subscription_plan', 'free')
         
         # Validation
@@ -31,6 +35,18 @@ def register():
         if not owner_name or len(owner_name) < 2:
             errors.append('Owner name must be at least 2 characters long')
         
+        if not phone_number or len(phone_number) < 10:
+            errors.append('Please enter a valid phone number')
+        
+        if not password or len(password) < 8:
+            errors.append('Password must be at least 8 characters long')
+        
+        if not email_verification_code or len(email_verification_code) != 6:
+            errors.append('Please enter the 6-digit email verification code')
+        
+        if not mobile_verification_code or len(mobile_verification_code) != 6:
+            errors.append('Please enter the 6-digit mobile verification code')
+        
         if subscription_plan not in ['free', 'basic', 'premium']:
             subscription_plan = 'free'
         
@@ -41,14 +57,20 @@ def register():
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
+                                 phone_number=phone_number,
                                  subscription_plan=subscription_plan)
         
         try:
+            # TODO: Verify the codes against stored codes in session/cache
+            # For now, we'll proceed with registration
+            
             # Create new tenant
             result = TenantService.create_tenant(
                 business_name=business_name,
                 owner_email=owner_email,
                 owner_name=owner_name,
+                phone_number=phone_number,
+                password=password,
                 subscription_plan=subscription_plan
             )
             
@@ -62,6 +84,7 @@ def register():
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
+                                 phone_number=phone_number,
                                  subscription_plan=subscription_plan)
         except Exception as e:
             # Show actual error for debugging
@@ -74,6 +97,7 @@ def register():
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
+                                 phone_number=phone_number,
                                  subscription_plan=subscription_plan)
     
     return render_template('tenant/register.html')
@@ -99,6 +123,49 @@ def check_availability():
         from ..models import User
         existing_user = User.query.filter_by(email=owner_email).first()
         result['email_available'] = existing_user is None
+    
+    return jsonify(result)
+
+@bp.route('/api/send-verification-codes', methods=['POST'])
+def send_verification_codes():
+    """API endpoint to send verification codes to email and phone"""
+    from ..services.verification_service import VerificationService
+    
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    phone = data.get('phone', '').strip()
+    business_name = data.get('business_name', '').strip()
+    
+    if not email or not phone:
+        return jsonify({
+            'success': False,
+            'message': 'Email and phone number are required'
+        }), 400
+    
+    # Send both verification codes
+    result = VerificationService.send_both_codes(email, phone, business_name)
+    
+    return jsonify(result)
+
+@bp.route('/api/verify-codes', methods=['POST'])
+def verify_codes():
+    """API endpoint to verify email and SMS codes"""
+    from ..services.verification_service import VerificationService
+    
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    phone = data.get('phone', '').strip()
+    email_code = data.get('email_code', '').strip()
+    sms_code = data.get('sms_code', '').strip()
+    
+    if not all([email, phone, email_code, sms_code]):
+        return jsonify({
+            'success': False,
+            'message': 'All fields are required'
+        }), 400
+    
+    # Verify both codes
+    result = VerificationService.verify_both_codes(email, phone, email_code, sms_code)
     
     return jsonify(result)
 

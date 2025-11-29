@@ -1,7 +1,7 @@
 from flask import Flask
 from datetime import datetime, timezone
 import os
-from .extensions import db, migrate, login_manager
+from .extensions import db, migrate, login_manager, mail, cache
 from .blueprints import dashboard, admin, pos, menu, inventory, finance, reports, profile
 
 def create_app(config_object="config.Config"):
@@ -19,6 +19,8 @@ def create_app(config_object="config.Config"):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    mail.init_app(app)
+    cache.init_app(app)
     
     # Initialize backup and data persistence services
     from app.services.backup_service import backup_service
@@ -27,6 +29,17 @@ def create_app(config_object="config.Config"):
     backup_service.init_app(app)
     data_persistence.init_app(app)
     scheduler_service.init_app(app)
+    
+    # Security headers
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        # Disable detailed error messages in production
+        if not app.debug:
+            response.headers['Server'] = 'TSG-ERP'
+        return response
     
     # Configure login manager
     login_manager.login_view = 'auth.login'

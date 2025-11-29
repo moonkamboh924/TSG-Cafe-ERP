@@ -7,6 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
+    DEBUG = False  # Disable debug mode to prevent code exposure
     
     # Use Railway's PostgreSQL database
     # Railway provides DATABASE_URL environment variable
@@ -42,6 +43,37 @@ class Config:
     
     # File Upload
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    
+    # Email Configuration (Flask-Mail)
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'noreply@tsgcafe.com'
+    
+    # SMS Configuration
+    SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'TWILIO')  # TWILIO, MSG91, or FAST2SMS
+    
+    # Twilio Configuration (Works globally including Pakistan - $15 free trial)
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+    
+    # MSG91 Configuration (Paid - works in Pakistan)
+    MSG91_AUTH_KEY = os.environ.get('MSG91_AUTH_KEY')
+    MSG91_SENDER_ID = os.environ.get('MSG91_SENDER_ID', 'TSGCAF')
+    MSG91_ROUTE = os.environ.get('MSG91_ROUTE', '4')
+    MSG91_TEMPLATE_ID = os.environ.get('MSG91_TEMPLATE_ID')
+    
+    # Fast2SMS Configuration (Free: 50 SMS/day, India only)
+    FAST2SMS_API_KEY = os.environ.get('FAST2SMS_API_KEY')
+    
+    # Cache Configuration (for verification codes)
+    CACHE_TYPE = os.environ.get('CACHE_TYPE') or 'SimpleCache'  # Use 'RedisCache' for production
+    CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes default
+    CACHE_REDIS_URL = os.environ.get('REDIS_URL')  # For Redis cache
     
     # Logging
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')

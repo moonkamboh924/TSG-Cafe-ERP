@@ -17,4 +17,12 @@ psycopg2-binary==2.9.9
 Pillow==10.1.0
 cryptography==41.0.7
 psutil==5.9.6
+# Email sending
+Flask-Mail==0.9.1
+# SMS sending
+twilio==8.10.0
+requests==2.31.0
+# Caching for verification codes
+Flask-Caching==2.1.0
+redis==5.0.1
 

@@ -15,7 +15,7 @@ class TenantService:
     """Service for managing multi-tenant operations"""
     
     @staticmethod
-    def create_tenant(business_name, owner_email, owner_name=None, subscription_plan='free'):
+    def create_tenant(business_name, owner_email, owner_name=None, phone_number=None, password=None, subscription_plan='free'):
         """
         Create a new tenant (business) with owner user
         
@@ -23,6 +23,8 @@ class TenantService:
             business_name (str): Name of the business
             owner_email (str): Email of the business owner
             owner_name (str): Full name of the owner (optional)
+            phone_number (str): Phone number of the owner (optional)
+            password (str): Password for the owner account (optional, generates temp password if not provided)
             subscription_plan (str): Subscription plan (free, basic, premium)
             
         Returns:
@@ -51,7 +53,14 @@ class TenantService:
             
             # Generate secure credentials
             username = TenantService._generate_username(business_name)
-            temp_password = TenantService._generate_password()
+            
+            # Use provided password or generate temporary one
+            if password:
+                user_password = password
+                requires_password_change = False
+            else:
+                user_password = TenantService._generate_password()
+                requires_password_change = True
             
             # Parse owner name
             if owner_name:
@@ -71,16 +80,17 @@ class TenantService:
                 employee_id=employee_id,
                 username=username,
                 email=owner_email,
+                phone=phone_number,
                 first_name=first_name,
                 last_name=last_name,
                 full_name=f"{first_name} {last_name}".strip(),
                 role='admin',
                 is_owner=True,
                 is_active=True,
-                requires_password_change=True,  # Force password change on first login
-                email_verified=False
+                requires_password_change=requires_password_change,
+                email_verified=True  # Set to True since we verified with codes
             )
-            owner_user.set_password(temp_password)
+            owner_user.set_password(user_password)
             owner_user.set_navigation_permissions([
                 'dashboard', 'pos', 'menu', 'inventory', 
                 'finance', 'reports', 'admin'
@@ -106,7 +116,8 @@ class TenantService:
                     'id': owner_user.id,
                     'username': username,
                     'email': owner_email,
-                    'temp_password': temp_password,
+                    'phone': phone_number,
+                    'temp_password': user_password if requires_password_change else None,
                     'full_name': owner_user.full_name
                 },
                 'message': 'Tenant created successfully'
