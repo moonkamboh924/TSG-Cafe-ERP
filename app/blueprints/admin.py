@@ -437,26 +437,48 @@ def get_navigation_permissions():
 def get_timezones():
     """Get available timezones for system configuration"""
     import pytz
+    from datetime import datetime
+    
+    def get_timezone_offset(tz_str):
+        """Get the current UTC offset for a timezone"""
+        try:
+            timezone = pytz.timezone(tz_str)
+            now = datetime.now(timezone)
+            offset = now.strftime('%z')
+            # Format offset as GMT±HH:MM
+            if offset:
+                hours = int(offset[1:3])
+                minutes = int(offset[3:5])
+                sign = offset[0]
+                if hours == 0 and minutes == 0:
+                    return "GMT"
+                elif minutes == 0:
+                    return f"GMT{sign}{hours}"
+                else:
+                    return f"GMT{sign}{hours}:{minutes:02d}"
+            return "GMT"
+        except Exception:
+            return "GMT"
     
     # Common timezones for Pakistan and surrounding regions
     common_timezones = [
-        {'value': 'Asia/Karachi', 'label': 'Asia/Karachi (Pakistan Standard Time)'},
-        {'value': 'Asia/Dubai', 'label': 'Asia/Dubai (Gulf Standard Time)'},
-        {'value': 'Asia/Kolkata', 'label': 'Asia/Kolkata (India Standard Time)'},
-        {'value': 'Asia/Dhaka', 'label': 'Asia/Dhaka (Bangladesh Standard Time)'},
-        {'value': 'UTC', 'label': 'UTC (Coordinated Universal Time)'},
+        {'value': 'Asia/Karachi', 'label': f"Asia/Karachi ({get_timezone_offset('Asia/Karachi')})"},
+        {'value': 'Asia/Dubai', 'label': f"Asia/Dubai ({get_timezone_offset('Asia/Dubai')})"},
+        {'value': 'Asia/Kolkata', 'label': f"Asia/Kolkata ({get_timezone_offset('Asia/Kolkata')})"},
+        {'value': 'Asia/Dhaka', 'label': f"Asia/Dhaka ({get_timezone_offset('Asia/Dhaka')})"},
+        {'value': 'UTC', 'label': 'UTC (GMT)'},
     ]
     
     # Get all available timezones
     all_timezones = []
     for tz in pytz.all_timezones:
         try:
-            timezone = pytz.timezone(tz)
+            offset_str = get_timezone_offset(tz)
             all_timezones.append({
                 'value': tz,
-                'label': f"{tz} ({timezone.zone})"
+                'label': f"{tz} ({offset_str})"
             })
-        except (AttributeError, TypeError):
+        except Exception:
             continue
     
     # Sort all timezones alphabetically
