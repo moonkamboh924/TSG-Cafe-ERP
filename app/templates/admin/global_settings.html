@@ -120,11 +120,24 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">System Timezone</label>
-                    <select id="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Loading timezones...</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">This timezone will be used for all system timestamps and reports</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Business Opening Time</label>
+                    <input type="time" id="openingTime" value="{{ get_setting('opening_time', '09:00') }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Time when business opens daily</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Business Closing Time</label>
+                    <input type="time" id="closingTime" value="{{ get_setting('closing_time', '23:00') }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Time when business closes daily</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Day Start Time</label>
+                    <input type="time" id="newDayStartTime" value="{{ get_setting('new_day_start_time', '06:00') }}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Time when a new business day starts (for reports and daily operations)</p>
                 </div>
                 
                 <div>
@@ -229,7 +242,9 @@ function saveSettings() {
             autoTax: document.getElementById('autoTax').checked,
             dateFormat: document.getElementById('dateFormat').value,
             timeFormat: document.getElementById('timeFormat').value,
-            timezone: document.getElementById('timezone').value,
+            openingTime: document.getElementById('openingTime').value,
+            closingTime: document.getElementById('closingTime').value,
+            newDayStartTime: document.getElementById('newDayStartTime').value,
             language: document.getElementById('language').value,
             notifications: document.getElementById('notifications').checked,
             backupFrequency: document.getElementById('backupFrequency').value,
@@ -584,62 +599,10 @@ function showInfoModal(title, message) {
     document.getElementById('infoModal').classList.add('flex');
 }
 
-// Load timezones and backup info when page loads
+// Load backup info when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    loadTimezones();
     loadBackupInfo();
 });
-
-function loadTimezones() {
-    fetch('/admin/api/timezones')
-        .then(response => response.json())
-        .then(data => {
-            const timezoneSelect = document.getElementById('timezone');
-            const currentTimezone = '{{ get_setting("timezone", "Asia/Karachi") }}';
-            
-            // Clear existing options
-            timezoneSelect.innerHTML = '';
-            
-            // Add common timezones group
-            const commonGroup = document.createElement('optgroup');
-            commonGroup.label = 'Common Timezones';
-            data.common_timezones.forEach(tz => {
-                const option = document.createElement('option');
-                option.value = tz.value;
-                option.textContent = tz.label;
-                if (tz.value === currentTimezone) {
-                    option.selected = true;
-                }
-                commonGroup.appendChild(option);
-            });
-            timezoneSelect.appendChild(commonGroup);
-            
-            // Add separator
-            const separator = document.createElement('option');
-            separator.disabled = true;
-            separator.textContent = '──────────────────────';
-            timezoneSelect.appendChild(separator);
-            
-            // Add all timezones group
-            const allGroup = document.createElement('optgroup');
-            allGroup.label = 'All Timezones';
-            data.all_timezones.forEach(tz => {
-                const option = document.createElement('option');
-                option.value = tz.value;
-                option.textContent = tz.label;
-                if (tz.value === currentTimezone) {
-                    option.selected = true;
-                }
-                allGroup.appendChild(option);
-            });
-            timezoneSelect.appendChild(allGroup);
-        })
-        .catch(error => {
-            console.error('Error loading timezones:', error);
-            const timezoneSelect = document.getElementById('timezone');
-            timezoneSelect.innerHTML = '<option value="Asia/Karachi">Asia/Karachi (Default)</option>';
-        });
-}
 
 // Generic Modal Functions
 function showInfoModal(title, message) {

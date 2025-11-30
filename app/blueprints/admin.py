@@ -41,7 +41,9 @@ def get_global_settings():
         'currency': SystemSetting.get_setting('currency', 'PKR'),
         'date_format': SystemSetting.get_setting('date_format', 'DD/MM/YYYY'),
         'time_format': SystemSetting.get_setting('time_format', '12'),
-        'timezone': SystemSetting.get_setting('timezone', 'Asia/Karachi'),
+        'opening_time': SystemSetting.get_setting('opening_time', '09:00'),
+        'closing_time': SystemSetting.get_setting('closing_time', '23:00'),
+        'new_day_start_time': SystemSetting.get_setting('new_day_start_time', '06:00'),
         'address': SystemSetting.get_setting('address', ''),
         'phone': SystemSetting.get_setting('phone', ''),
         'email': SystemSetting.get_setting('email', ''),
@@ -813,7 +815,9 @@ def save_settings():
             'autoTax': 'auto_tax',
             'dateFormat': 'date_format',
             'timeFormat': 'time_format',
-            'timezone': 'timezone',
+            'openingTime': 'opening_time',
+            'closingTime': 'closing_time',
+            'newDayStartTime': 'new_day_start_time',
             'language': 'language',
             'notifications': 'notifications',
             'backupFrequency': 'backup_frequency',
@@ -829,16 +833,6 @@ def save_settings():
                     value = 'True' if value else 'False'
                 # Pass business_id to ensure settings are saved for current business
                 SystemSetting.set_setting(backend_key, str(value), business_id=current_user.business_id)
-
-        # Check if timezone was updated and trigger sync
-        if 'timezone' in data:
-            try:
-                from app.utils.timezone_utils import sync_existing_records
-                sync_existing_records()
-            except Exception as e:
-                # Log the error but don't fail the settings update
-                import logging
-                logging.error(f"Failed to sync existing records after timezone update: {str(e)}")
         
         # Log the settings update
         log_audit('update', 'global_settings', None, {
