@@ -318,6 +318,11 @@ def manage_business(business_id):
         business_data = business.to_dict()
         business_data['user_count'] = user_count
         business_data['updated_at'] = business.updated_at.isoformat() if business.updated_at else None
+        
+        # Get owner phone number from owner profile
+        owner = User.query.filter_by(business_id=business_id, is_owner=True).first()
+        business_data['owner_phone'] = owner.phone if owner and owner.phone else None
+        
         return jsonify({
             'business': business_data
         })
