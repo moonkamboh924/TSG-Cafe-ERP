@@ -318,11 +318,6 @@ def manage_business(business_id):
         business_data = business.to_dict()
         business_data['user_count'] = user_count
         business_data['updated_at'] = business.updated_at.isoformat() if business.updated_at else None
-        
-        # Get owner phone number from owner profile
-        owner = User.query.filter_by(business_id=business_id, is_owner=True).first()
-        business_data['owner_phone'] = owner.phone if owner and owner.phone else None
-        
         return jsonify({
             'business': business_data
         })
@@ -453,37 +448,44 @@ def get_business_analytics(business_id):
         
         # Calculate total sales and revenue
         total_sales = Sale.query.filter_by(business_id=business_id).count()
-        total_revenue = db.session.query(func.sum(Sale.total_amount)).filter_by(business_id=business_id).scalar() or 0.0
+        total_revenue = db.session.query(func.sum(Sale.total)).filter_by(business_id=business_id).scalar() or 0.0
         
         # Calculate total expenses
         total_expenses = db.session.query(func.sum(Expense.amount)).filter_by(business_id=business_id).scalar() or 0.0
         
-        # Calculate credit sales and pending credits
-        credit_sales_amount = db.session.query(func.sum(CreditSale.pending_amount)).filter_by(business_id=business_id).scalar() or 0.0
-        total_credit_payments = db.session.query(func.sum(CreditPayment.amount)).filter(
-            CreditPayment.credit_sale_id.in_(
-                db.session.query(CreditSale.id).filter_by(business_id=business_id)
-            )
-        ).scalar() or 0.0
-        pending_credits = credit_sales_amount - total_credit_payments
+        # Calculate credit sales and pending credits (with error handling)
+        try:
+            credit_sales_amount = db.session.query(func.sum(CreditSale.pending_amount)).filter_by(business_id=business_id).scalar() or 0.0
+            total_credit_payments = db.session.query(func.sum(CreditPayment.amount)).filter(
+                CreditPayment.credit_sale_id.in_(
+                    db.session.query(CreditSale.id).filter_by(business_id=business_id)
+                )
+            ).scalar() or 0.0
+            pending_credits = credit_sales_amount - total_credit_payments
+        except Exception:
+            credit_sales_amount = 0.0
+            pending_credits = 0.0
         
         # Count menu items
         menu_items_count = MenuItem.query.filter_by(business_id=business_id).count()
         
-        # Get recent activities (last 5 audit logs)
+        # Get recent activities (with error handling)
         recent_activities = []
-        audit_logs = AuditLog.query.filter_by(business_id=business_id).order_by(AuditLog.created_at.desc()).limit(5).all()
-        
-        for log in audit_logs:
-            activity_text = f"{log.action} on {log.entity}"
-            if log.entity_id:
-                activity_text += f" (ID: {log.entity_id})"
+        try:
+            audit_logs = AuditLog.query.filter_by(business_id=business_id).order_by(AuditLog.created_at.desc()).limit(5).all()
             
-            recent_activities.append({
-                'action': activity_text,
-                'timestamp': log.created_at.isoformat(),
-                'user_id': log.user_id
-            })
+            for log in audit_logs:
+                activity_text = f"{log.action} on {log.entity}"
+                if log.entity_id:
+                    activity_text += f" (ID: {log.entity_id})"
+                
+                recent_activities.append({
+                    'action': activity_text,
+                    'timestamp': log.created_at.isoformat(),
+                    'user_id': log.user_id
+                })
+        except Exception:
+            pass  # Continue without recent activities
         
         # Get active users count
         active_users = User.query.filter_by(business_id=business_id, is_active=True).count()
@@ -511,5 +513,8 @@ def get_business_analytics(business_id):
         })
         
     except Exception as e:
+        import traceback
+        print(f"Analytics error: {str(e)}")
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 

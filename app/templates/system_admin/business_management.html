@@ -330,21 +330,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Subscription Details Card -->
-                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 shadow-sm">
-                    <div class="p-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <i class="fas fa-crown text-yellow-500 text-xl"></i>
-                            <h4 class="font-semibold text-gray-900">Subscription</h4>
-                        </div>
-                        <p class="text-2xl font-bold text-indigo-600 mb-2" id="detailsSubPlan">Premium</p>
-                        <p class="text-xs text-gray-600 mb-3">Active since <span id="detailsSubSince">—</span></p>
-                        <button class="w-full px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-indigo-50 transition text-sm font-medium shadow-sm">
-                            <i class="fas fa-arrow-up mr-2"></i>Upgrade Plan
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -406,26 +391,15 @@
                            placeholder="owner@example.com">
                 </div>
 
-                <!-- Phone Number (Auto-synced from Owner Profile) -->
+                <!-- Phone Number -->
                 <div>
                     <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-phone text-blue-500"></i>
-                        Owner Phone Number
+                        Phone Number
                     </label>
-                    <div class="mt-2 relative">
-                        <input id="editBusinessPhone" type="tel" 
-                               class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700"
-                               placeholder="Not set in owner profile"
-                               readonly>
-                        <span class="absolute inset-y-0 right-3 flex items-center">
-                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
-                                <i class="fas fa-sync-alt mr-1"></i>Synced
-                            </span>
-                        </span>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <i class="fas fa-info-circle"></i> Phone synced from owner's profile
-                    </p>
+                    <input id="editBusinessPhone" type="tel" 
+                           class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                           placeholder="+1 (555) 000-0000">
                 </div>
 
                 <!-- Subscription Plan (Read-only, Auto-synced) -->
@@ -742,23 +716,7 @@ function businessManager() {
                 this.selectedBusiness = business;
                 document.getElementById('detailsName').textContent = business.business_name;
                 document.getElementById('detailsEmail').textContent = business.owner_email || '—';
-                
-                // Load plan name dynamically
-                let planDisplayName = business.subscription_plan;
-                try {
-                    const plansResponse = await fetch('/system-admin/subscriptions/api/plans');
-                    const plansData = await plansResponse.json();
-                    if (plansResponse.ok && plansData.plans) {
-                        const plan = plansData.plans.find(p => p.plan_code === business.subscription_plan);
-                        if (plan) {
-                            planDisplayName = `${plan.plan_name} - $${plan.price || 0}`;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Failed to load plan name:', error);
-                }
-                
-                document.getElementById('detailsPlan').textContent = planDisplayName;
+                document.getElementById('detailsPlan').textContent = business.plan_name || business.subscription_plan;
                 document.getElementById('detailsStatus').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsActiveUsers').textContent = business.user_count || '0';
                 document.getElementById('detailsCreated').textContent = new Date(business.created_at).toLocaleString();
@@ -769,9 +727,7 @@ function businessManager() {
                 document.getElementById('detailsUsersCount').textContent = business.user_count || '0';
                 document.getElementById('detailsStatusBadge').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsStatusBadge').className = `px-3 py-1 backdrop-blur-sm rounded-full text-xs font-medium ${business.is_active ? 'bg-green-500/30 text-green-100' : 'bg-gray-500/30 text-gray-100'}`;
-                document.getElementById('detailsPlanBadge').textContent = planDisplayName;
-                document.getElementById('detailsSubPlan').textContent = planDisplayName;
-                document.getElementById('detailsSubSince').textContent = new Date(business.created_at).toLocaleDateString();
+                document.getElementById('detailsPlanBadge').textContent = business.plan_name || business.subscription_plan;
                 document.getElementById('detailsToggleBtn').textContent = business.is_active ? 'Deactivate' : 'Activate';
                 
                 // Load analytics data
@@ -946,9 +902,7 @@ function businessManager() {
                 this.selectedBusiness = business;
                 document.getElementById('editBusinessName').value = business.business_name;
                 document.getElementById('editOwnerEmail').value = business.owner_email || '';
-                
-                // Auto-sync phone from owner profile
-                document.getElementById('editBusinessPhone').value = business.owner_phone || 'Not set in owner profile';
+                document.getElementById('editBusinessPhone').value = business.phone || '';
                 
                 // Set subscription as read-only hidden field
                 document.getElementById('editSubscription').value = business.subscription_plan;
@@ -987,8 +941,8 @@ function businessManager() {
                 const payload = {
                     business_name: document.getElementById('editBusinessName').value,
                     owner_email: document.getElementById('editOwnerEmail').value,
+                    phone: document.getElementById('editBusinessPhone').value,
                     is_active: document.getElementById('editIsActive').checked
-                    // phone is auto-synced from owner profile (read-only)
                     // subscription_plan is NOT editable here - managed in Subscription Management
                 };
                 const response = await fetch(`/system-admin/businesses/api/businesses/${this.selectedBusiness.id}`, {
