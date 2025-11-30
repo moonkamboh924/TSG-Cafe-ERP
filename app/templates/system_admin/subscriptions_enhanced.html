@@ -302,9 +302,23 @@ async function loadSubscriptionStats() {
         document.getElementById('mrrAmount').textContent = '$' + (data.total_mrr || 0).toFixed(2);
         
         const planDistribution = data.plan_distribution || {};
-        document.getElementById('freePlans').textContent = planDistribution.free || 0;
-        // Fixed: Premium Plans now includes basic, advance, premium, and enterprise (all paid plans)
-        document.getElementById('premiumPlans').textContent = (planDistribution.basic || 0) + (planDistribution.advance || 0) + (planDistribution.premium || 0) + (planDistribution.enterprise || 0);
+        
+        // Auto-sync: Dynamically count free vs paid plans
+        let freePlansCount = 0;
+        let paidPlansCount = 0;
+        
+        // Iterate through all plan codes in distribution
+        for (const [planCode, count] of Object.entries(planDistribution)) {
+            if (planCode === 'free') {
+                freePlansCount += count;
+            } else {
+                // All non-free plans are considered paid/premium
+                paidPlansCount += count;
+            }
+        }
+        
+        document.getElementById('freePlans').textContent = freePlansCount;
+        document.getElementById('premiumPlans').textContent = paidPlansCount;
         
     } catch (error) {
         console.error('Error loading subscription stats:', error);
