@@ -396,7 +396,7 @@
                 </div>
 
                 <!-- Owner Email -->
-                <div class="md:col-span-2">
+                <div>
                     <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-envelope text-blue-500"></i>
                         Owner Email
@@ -406,21 +406,40 @@
                            placeholder="owner@example.com">
                 </div>
 
-                <!-- Subscription Plan (Auto-synced) -->
+                <!-- Phone Number -->
                 <div>
                     <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-crown text-blue-500"></i>
-                        Subscription Plan
+                        <i class="fas fa-phone text-blue-500"></i>
+                        Phone Number
                     </label>
-                    <select id="editSubscription" 
-                            class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
-                        <!-- Plans loaded dynamically from database -->
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Plans synced from Configure Plans</p>
+                    <input id="editBusinessPhone" type="tel" 
+                           class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                           placeholder="+1 (555) 000-0000">
+                </div>
+
+                <!-- Subscription Plan (Read-only, Auto-synced) -->
+                <div class="md:col-span-2">
+                    <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-crown text-blue-500"></i>
+                        Current Subscription Plan
+                    </label>
+                    <div class="mt-2 relative">
+                        <div id="editSubscriptionDisplay" 
+                             class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 font-medium flex items-center justify-between">
+                            <span id="editSubscriptionText">Loading...</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg">
+                                <i class="fas fa-lock mr-1"></i>Auto-synced
+                            </span>
+                        </div>
+                        <input id="editSubscription" type="hidden">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle"></i> Subscription plans are managed in Subscription Management
+                    </p>
                 </div>
 
                 <!-- Status Toggle -->
-                <div>
+                <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
                         <i class="fas fa-toggle-on text-blue-500"></i>
                         Business Status
@@ -875,43 +894,39 @@ function businessManager() {
             }
         },
 
-        async loadSubscriptionPlans() {
+        async loadSubscriptionPlanDisplay(planCode) {
             try {
                 const response = await fetch('/system-admin/subscriptions/api/plans');
                 const data = await response.json();
                 
                 if (response.ok && data.plans) {
-                    const select = document.getElementById('editSubscription');
-                    select.innerHTML = '';
-                    
-                    // Add plans from database (auto-synced)
-                    data.plans
-                        .filter(plan => plan.is_active) // Only show active plans
-                        .sort((a, b) => a.display_order - b.display_order)
-                        .forEach(plan => {
-                            const option = document.createElement('option');
-                            option.value = plan.plan_code;
-                            option.textContent = `${plan.plan_name} - $${plan.price || 0}`;
-                            select.appendChild(option);
-                        });
+                    const plan = data.plans.find(p => p.plan_code === planCode);
+                    if (plan) {
+                        const displayText = `${plan.plan_name} - $${plan.price || 0}`;
+                        document.getElementById('editSubscriptionText').textContent = displayText;
+                    } else {
+                        document.getElementById('editSubscriptionText').textContent = planCode || 'Unknown Plan';
+                    }
                 }
             } catch (error) {
-                console.error('Failed to load subscription plans:', error);
-                // Fallback to default options if API fails
-                const select = document.getElementById('editSubscription');
-                select.innerHTML = '<option value="">Failed to load plans</option>';
+                console.error('Failed to load subscription plan:', error);
+                document.getElementById('editSubscriptionText').textContent = planCode || 'Unknown Plan';
             }
         },
 
         async openEdit(id) {
-            // Load subscription plans first
-            await this.loadSubscriptionPlans();
-            
             await this.fetchBusiness(id, (business) => {
                 this.selectedBusiness = business;
                 document.getElementById('editBusinessName').value = business.business_name;
                 document.getElementById('editOwnerEmail').value = business.owner_email || '';
+                document.getElementById('editBusinessPhone').value = business.phone || '';
+                
+                // Set subscription as read-only hidden field
                 document.getElementById('editSubscription').value = business.subscription_plan;
+                
+                // Load and display subscription plan name
+                this.loadSubscriptionPlanDisplay(business.subscription_plan);
+                
                 document.getElementById('editIsActive').checked = business.is_active;
                 document.getElementById('editBusinessModal').classList.remove('hidden');
             });
@@ -943,8 +958,9 @@ function businessManager() {
                 const payload = {
                     business_name: document.getElementById('editBusinessName').value,
                     owner_email: document.getElementById('editOwnerEmail').value,
-                    subscription_plan: document.getElementById('editSubscription').value,
+                    phone: document.getElementById('editBusinessPhone').value,
                     is_active: document.getElementById('editIsActive').checked
+                    // subscription_plan is NOT editable here - managed in Subscription Management
                 };
                 const response = await fetch(`/system-admin/businesses/api/businesses/${this.selectedBusiness.id}`, {
                     method: 'PUT',

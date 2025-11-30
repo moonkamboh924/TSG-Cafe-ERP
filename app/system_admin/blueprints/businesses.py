@@ -327,6 +327,7 @@ def manage_business(business_id):
 
         name = data.get('business_name')
         email = data.get('owner_email')
+        phone = data.get('phone')
         plan = data.get('subscription_plan')
         is_active = data.get('is_active')
 
@@ -347,6 +348,9 @@ def manage_business(business_id):
             if existing_email:
                 return jsonify({'error': 'Owner email already in use'}), 400
             business.owner_email = email.strip()
+
+        if phone is not None:
+            business.phone = phone.strip() if phone else None
 
         if plan:
             business.subscription_plan = plan.strip()
