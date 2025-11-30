@@ -309,10 +309,11 @@ async function loadSubscriptionStats() {
         
         // Iterate through all plan codes in distribution
         for (const [planCode, count] of Object.entries(planDistribution)) {
-            if (planCode === 'free') {
+            if (planCode === 'free' || planCode === 'trial') {
+                // Only 'free' and 'trial' are considered free plans
                 freePlansCount += count;
             } else {
-                // All non-free plans are considered paid/premium
+                // All other plans (basic, advance, premium, etc.) are paid
                 paidPlansCount += count;
             }
         }

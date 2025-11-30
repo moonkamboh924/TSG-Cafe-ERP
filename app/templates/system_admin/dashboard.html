@@ -812,9 +812,11 @@ async function loadBusinessDetails() {
             const activeBusinesses = data.businesses ? data.businesses.filter(b => b.is_active).length : 0;
             const inactiveBusinesses = data.businesses ? data.businesses.filter(b => !b.is_active).length : 0;
             
-            // Auto-sync: Count premium/paid businesses (any plan except 'free')
+            // Auto-sync: Count paid businesses (all plans except 'free' and 'trial')
             const premiumBusinesses = data.businesses ? data.businesses.filter(b => 
-                b.subscription_plan && b.subscription_plan.toLowerCase() !== 'free'
+                b.subscription_plan && 
+                b.subscription_plan.toLowerCase() !== 'free' && 
+                b.subscription_plan.toLowerCase() !== 'trial'
             ).length : 0;
             
             // Calculate new businesses this month from LIVE data
