@@ -360,38 +360,90 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
-<div id="editBusinessModal" class="fixed inset-0 bg-black/50 hidden z-50 p-6 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-3xl mx-auto shadow-2xl">
-        <div class="flex justify-between items-center border-b px-6 py-4">
-            <h3 class="text-xl font-bold text-gray-800">Edit Business</h3>
-            <button class="text-gray-400 hover:text-gray-600" onclick="businessApp.closeEdit()"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="text-sm font-medium text-gray-500">Business Name</label>
-                <input id="editBusinessName" type="text" class="mt-2 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-500">Owner Email</label>
-                <input id="editOwnerEmail" type="email" class="mt-2 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-500">Subscription Plan</label>
-                <select id="editSubscription" class="mt-2 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="free">Free</option>
-                    <option value="basic">Basic</option>
-                    <option value="premium">Premium</option>
-                </select>
-            </div>
-            <div class="flex items-center mt-8">
-                <input id="editIsActive" type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                <label class="ml-2 text-sm font-medium text-gray-700">Active</label>
+<!-- Edit Modal - Enhanced -->
+<div id="editBusinessModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 p-6 overflow-y-auto">
+    <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl max-w-3xl mx-auto shadow-2xl transform transition-all">
+        <!-- Gradient Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-6 rounded-t-3xl">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-edit text-white"></i>
+                        </div>
+                        Edit Business
+                    </h3>
+                    <p class="text-blue-100 text-sm mt-2">Update business information and subscription plan</p>
+                </div>
+                <button class="text-white/80 hover:text-white transition" onclick="businessApp.closeEdit()">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
             </div>
         </div>
-        <div class="flex justify-end gap-3 px-6 py-4 border-t" data-business-id="">
-            <button class="px-4 py-2 border border-gray-200 rounded-xl text-gray-700" onclick="businessApp.closeEdit()">Cancel</button>
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-xl" onclick="businessApp.saveEdit()">Save Changes</button>
+
+        <!-- Form Content -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Business Name -->
+                <div class="md:col-span-2">
+                    <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-building text-blue-500"></i>
+                        Business Name
+                    </label>
+                    <input id="editBusinessName" type="text" 
+                           class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                           placeholder="Enter business name">
+                </div>
+
+                <!-- Owner Email -->
+                <div class="md:col-span-2">
+                    <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-envelope text-blue-500"></i>
+                        Owner Email
+                    </label>
+                    <input id="editOwnerEmail" type="email" 
+                           class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                           placeholder="owner@example.com">
+                </div>
+
+                <!-- Subscription Plan (Auto-synced) -->
+                <div>
+                    <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-crown text-blue-500"></i>
+                        Subscription Plan
+                    </label>
+                    <select id="editSubscription" 
+                            class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
+                        <!-- Plans loaded dynamically from database -->
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle"></i> Plans synced from Configure Plans</p>
+                </div>
+
+                <!-- Status Toggle -->
+                <div>
+                    <label class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
+                        <i class="fas fa-toggle-on text-blue-500"></i>
+                        Business Status
+                    </label>
+                    <div class="mt-2 flex items-center gap-3 bg-white border-2 border-gray-200 rounded-xl px-4 py-3">
+                        <input id="editIsActive" type="checkbox" 
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="editIsActive" class="text-sm font-medium text-gray-700 cursor-pointer">Active</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-3xl">
+            <button class="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all" 
+                    onclick="businessApp.closeEdit()">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </button>
+            <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all" 
+                    onclick="businessApp.saveEdit()">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
         </div>
     </div>
 </div>
@@ -823,7 +875,38 @@ function businessManager() {
             }
         },
 
+        async loadSubscriptionPlans() {
+            try {
+                const response = await fetch('/system-admin/subscriptions/api/plans');
+                const data = await response.json();
+                
+                if (response.ok && data.plans) {
+                    const select = document.getElementById('editSubscription');
+                    select.innerHTML = '';
+                    
+                    // Add plans from database (auto-synced)
+                    data.plans
+                        .filter(plan => plan.is_active) // Only show active plans
+                        .sort((a, b) => a.display_order - b.display_order)
+                        .forEach(plan => {
+                            const option = document.createElement('option');
+                            option.value = plan.plan_code;
+                            option.textContent = `${plan.plan_name} - $${plan.price || 0}`;
+                            select.appendChild(option);
+                        });
+                }
+            } catch (error) {
+                console.error('Failed to load subscription plans:', error);
+                // Fallback to default options if API fails
+                const select = document.getElementById('editSubscription');
+                select.innerHTML = '<option value="">Failed to load plans</option>';
+            }
+        },
+
         async openEdit(id) {
+            // Load subscription plans first
+            await this.loadSubscriptionPlans();
+            
             await this.fetchBusiness(id, (business) => {
                 this.selectedBusiness = business;
                 document.getElementById('editBusinessName').value = business.business_name;
