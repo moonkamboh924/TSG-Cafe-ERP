@@ -9,8 +9,8 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">System Administration</h1>
-                <p class="text-gray-600 mt-2">Manage users, businesses, and system settings</p>
+                <h1 class="text-3xl font-bold text-gray-800">User Management</h1>
+                <p class="text-gray-600 mt-2">Manage users, and Assigned Roles</p>
             </div>
             <div class="flex space-x-3">
                 <button id="addUserBtn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
@@ -90,9 +90,11 @@
                         {% if current_user.role == 'system_administrator' %}
                         <option value="system_administrator">System Administrator</option>
                         {% endif %}
-                        <option value="admin">Admin</option>
+                        <option value="owner">Owner</option>
                         <option value="manager">Manager</option>
-                        <option value="employee">Employee</option>
+                        <option value="executive">Executive</option>
+                        <option value="officer">Officer</option>
+                        <option value="worker">Worker</option>
                     </select>
                 </div>
                 <div>
@@ -252,9 +254,11 @@
                     {% if current_user.role == 'system_administrator' %}
                     <option value="system_administrator">System Administrator</option>
                     {% endif %}
-                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
                     <option value="manager">Manager</option>
-                    <option value="employee">Employee</option>
+                    <option value="executive">Executive</option>
+                    <option value="officer">Officer</option>
+                    <option value="worker">Worker</option>
                 </select>
             </div>
             
@@ -512,11 +516,36 @@ function openUserModalWithData(user, modal, title) {
         document.getElementById('userLastName').value = user.last_name || '';
         document.getElementById('userUsername').value = user.username || '';
         document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userRole').value = user.role || 'employee';
+        document.getElementById('userRole').value = user.role || 'worker';
         document.getElementById('userDepartment').value = user.department || '';
         document.getElementById('userDesignation').value = user.designation || '';
         document.getElementById('userPhone').value = user.phone || '';
         document.getElementById('userAddress').value = user.address || '';
+        
+        // Disable role field for owner role (cannot be changed)
+        const roleField = document.getElementById('userRole');
+        if (user.role === 'owner') {
+            roleField.disabled = true;
+            roleField.classList.add('bg-gray-100', 'cursor-not-allowed');
+            // Add visual indicator that owner role is fixed
+            const roleContainer = roleField.parentElement;
+            let ownerNote = roleContainer.querySelector('.owner-role-note');
+            if (!ownerNote) {
+                ownerNote = document.createElement('p');
+                ownerNote.className = 'owner-role-note text-xs text-blue-600 mt-1';
+                ownerNote.textContent = 'Owner role is assigned automatically and cannot be changed';
+                roleContainer.appendChild(ownerNote);
+            }
+        } else {
+            roleField.disabled = false;
+            roleField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            // Remove owner note if exists
+            const roleContainer = roleField.parentElement;
+            const ownerNote = roleContainer.querySelector('.owner-role-note');
+            if (ownerNote) {
+                ownerNote.remove();
+            }
+        }
         
         // Render navigation permissions with user's current permissions
         const userPermissions = user.navigation_permissions || [];
@@ -525,6 +554,18 @@ function openUserModalWithData(user, modal, title) {
         title.textContent = 'Add User';
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
+        
+        // Enable role field for new users
+        const roleField = document.getElementById('userRole');
+        roleField.disabled = false;
+        roleField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        
+        // Remove owner note if exists
+        const roleContainer = roleField.parentElement;
+        const ownerNote = roleContainer.querySelector('.owner-role-note');
+        if (ownerNote) {
+            ownerNote.remove();
+        }
         
         // Render navigation permissions with no selections
         renderNavigationPermissions([]);

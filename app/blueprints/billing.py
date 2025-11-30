@@ -167,6 +167,7 @@ def upgrade():
         return render_template('billing/upgrade.html',
                              plans=plans,
                              current_plan=current_plan,
+                             business=business,
                              stripe_key=PaymentService.get_publishable_key())
     
     # POST - process upgrade

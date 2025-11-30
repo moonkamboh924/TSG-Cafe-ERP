@@ -75,7 +75,7 @@ def register():
             )
             
             # Show success notification and redirect to login
-            flash(f'Registration successful! Welcome to TSG Cafe ERP. Your username is: {result["owner"]["username"]}', 'success')
+            flash('Registration successful! Welcome to TSG Cafe ERP.', 'success')
             return redirect(url_for('auth.login'))
             
         except ValueError as e:

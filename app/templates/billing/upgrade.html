@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade Plan - {{ business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+    <div class="max-w-7xl mx-auto px-6">
+        
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-crown text-white text-xl"></i>
+                        </div>
+                        Choose Your Plan
+                    </h1>
+                    <p class="text-gray-600 mt-2 ml-15">Select the perfect plan for your business needs</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('billing.index') }}" class="inline-flex items-center bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition gap-2 shadow-sm">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Billing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Plan Badge -->
+        {% if current_plan %}
+        <div class="mb-6 text-center">
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                <i class="fas fa-star mr-2"></i>
+                Current Plan: <span class="capitalize ml-1">{{ current_plan }}</span>
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- Pricing Plans -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            
+            <!-- Cafe Plan -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl {% if current_plan == 'cafe' %}border-blue-500{% endif %}">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white text-center">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-coffee text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Cafe</h3>
+                    <div class="text-4xl font-bold mb-2">$29<span class="text-lg font-normal">/month</span></div>
+                    <p class="text-blue-100 text-sm">Perfect for small cafes</p>
+                </div>
+                
+                <div class="p-6">
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Up to 50 menu items</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Basic POS system</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Inventory management</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Basic reports</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Email support</span>
+                        </li>
+                    </ul>
+                    
+                    {% if current_plan == 'cafe' %}
+                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
+                        Current Plan
+                    </button>
+                    {% else %}
+                    <button onclick="selectPlan('cafe', 29)" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        Choose Cafe
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Restaurant Plan -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-purple-400 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl relative {% if current_plan == 'restaurant' %}border-purple-600{% endif %}">
+                <div class="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
+                    POPULAR
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white text-center">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-utensils text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Restaurant</h3>
+                    <div class="text-4xl font-bold mb-2">$79<span class="text-lg font-normal">/month</span></div>
+                    <p class="text-purple-100 text-sm">Ideal for restaurants</p>
+                </div>
+                
+                <div class="p-6">
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Unlimited menu items</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Advanced POS system</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Full inventory management</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Advanced reports & analytics</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Multi-user support</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Priority support</span>
+                        </li>
+                    </ul>
+                    
+                    {% if current_plan == 'restaurant' %}
+                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
+                        Current Plan
+                    </button>
+                    {% else %}
+                    <button onclick="selectPlan('restaurant', 79)" class="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        Choose Restaurant
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Hotel Plan -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl {% if current_plan == 'hotel' %}border-indigo-500{% endif %}">
+                <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 text-white text-center">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hotel text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Hotel</h3>
+                    <div class="text-4xl font-bold mb-2">$199<span class="text-lg font-normal">/month</span></div>
+                    <p class="text-indigo-100 text-sm">Complete solution for hotels</p>
+                </div>
+                
+                <div class="p-6">
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Everything in Restaurant</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Room service integration</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Multiple outlets management</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Custom integrations</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">Dedicated account manager</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span class="text-gray-700">24/7 premium support</span>
+                        </li>
+                    </ul>
+                    
+                    {% if current_plan == 'hotel' %}
+                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
+                        Current Plan
+                    </button>
+                    {% else %}
+                    <button onclick="selectPlan('hotel', 199)" class="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        Choose Hotel
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Billing Period Selection -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-xl p-8 text-center">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Save more with longer billing periods</h3>
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="setBillingPeriod(1)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200 active">
+                    1 Month
+                </button>
+                <button onclick="setBillingPeriod(3)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
+                    3 Months <span class="text-green-600 text-sm ml-1">(Save 5%)</span>
+                </button>
+                <button onclick="setBillingPeriod(6)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
+                    6 Months <span class="text-green-600 text-sm ml-1">(Save 10%)</span>
+                </button>
+                <button onclick="setBillingPeriod(12)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
+                    12 Months <span class="text-green-600 text-sm ml-1">(Save 15%)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-800">Confirm Plan Selection</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-star text-purple-600 text-2xl"></i>
+                </div>
+                <p class="text-gray-700 mb-2">You're about to subscribe to:</p>
+                <p class="text-2xl font-bold text-gray-800 capitalize mb-1" id="selectedPlanName"></p>
+                <p class="text-3xl font-bold text-purple-600" id="selectedPlanPrice"></p>
+                <p class="text-sm text-gray-500 mt-2" id="billingPeriodText"></p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button onclick="confirmSubscription()" class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedPlan = null;
+let selectedPrice = 0;
+let billingMonths = 1;
+
+function selectPlan(plan, price) {
+    selectedPlan = plan;
+    selectedPrice = price;
+    
+    document.getElementById('selectedPlanName').textContent = plan + ' Plan';
+    updatePriceDisplay();
+    
+    document.getElementById('confirmationModal').classList.remove('hidden');
+}
+
+function setBillingPeriod(months) {
+    billingMonths = months;
+    
+    // Update active button
+    document.querySelectorAll('.billing-period-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-purple-500', 'bg-purple-50');
+    });
+    event.target.classList.add('active', 'border-purple-500', 'bg-purple-50');
+}
+
+function updatePriceDisplay() {
+    let discount = 0;
+    if (billingMonths === 3) discount = 0.05;
+    else if (billingMonths === 6) discount = 0.10;
+    else if (billingMonths === 12) discount = 0.15;
+    
+    const totalPrice = selectedPrice * billingMonths * (1 - discount);
+    
+    document.getElementById('selectedPlanPrice').textContent = '$' + totalPrice.toFixed(2);
+    document.getElementById('billingPeriodText').textContent = 'For ' + billingMonths + ' month' + (billingMonths > 1 ? 's' : '');
+}
+
+function closeModal() {
+    document.getElementById('confirmationModal').classList.add('hidden');
+}
+
+function confirmSubscription() {
+    if (!selectedPlan) return;
+    
+    fetch('{{ url_for("billing.subscribe") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            plan: selectedPlan,
+            subscription_months: billingMonths
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Subscription updated successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '{{ url_for("billing.index") }}';
+            }, 1500);
+        } else {
+            showNotification('Error: ' + (data.error || 'Failed to update subscription'), 'error');
+        }
+        closeModal();
+    })
+    .catch(error => {
+        showNotification('Error updating subscription', 'error');
+        console.error(error);
+        closeModal();
+    });
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-4 rounded-xl shadow-lg z-50 transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-semibold`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+
+<style>
+.billing-period-btn.active {
+    border-color: rgb(168, 85, 247);
+    background-color: rgb(250, 245, 255);
+}
+</style>
+
+{% endblock %}

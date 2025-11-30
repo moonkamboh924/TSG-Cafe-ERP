@@ -543,26 +543,44 @@ def get_system_stats():
         from sqlalchemy import func
         from app.models import MenuItem, InventoryItem, Expense, Sale
         
-        # Total users
-        total_users = User.query.count()
+        # MULTI-TENANT: Total users (excluding system administrators)
+        if current_user.role == 'system_administrator':
+            total_users = User.query.filter(User.role != 'system_administrator').count()
+        else:
+            total_users = User.query.filter(
+                User.business_id == current_user.business_id,
+                User.role != 'system_administrator'
+            ).count()
         
         # MULTI-TENANT: Active users (logged in within last 30 days)
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
         if current_user.role == 'system_administrator':
             active_users = User.query.filter(
-                User.last_login >= thirty_days_ago
+                User.last_login >= thirty_days_ago,
+                User.role != 'system_administrator'
             ).count() if hasattr(User, 'last_login') else 0
         else:
             active_users = User.query.filter(
                 User.business_id == current_user.business_id,
-                User.last_login >= thirty_days_ago
+                User.last_login >= thirty_days_ago,
+                User.role != 'system_administrator'
             ).count() if hasattr(User, 'last_login') else 0
         
-        # Total menu items
-        total_menu_items = MenuItem.query.count()
+        # MULTI-TENANT: Total menu items
+        if current_user.role == 'system_administrator':
+            total_menu_items = MenuItem.query.count()
+        else:
+            total_menu_items = MenuItem.query.filter(
+                MenuItem.business_id == current_user.business_id
+            ).count()
         
-        # Total inventory items
-        total_inventory_items = InventoryItem.query.count()
+        # MULTI-TENANT: Total inventory items
+        if current_user.role == 'system_administrator':
+            total_inventory_items = InventoryItem.query.count()
+        else:
+            total_inventory_items = InventoryItem.query.filter(
+                InventoryItem.business_id == current_user.business_id
+            ).count()
         
         # MULTI-TENANT: Low stock items (assuming stock < 10 is low)
         if current_user.role == 'system_administrator':
@@ -575,17 +593,29 @@ def get_system_stats():
                 InventoryItem.current_stock < 10
             ).count()
         
-        # Today's sales
+        # MULTI-TENANT: Today's sales
         today = datetime.now(timezone.utc).date()
-        today_sales = db.session.query(func.sum(Sale.total)).filter(
-            func.date(Sale.created_at) == today
-        ).scalar() or 0
+        if current_user.role == 'system_administrator':
+            today_sales = db.session.query(func.sum(Sale.total)).filter(
+                func.date(Sale.created_at) == today
+            ).scalar() or 0
+        else:
+            today_sales = db.session.query(func.sum(Sale.total)).filter(
+                Sale.business_id == current_user.business_id,
+                func.date(Sale.created_at) == today
+            ).scalar() or 0
         
-        # This month's expenses
+        # MULTI-TENANT: This month's expenses
         current_month = datetime.now(timezone.utc).replace(day=1)
-        month_expenses = db.session.query(func.sum(Expense.amount)).filter(
-            Expense.incurred_at >= current_month
-        ).scalar() or 0
+        if current_user.role == 'system_administrator':
+            month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.incurred_at >= current_month
+            ).scalar() or 0
+        else:
+            month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.business_id == current_user.business_id,
+                Expense.incurred_at >= current_month
+            ).scalar() or 0
         
         # MULTI-TENANT: Recent audit logs count
         if current_user.role == 'system_administrator':
@@ -650,7 +680,12 @@ def sync_employee_profile():
 @login_required
 @require_permissions('admin.view')
 def list_settings():
-    settings = SystemSetting.query.all()
+    # MULTI-TENANT: Filter settings by business
+    if current_user.role == 'system_administrator':
+        settings = SystemSetting.query.all()
+    else:
+        settings = SystemSetting.query.filter_by(business_id=current_user.business_id).all()
+    
     return jsonify([{
         'id': setting.id,
         'key': setting.key,

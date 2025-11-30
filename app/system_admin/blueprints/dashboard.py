@@ -39,9 +39,12 @@ def system_stats():
         total_businesses = Business.query.count()
         active_businesses = Business.query.filter_by(is_active=True).count()
         
-        # User Statistics
-        total_users = User.query.count()
-        active_users = User.query.filter_by(is_active=True).count()
+        # User Statistics (excluding system administrators)
+        total_users = User.query.filter(User.role != 'system_administrator').count()
+        active_users = User.query.filter(
+            User.is_active == True,
+            User.role != 'system_administrator'
+        ).count()
         
         # Recent registrations (last 30 days)
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
@@ -50,7 +53,8 @@ def system_stats():
         ).count()
         
         recent_users = User.query.filter(
-            User.created_at >= thirty_days_ago
+            User.created_at >= thirty_days_ago,
+            User.role != 'system_administrator'
         ).count()
         
         # Subscription plan distribution

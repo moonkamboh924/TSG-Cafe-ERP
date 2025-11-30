@@ -51,29 +51,22 @@ def _cleanup_user_associations(user):
 
 
 def _delete_business_data(business_id):
-    """Remove or detach data tied to a business before deletion"""
-    cleanup_order = [
-        CreditPayment,
-        CreditSale,
-        SaleLine,
-        Sale,
-        Expense,
-        DailyClosing,
-        PurchaseOrderLine,
-        PurchaseOrder,
-        Supplier,
-        InventoryLot,
-        MenuRecipe,
-        MenuItem,
-        MenuCategory,
-        InventoryItem,
-        SystemSetting,
-        BillTemplate,
-    ]
-
-    for model in cleanup_order:
-        if hasattr(model, 'business_id'):
-            model.query.filter_by(business_id=business_id).delete(synchronize_session=False)
+    """
+    Delete all business-related data.
+    Since all models have ondelete='CASCADE' in their foreign keys,
+    we only need to delete the Business object and the database will handle cascading.
+    This function now only handles cleanup of user associations before deletion.
+    """
+    # First, cleanup and delete all users associated with this business
+    users = User.query.filter_by(business_id=business_id).all()
+    for user in users:
+        # Clean up user associations (audit logs, password resets, etc.)
+        _cleanup_user_associations(user)
+        # Delete the user - this will cascade to related records
+        db.session.delete(user)
+    
+    # Commit user deletions before business deletion
+    db.session.flush()
 
 @bp.route('/')
 @login_required
@@ -166,9 +159,12 @@ def get_employee_details():
             }
             employee_list.append(employee_data)
         
-        # Get summary statistics
-        total_employees = User.query.count()
-        active_employees = User.query.filter_by(is_active=True).count()
+        # Get summary statistics (excluding system administrators)
+        total_employees = User.query.filter(User.role != 'system_administrator').count()
+        active_employees = User.query.filter(
+            User.is_active == True,
+            User.role != 'system_administrator'
+        ).count()
         
         # Get employees by role
         role_stats = db.session.query(
@@ -379,12 +375,10 @@ def manage_business(business_id):
 
     # DELETE flow
     try:
-        users = User.query.filter_by(business_id=business_id).all()
-        for user in users:
-            _cleanup_user_associations(user)
-            user.business_id = None
-
+        # Delete all business data including users
         _delete_business_data(business_id)
+        
+        # Now delete the business itself - cascade will handle remaining relationships
         db.session.delete(business)
         db.session.commit()
 

@@ -85,6 +85,8 @@ class TenantService:
                 last_name=last_name,
                 full_name=f"{first_name} {last_name}".strip(),
                 role='owner',  # Business owner role
+                designation='CEO',  # Set designation as CEO
+                department='Management',  # Set department as Management
                 is_owner=True,
                 is_active=True,
                 requires_password_change=requires_password_change,
@@ -183,6 +185,7 @@ class TenantService:
         return ''.join(secrets.choice(chars) for _ in range(12))
     
     @staticmethod
+    @staticmethod
     def _create_default_settings(business_id, business_name):
         """Create default system settings for new tenant"""
         default_settings = [
@@ -200,12 +203,19 @@ class TenantService:
         ]
         
         for key, value in default_settings:
-            setting = SystemSetting(
+            # Check if setting already exists for this business
+            existing = SystemSetting.query.filter_by(
                 business_id=business_id,
-                key=key,
-                value=value
-            )
-            db.session.add(setting)
+                key=key
+            ).first()
+            
+            if not existing:
+                setting = SystemSetting(
+                    business_id=business_id,
+                    key=key,
+                    value=value
+                )
+                db.session.add(setting)
     
     @staticmethod
     def _create_default_menu_structure(business_id):
