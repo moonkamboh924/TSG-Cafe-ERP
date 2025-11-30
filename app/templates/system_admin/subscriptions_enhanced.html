@@ -1,0 +1,675 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}Subscription Management - TSG Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-credit-card text-white text-xl"></i>
+                    </div>
+                    Subscription Management
+                </h1>
+                <p class="text-gray-600 mt-2 ml-15">Manage business subscriptions, billing, and revenue</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="/system-admin/subscriptions/plans" class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-cog"></i>
+                    Configure Plans
+                </a>
+                <button onclick="exportSubscriptions()" class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </button>
+                <button onclick="location.reload()" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-sync mr-2"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Revenue & Stats Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Subscriptions</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2" id="totalSubscriptions">0</p>
+                        <p class="text-xs text-gray-500 mt-1">All plans</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-credit-card text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Subscriptions</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2" id="activeSubscriptions">0</p>
+                        <p class="text-xs text-gray-500 mt-1">Currently active</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">MRR</p>
+                        <p class="text-3xl font-bold text-emerald-600 mt-2" id="mrrAmount">$0</p>
+                        <p class="text-xs text-gray-500 mt-1">Monthly Revenue</p>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-dollar-sign text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Premium Plans</p>
+                        <p class="text-3xl font-bold text-purple-600 mt-2" id="premiumPlans">0</p>
+                        <p class="text-xs text-gray-500 mt-1">Paid subscribers</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-crown text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Free Plans</p>
+                        <p class="text-3xl font-bold text-yellow-600 mt-2" id="freePlans">0</p>
+                        <p class="text-xs text-gray-500 mt-1">Trial users</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-gift text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="subscriptionSearch" placeholder="Search businesses..." 
+                           class="pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full">
+                </div>
+                
+                <select id="planFilter" class="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">All Plans</option>
+                    <option value="free">Free</option>
+                    <option value="basic">Basic</option>
+                    <option value="premium">Premium</option>
+                    <option value="enterprise">Enterprise</option>
+                </select>
+                
+                <select id="statusFilter" class="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                
+                <button onclick="resetFilters()" class="px-4 py-3 bg-gray-500 text-white rounded-xl text-sm hover:bg-gray-600 transition-colors font-medium">
+                    <i class="fas fa-redo mr-2"></i>Reset Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Subscriptions Table -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">Business Subscriptions</h2>
+                <p class="text-gray-600 text-sm mt-1">Manage all business subscription plans and billing</p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Business</th>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Owner</th>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Current Plan</th>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Created</th>
+                            <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscriptionsTableBody" class="divide-y divide-gray-100">
+                        <!-- Dynamic content will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="p-6 border-t border-gray-200 flex items-center justify-between">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="subscriptionCount">0</span> subscriptions
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prevPage" class="px-4 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 transition-colors" disabled>
+                        <i class="fas fa-chevron-left mr-1"></i> Previous
+                    </button>
+                    <button id="nextPage" class="px-4 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 transition-colors" disabled>
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Details Modal -->
+<div id="subscriptionModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl mx-auto shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-t-3xl">
+            <div class="flex items-center justify-between text-white">
+                <div>
+                    <h3 class="text-2xl font-bold" id="modalBusinessName">Business Subscription</h3>
+                    <p class="text-purple-100 text-sm mt-1">Manage subscription and billing</p>
+                </div>
+                <button onclick="closeSubscriptionModal()" class="text-white/80 hover:text-white transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6">
+            <!-- Current Plan Section -->
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Current Plan</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Plan Type</p>
+                        <p class="text-xl font-bold text-purple-600 mt-1" id="modalCurrentPlan">Premium</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Status</p>
+                        <p class="text-xl font-bold mt-1" id="modalPlanStatus">Active</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Billing Cycle</p>
+                        <p class="text-lg font-semibold text-gray-800 mt-1" id="modalBillingCycle">Monthly</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Next Billing Date</p>
+                        <p class="text-lg font-semibold text-gray-800 mt-1" id="modalNextBilling">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <button onclick="showUpgradeModal()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition shadow-lg">
+                    <i class="fas fa-arrow-up mr-2"></i>Upgrade Plan
+                </button>
+                <button onclick="suspendSubscription()" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition shadow-lg">
+                    <i class="fas fa-pause mr-2"></i>Suspend
+                </button>
+                <button onclick="viewInvoices()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition shadow-lg">
+                    <i class="fas fa-file-invoice mr-2"></i>View Invoices
+                </button>
+            </div>
+
+            <!-- Subscription History -->
+            <div class="bg-gray-50 rounded-2xl p-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Subscription History</h4>
+                <div id="subscriptionHistory" class="space-y-3">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Plan Modal -->
+<div id="upgradeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-2xl mx-4 shadow-2xl">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">Upgrade Subscription Plan</h3>
+        
+        <form id="upgradeForm">
+            <input type="hidden" id="upgradeBusinessId">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select New Plan</label>
+                    <select id="upgradePlan" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="basic">Basic - $29/month</option>
+                        <option value="premium">Premium - $99/month</option>
+                        <option value="enterprise">Enterprise - $299/month</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Billing Cycle</label>
+                    <select id="upgradeBillingCycle" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly (Save 20%)</option>
+                    </select>
+                </div>
+                
+                <div class="bg-blue-50 rounded-xl p-4">
+                    <p class="text-sm text-blue-800"><strong>Note:</strong> The subscription will be upgraded immediately and the business will have access to new features.</p>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition">
+                    <i class="fas fa-check mr-2"></i>Confirm Upgrade
+                </button>
+                <button type="button" onclick="closeUpgradeModal()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let currentSearch = '';
+let currentPlan = '';
+let currentStatus = '';
+let currentBusinessId = null;
+
+// Load subscription statistics
+async function loadSubscriptionStats() {
+    try {
+        const response = await fetch('/system-admin/subscriptions/api/stats');
+        const data = await response.json();
+        
+        document.getElementById('totalSubscriptions').textContent = data.total_subscriptions || 0;
+        document.getElementById('activeSubscriptions').textContent = data.active_subscriptions || 0;
+        document.getElementById('mrrAmount').textContent = '$' + (data.total_mrr || 0).toFixed(2);
+        
+        const planDistribution = data.plan_distribution || {};
+        document.getElementById('freePlans').textContent = planDistribution.free || 0;
+        document.getElementById('premiumPlans').textContent = (planDistribution.premium || 0) + (planDistribution.enterprise || 0) + (planDistribution.basic || 0);
+        
+    } catch (error) {
+        console.error('Error loading subscription stats:', error);
+    }
+}
+
+// Load subscriptions
+async function loadSubscriptions(page = 1, search = '', plan = '', status = '') {
+    try {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: 25,
+            search: search,
+            plan: plan,
+            status: status
+        });
+        
+        const response = await fetch(`/system-admin/subscriptions/api/subscriptions?${params}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            renderSubscriptionsTable(data.businesses);
+            updatePagination(data);
+        } else {
+            console.error('Error loading subscriptions:', data.error);
+            showNotification('Error loading subscriptions', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading subscriptions:', error);
+        showNotification('Error loading subscriptions', 'error');
+    }
+}
+
+// Render subscriptions table
+function renderSubscriptionsTable(subscriptions) {
+    const tbody = document.getElementById('subscriptionsTableBody');
+    
+    if (subscriptions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No subscriptions found</td></tr>';
+        document.getElementById('subscriptionCount').textContent = '0';
+        return;
+    }
+    
+    tbody.innerHTML = subscriptions.map(subscription => {
+        const statusBadge = subscription.is_active 
+            ? '<span class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full"><i class="fas fa-check-circle mr-1"></i>Active</span>'
+            : '<span class="px-3 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full"><i class="fas fa-times-circle mr-1"></i>Inactive</span>';
+        
+        const planBadges = {
+            'free': 'bg-gray-100 text-gray-800',
+            'basic': 'bg-blue-100 text-blue-800',
+            'premium': 'bg-purple-100 text-purple-800',
+            'enterprise': 'bg-yellow-100 text-yellow-800'
+        };
+        
+        const planClass = planBadges[subscription.subscription_plan] || planBadges.free;
+        const createdDate = new Date(subscription.created_at).toLocaleDateString();
+        
+        return `
+            <tr class="border-b border-gray-100 hover:bg-purple-50/50 transition cursor-pointer" onclick="viewSubscriptionDetails(${subscription.id})">
+                <td class="py-4 px-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="text-white text-sm font-bold">${subscription.business_name ? subscription.business_name.charAt(0).toUpperCase() : 'B'}</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">${subscription.business_name || 'N/A'}</p>
+                            <p class="text-sm text-gray-500">ID: #${subscription.id}</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-4 px-6">
+                    <div>
+                        <p class="font-medium text-gray-900">${subscription.owner ? subscription.owner.name : 'No Owner'}</p>
+                        <p class="text-sm text-gray-500">${subscription.owner ? subscription.owner.email : 'N/A'}</p>
+                    </div>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="px-3 py-1 text-xs font-semibold ${planClass} rounded-full uppercase">
+                        <i class="fas ${subscription.subscription_plan === 'premium' || subscription.subscription_plan === 'enterprise' ? 'fa-crown' : 'fa-tag'} mr-1"></i>
+                        ${subscription.plan_name || subscription.subscription_plan}
+                    </span>
+                </td>
+                <td class="py-4 px-6">${statusBadge}</td>
+                <td class="py-4 px-6">
+                    <span class="text-sm text-gray-600">${createdDate}</span>
+                </td>
+                <td class="py-4 px-6">
+                    <div class="flex space-x-2">
+                        <button onclick="event.stopPropagation(); viewSubscriptionDetails(${subscription.id})" class="text-purple-600 hover:text-purple-800 text-sm font-medium px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </button>
+                        <button onclick="event.stopPropagation(); quickUpgrade(${subscription.id})" class="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-arrow-up mr-1"></i>Upgrade
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('subscriptionCount').textContent = subscriptions.length;
+}
+
+// View subscription details
+async function viewSubscriptionDetails(businessId) {
+    currentBusinessId = businessId;
+    
+    try {
+        const response = await fetch(`/system-admin/subscriptions/api/businesses/${businessId}/subscription`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Populate modal with subscription details
+            document.getElementById('modalBusinessName').textContent = data.business.name;
+            
+            if (data.current_subscription) {
+                const sub = data.current_subscription;
+                document.getElementById('modalCurrentPlan').textContent = sub.plan.toUpperCase();
+                document.getElementById('modalPlanStatus').textContent = sub.status.charAt(0).toUpperCase() + sub.status.slice(1);
+                document.getElementById('modalBillingCycle').textContent = sub.billing_cycle.charAt(0).toUpperCase() + sub.billing_cycle.slice(1);
+                document.getElementById('modalNextBilling').textContent = sub.next_billing_date ? new Date(sub.next_billing_date).toLocaleDateString() : '—';
+            }
+            
+            // Render subscription history
+            renderSubscriptionHistory(data.subscription_history);
+            
+            // Show modal
+            document.getElementById('subscriptionModal').classList.remove('hidden');
+            document.getElementById('subscriptionModal').classList.add('flex');
+        }
+    } catch (error) {
+        console.error('Error loading subscription details:', error);
+        showNotification('Error loading subscription details', 'error');
+    }
+}
+
+// Render subscription history
+function renderSubscriptionHistory(history) {
+    const container = document.getElementById('subscriptionHistory');
+    
+    if (!history || history.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">No subscription history available</p>';
+        return;
+    }
+    
+    container.innerHTML = history.map(sub => {
+        const startDate = new Date(sub.start_date).toLocaleDateString();
+        const statusColors = {
+            'active': 'bg-green-100 text-green-800',
+            'cancelled': 'bg-red-100 text-red-800',
+            'suspended': 'bg-orange-100 text-orange-800'
+        };
+        
+        return `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-800">${sub.plan.toUpperCase()} Plan</p>
+                    <p class="text-sm text-gray-600">Started: ${startDate} • ${sub.billing_cycle}</p>
+                </div>
+                <span class="px-3 py-1 text-xs font-semibold ${statusColors[sub.status] || 'bg-gray-100 text-gray-800'} rounded-full">
+                    ${sub.status}
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+// Quick upgrade
+function quickUpgrade(businessId) {
+    currentBusinessId = businessId;
+    document.getElementById('upgradeBusinessId').value = businessId;
+    showUpgradeModal();
+}
+
+// Show upgrade modal
+function showUpgradeModal() {
+    if (currentBusinessId) {
+        document.getElementById('upgradeBusinessId').value = currentBusinessId;
+    }
+    document.getElementById('upgradeModal').classList.remove('hidden');
+    document.getElementById('upgradeModal').classList.add('flex');
+}
+
+// Close upgrade modal
+function closeUpgradeModal() {
+    document.getElementById('upgradeModal').classList.add('hidden');
+    document.getElementById('upgradeModal').classList.remove('flex');
+}
+
+// Close subscription modal
+function closeSubscriptionModal() {
+    document.getElementById('subscriptionModal').classList.add('hidden');
+    document.getElementById('subscriptionModal').classList.remove('flex');
+    currentBusinessId = null;
+}
+
+// Handle upgrade form submission
+document.getElementById('upgradeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const businessId = document.getElementById('upgradeBusinessId').value;
+    const plan = document.getElementById('upgradePlan').value;
+    const billingCycle = document.getElementById('upgradeBillingCycle').value;
+    
+    try {
+        const response = await fetch(`/system-admin/subscriptions/api/businesses/${businessId}/subscription/upgrade`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                plan: plan,
+                billing_cycle: billingCycle,
+                amount: plan === 'basic' ? 29 : plan === 'premium' ? 99 : 299,
+                currency: 'USD'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Subscription upgraded successfully!', 'success');
+            closeUpgradeModal();
+            closeSubscriptionModal();
+            loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+            loadSubscriptionStats();
+        } else {
+            showNotification(data.error || 'Failed to upgrade subscription', 'error');
+        }
+    } catch (error) {
+        console.error('Error upgrading subscription:', error);
+        showNotification('Error upgrading subscription', 'error');
+    }
+});
+
+// Suspend subscription
+async function suspendSubscription() {
+    if (!currentBusinessId) return;
+    
+    if (!confirm('Are you sure you want to suspend this subscription?')) return;
+    
+    try {
+        const response = await fetch(`/system-admin/subscriptions/api/businesses/${currentBusinessId}/subscription/suspend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reason: 'Administrative action'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Subscription suspended successfully!', 'success');
+            closeSubscriptionModal();
+            loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+            loadSubscriptionStats();
+        } else {
+            showNotification(data.error || 'Failed to suspend subscription', 'error');
+        }
+    } catch (error) {
+        console.error('Error suspending subscription:', error);
+        showNotification('Error suspending subscription', 'error');
+    }
+}
+
+// View invoices
+function viewInvoices() {
+    if (currentBusinessId) {
+        window.location.href = `/system-admin/businesses/${currentBusinessId}/invoices`;
+    }
+}
+
+// Update pagination
+function updatePagination(data) {
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= (data.pages || 1);
+    
+    prevBtn.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+        }
+    };
+    
+    nextBtn.onclick = () => {
+        if (currentPage < (data.pages || 1)) {
+            currentPage++;
+            loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+        }
+    };
+}
+
+// Reset filters
+function resetFilters() {
+    document.getElementById('subscriptionSearch').value = '';
+    document.getElementById('planFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    
+    currentSearch = '';
+    currentPlan = '';
+    currentStatus = '';
+    currentPage = 1;
+    
+    loadSubscriptions();
+    loadSubscriptionStats();
+}
+
+// Export subscriptions
+function exportSubscriptions() {
+    showNotification('Export feature coming soon!', 'info');
+}
+
+// Simple notification function
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    const colors = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'info': 'bg-blue-500'
+    };
+    
+    notification.className = `fixed top-4 right-4 ${colors[type] || colors.info} text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-fade-in`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Event listeners
+document.getElementById('subscriptionSearch').addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    currentPage = 1;
+    loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+});
+
+document.getElementById('planFilter').addEventListener('change', (e) => {
+    currentPlan = e.target.value;
+    currentPage = 1;
+    loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+});
+
+document.getElementById('statusFilter').addEventListener('change', (e) => {
+    currentStatus = e.target.value;
+    currentPage = 1;
+    loadSubscriptions(currentPage, currentSearch, currentPlan, currentStatus);
+});
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSubscriptionStats();
+    loadSubscriptions();
+});
+</script>
+{% endblock %}

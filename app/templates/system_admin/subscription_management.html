@@ -241,7 +241,7 @@ function renderSubscriptionsTable(subscriptions) {
                     </div>
                 </td>
                 <td class="py-3 px-6">
-                    <span class="px-2 py-1 text-xs font-medium ${planClass} rounded-full">${subscription.subscription_plan}</span>
+                    <span class="px-2 py-1 text-xs font-medium ${planClass} rounded-full">${subscription.plan_name || subscription.subscription_plan}</span>
                 </td>
                 <td class="py-3 px-6">${statusBadge}</td>
                 <td class="py-3 px-6">

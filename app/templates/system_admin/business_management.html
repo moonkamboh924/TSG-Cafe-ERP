@@ -471,7 +471,7 @@ async function loadBusinesses(page = 1) {
                     <div class="text-gray-900">${biz.owner_email || '—'}</div>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">${biz.subscription_plan}</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">${biz.plan_name || biz.subscription_plan}</span>
                 </td>
                 <td class="px-6 py-4 text-gray-700">${biz.user_count}</td>
                 <td class="px-6 py-4">
@@ -626,7 +626,7 @@ function businessManager() {
             </td>
             <td class="px-6 py-4">
                 <span class="px-3 py-1 rounded-lg text-xs font-semibold border ${planColor}">
-                    <i class="fas fa-crown mr-1"></i>${biz.subscription_plan}
+                    <i class="fas fa-crown mr-1"></i>${biz.plan_name || biz.subscription_plan}
                 </span>
             </td>
             <td class="px-6 py-4">
@@ -660,7 +660,7 @@ function businessManager() {
                 this.selectedBusiness = business;
                 document.getElementById('detailsName').textContent = business.business_name;
                 document.getElementById('detailsEmail').textContent = business.owner_email || '—';
-                document.getElementById('detailsPlan').textContent = business.subscription_plan;
+                document.getElementById('detailsPlan').textContent = business.plan_name || business.subscription_plan;
                 document.getElementById('detailsStatus').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsActiveUsers').textContent = business.user_count || '0';
                 document.getElementById('detailsCreated').textContent = new Date(business.created_at).toLocaleString();
@@ -671,8 +671,8 @@ function businessManager() {
                 document.getElementById('detailsUsersCount').textContent = business.user_count || '0';
                 document.getElementById('detailsStatusBadge').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsStatusBadge').className = `px-3 py-1 backdrop-blur-sm rounded-full text-xs font-medium ${business.is_active ? 'bg-green-500/30 text-green-100' : 'bg-gray-500/30 text-gray-100'}`;
-                document.getElementById('detailsPlanBadge').textContent = business.subscription_plan;
-                document.getElementById('detailsSubPlan').textContent = business.subscription_plan;
+                document.getElementById('detailsPlanBadge').textContent = business.plan_name || business.subscription_plan;
+                document.getElementById('detailsSubPlan').textContent = business.plan_name || business.subscription_plan;
                 document.getElementById('detailsSubSince').textContent = new Date(business.created_at).toLocaleDateString();
                 document.getElementById('detailsToggleBtn').textContent = business.is_active ? 'Deactivate' : 'Activate';
                 

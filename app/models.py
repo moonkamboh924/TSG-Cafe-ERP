@@ -57,15 +57,81 @@ class Business(db.Model):
         from .services.subscription_service import SubscriptionService
         return SubscriptionService.get_plan_limits(self.subscription_plan)
     
+    def get_plan_name(self):
+        """Get current plan name from SubscriptionPlan configuration"""
+        plan_config = SubscriptionPlan.query.filter_by(plan_code=self.subscription_plan).first()
+        return plan_config.plan_name if plan_config else self.subscription_plan.capitalize()
+    
+    def get_plan_details(self):
+        """Get full plan details from SubscriptionPlan configuration"""
+        return SubscriptionPlan.query.filter_by(plan_code=self.subscription_plan).first()
+    
+    def get_plan_pricing(self):
+        """Get pricing details from plan configuration"""
+        plan_config = self.get_plan_details()
+        if plan_config:
+            return {
+                'monthly_price': float(plan_config.monthly_price),
+                'yearly_price': float(plan_config.yearly_price),
+                'currency': plan_config.currency,
+                'yearly_discount': plan_config.calculate_yearly_discount()
+            }
+        return None
+    
+    def get_plan_features(self):
+        """Get features list from plan configuration"""
+        plan_config = self.get_plan_details()
+        return plan_config.get_features_list() if plan_config else []
+    
+    def get_plan_limits_detailed(self):
+        """Get detailed limits from plan configuration"""
+        plan_config = self.get_plan_details()
+        if plan_config:
+            return {
+                'max_users': plan_config.max_users,
+                'max_menu_items': plan_config.max_menu_items,
+                'max_inventory_items': plan_config.max_inventory_items,
+                'max_monthly_sales': plan_config.max_monthly_sales,
+                'max_storage_mb': plan_config.max_storage_mb,
+                'advanced_reports': plan_config.advanced_reports,
+                'multi_location': plan_config.multi_location,
+                'api_access': plan_config.api_access,
+                'priority_support': plan_config.priority_support,
+                'custom_branding': plan_config.custom_branding,
+                'data_export': plan_config.data_export
+            }
+        return None
+    
     def to_dict(self):
-        return {
+        plan_config = self.get_plan_details()
+        result = {
             'id': self.id,
             'business_name': self.business_name,
             'owner_email': self.owner_email,
             'subscription_plan': self.subscription_plan,
+            'plan_name': self.get_plan_name(),
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat()
         }
+        
+        # Add plan details if available
+        if plan_config:
+            result.update({
+                'plan_details': {
+                    'name': plan_config.plan_name,
+                    'description': plan_config.description,
+                    'pricing': self.get_plan_pricing(),
+                    'features': self.get_plan_features(),
+                    'limits': self.get_plan_limits_detailed(),
+                    'has_trial': plan_config.has_trial,
+                    'trial_days': plan_config.trial_days,
+                    'is_featured': plan_config.is_featured,
+                    'badge_text': plan_config.badge_text,
+                    'badge_color': plan_config.badge_color
+                }
+            })
+        
+        return result
 
 # ============================================================================
 # USER & AUTHENTICATION MODELS
@@ -1014,11 +1080,34 @@ class Subscription(db.Model):
             return max(0, delta.days)
         return None
     
+    def get_plan_name(self):
+        """Get current plan name from SubscriptionPlan configuration"""
+        plan_config = SubscriptionPlan.query.filter_by(plan_code=self.plan).first()
+        return plan_config.plan_name if plan_config else self.plan.capitalize()
+    
+    def get_plan_details(self):
+        """Get full plan details from SubscriptionPlan configuration"""
+        return SubscriptionPlan.query.filter_by(plan_code=self.plan).first()
+    
+    def get_plan_pricing(self):
+        """Get pricing from plan configuration"""
+        plan_config = self.get_plan_details()
+        if plan_config:
+            return {
+                'monthly_price': float(plan_config.monthly_price),
+                'yearly_price': float(plan_config.yearly_price),
+                'currency': plan_config.currency
+            }
+        return None
+    
     def to_dict(self):
-        return {
+        plan_config = self.get_plan_details()
+        result = {
             'id': self.id,
             'business_id': self.business_id,
             'plan': self.plan,
+            'plan_name': self.get_plan_name(),
+            'subscription_plan': self.plan,
             'status': self.status,
             'billing_cycle': self.billing_cycle,
             'amount': float(self.amount),
@@ -1031,6 +1120,18 @@ class Subscription(db.Model):
             'is_trial': self.is_trial(),
             'days_until_renewal': self.days_until_renewal()
         }
+        
+        # Add plan details if available
+        if plan_config:
+            result.update({
+                'plan_description': plan_config.description,
+                'plan_features': plan_config.get_features_list(),
+                'plan_badge_text': plan_config.badge_text,
+                'plan_badge_color': plan_config.badge_color,
+                'plan_is_featured': plan_config.is_featured
+            })
+        
+        return result
 
 class Invoice(db.Model):
     """Invoice/billing history for subscriptions"""
@@ -1115,7 +1216,7 @@ class PaymentMethod(db.Model):
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     def is_expired(self):
         """Check if card is expired"""
         if self.exp_month and self.exp_year:
@@ -1135,6 +1236,124 @@ class PaymentMethod(db.Model):
             'is_default': self.is_default,
             'is_active': self.is_active,
             'is_expired': self.is_expired()
+        }
+
+
+class SubscriptionPlan(db.Model):
+    """Subscription plan configuration - manage all plan types and their features"""
+    __tablename__ = 'subscription_plans'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Plan identification
+    plan_code = db.Column(db.String(50), unique=True, nullable=False, index=True)  # free, basic, premium, enterprise
+    plan_name = db.Column(db.String(100), nullable=False)  # Display name
+    description = db.Column(db.Text, nullable=True)
+    
+    # Pricing
+    monthly_price = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    monthly_period = db.Column(db.String(1), default='M', nullable=False)  # M=Monthly, D=Daily, Y=Yearly
+    monthly_currency = db.Column(db.String(3), default='USD', nullable=False)
+    yearly_price = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    yearly_period = db.Column(db.String(1), default='Y', nullable=False)  # M=Monthly, D=Daily, Y=Yearly
+    yearly_currency = db.Column(db.String(3), default='USD', nullable=False)
+    currency = db.Column(db.String(3), default='USD', nullable=False)  # Default currency for backward compatibility
+    
+    # Trial configuration
+    has_trial = db.Column(db.Boolean, default=False, nullable=False)
+    trial_days = db.Column(db.Integer, default=0, nullable=False)
+    
+    # Feature limits (stored as JSON)
+    max_users = db.Column(db.Integer, default=-1, nullable=False)  # -1 means unlimited
+    max_menu_items = db.Column(db.Integer, default=-1, nullable=False)
+    max_inventory_items = db.Column(db.Integer, default=-1, nullable=False)
+    max_monthly_sales = db.Column(db.Integer, default=-1, nullable=False)
+    max_storage_mb = db.Column(db.Integer, default=1024, nullable=False)  # Storage limit in MB
+    
+    # Features (stored as JSON string)
+    features = db.Column(db.Text, nullable=True)  # JSON array of feature descriptions
+    
+    # Advanced features flags
+    advanced_reports = db.Column(db.Boolean, default=False, nullable=False)
+    multi_location = db.Column(db.Boolean, default=False, nullable=False)
+    api_access = db.Column(db.Boolean, default=False, nullable=False)
+    priority_support = db.Column(db.Boolean, default=False, nullable=False)
+    custom_branding = db.Column(db.Boolean, default=False, nullable=False)
+    data_export = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Display settings
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    is_featured = db.Column(db.Boolean, default=False, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)  # Show on pricing page
+    
+    # Badge/label
+    badge_text = db.Column(db.String(50), nullable=True)  # e.g., "Most Popular", "Best Value"
+    badge_color = db.Column(db.String(20), nullable=True)  # CSS color
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def get_features_list(self):
+        """Parse features JSON string to list"""
+        if self.features:
+            import json
+            try:
+                return json.loads(self.features)
+            except:
+                return []
+        return []
+    
+    def set_features_list(self, features_list):
+        """Convert features list to JSON string"""
+        import json
+        self.features = json.dumps(features_list)
+    
+    def calculate_yearly_discount(self):
+        """Calculate discount percentage for yearly plan"""
+        if self.monthly_price > 0 and self.yearly_price > 0:
+            yearly_as_monthly = self.monthly_price * 12
+            discount = ((yearly_as_monthly - self.yearly_price) / yearly_as_monthly) * 100
+            return round(discount, 1)
+        return 0
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'plan_code': self.plan_code,
+            'plan_name': self.plan_name,
+            'description': self.description,
+            'monthly_price': float(self.monthly_price),
+            'monthly_period': self.monthly_period,
+            'monthly_currency': self.monthly_currency,
+            'yearly_price': float(self.yearly_price),
+            'yearly_period': self.yearly_period,
+            'yearly_currency': self.yearly_currency,
+            'currency': self.currency,
+            'has_trial': self.has_trial,
+            'trial_days': self.trial_days,
+            'max_users': self.max_users,
+            'max_menu_items': self.max_menu_items,
+            'max_inventory_items': self.max_inventory_items,
+            'max_monthly_sales': self.max_monthly_sales,
+            'max_storage_mb': self.max_storage_mb,
+            'features': self.get_features_list(),
+            'advanced_reports': self.advanced_reports,
+            'multi_location': self.multi_location,
+            'api_access': self.api_access,
+            'priority_support': self.priority_support,
+            'custom_branding': self.custom_branding,
+            'data_export': self.data_export,
+            'display_order': self.display_order,
+            'is_featured': self.is_featured,
+            'is_active': self.is_active,
+            'is_visible': self.is_visible,
+            'badge_text': self.badge_text,
+            'badge_color': self.badge_color,
+            'yearly_discount': self.calculate_yearly_discount(),
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 class PlanFeature(db.Model):

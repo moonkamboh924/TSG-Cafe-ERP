@@ -1,0 +1,713 @@
+{% extends "system_admin/base.html" %}
+
+{% block title %}Subscription Plans Configuration - TSG Cafe ERP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <div class="flex items-center gap-3">
+                    <a href="/system-admin/subscriptions" class="text-gray-500 hover:text-gray-700 transition">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-cog text-white text-xl"></i>
+                        </div>
+                        Subscription Plans Configuration
+                    </h1>
+                </div>
+                <p class="text-gray-600 mt-2 ml-15">Configure subscription types, pricing, features, and trial periods</p>
+            </div>
+            <button onclick="openPlanModal()" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus mr-2"></i>Create New Plan
+            </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Plans</p>
+                        <p class="text-3xl font-bold text-indigo-600 mt-2" id="totalPlans">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-layer-group text-indigo-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Plans</p>
+                        <p class="text-3xl font-bold text-green-600 mt-2" id="activePlans">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Featured Plans</p>
+                        <p class="text-3xl font-bold text-purple-600 mt-2" id="featuredPlans">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-star text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">With Trial</p>
+                        <p class="text-3xl font-bold text-blue-600 mt-2" id="trialPlans">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-gift text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plans Grid -->
+        <div id="plansGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Plans will be loaded here dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Plan Creation/Edit Modal -->
+<div id="planModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-5xl mx-auto shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-3xl sticky top-0 z-10">
+            <div class="flex items-center justify-between text-white">
+                <div>
+                    <h3 class="text-2xl font-bold" id="modalTitle">Create Subscription Plan</h3>
+                    <p class="text-indigo-100 text-sm mt-1">Configure plan details, pricing, and features</p>
+                </div>
+                <button onclick="closePlanModal()" class="text-white/80 hover:text-white transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Content -->
+        <form id="planForm" class="p-6">
+            <input type="hidden" id="planId">
+            
+            <!-- Basic Information -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-indigo-600"></i>
+                    Basic Information
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Plan Code <span class="text-red-500">*</span></label>
+                        <input type="text" id="planCode" required placeholder="e.g., premium" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Unique identifier (lowercase, no spaces)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Plan Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="planName" required placeholder="e.g., Premium Plan" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Display name for customers</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="planDescription" rows="3" placeholder="Brief description of this plan..." class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-dollar-sign text-green-600"></i>
+                    Pricing
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Price</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                            <input type="number" id="monthlyPrice" step="0.01" min="0" placeholder="0.00" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Yearly Price</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                            <input type="number" id="yearlyPrice" step="0.01" min="0" placeholder="0.00" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                        <select id="currency" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="PKR">PKR (₨)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trial Period -->
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-gift text-blue-600"></i>
+                    Trial Period
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="hasTrial" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="hasTrial" class="ml-3 text-sm font-medium text-gray-700">Enable Free Trial</label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Trial Days</label>
+                        <input type="number" id="trialDays" min="0" placeholder="0" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Limits -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-purple-600"></i>
+                    Feature Limits
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Users</label>
+                        <input type="number" id="maxUsers" min="-1" placeholder="-1 for unlimited" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">-1 = Unlimited</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Menu Items</label>
+                        <input type="number" id="maxMenuItems" min="-1" placeholder="-1 for unlimited" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">-1 = Unlimited</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Inventory Items</label>
+                        <input type="number" id="maxInventoryItems" min="-1" placeholder="-1 for unlimited" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">-1 = Unlimited</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Monthly Sales</label>
+                        <input type="number" id="maxMonthlySales" min="-1" placeholder="-1 for unlimited" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">-1 = Unlimited</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Storage (MB)</label>
+                        <input type="number" id="maxStorageMb" min="0" placeholder="1024" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Features -->
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-star text-yellow-600"></i>
+                    Advanced Features
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="advancedReports" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="advancedReports" class="ml-3 text-sm font-medium text-gray-700">Advanced Reports</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="multiLocation" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="multiLocation" class="ml-3 text-sm font-medium text-gray-700">Multi-Location Support</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="apiAccess" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="apiAccess" class="ml-3 text-sm font-medium text-gray-700">API Access</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="prioritySupport" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="prioritySupport" class="ml-3 text-sm font-medium text-gray-700">Priority Support</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="customBranding" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="customBranding" class="ml-3 text-sm font-medium text-gray-700">Custom Branding</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="dataExport" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="dataExport" class="ml-3 text-sm font-medium text-gray-700">Data Export</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="bg-gradient-to-br from-teal-50 to-green-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-list text-teal-600"></i>
+                    Feature List (Shown to customers)
+                </h4>
+                <div id="featuresList" class="space-y-2 mb-4">
+                    <!-- Features will be added dynamically -->
+                </div>
+                <button type="button" onclick="addFeature()" class="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition text-sm">
+                    <i class="fas fa-plus mr-2"></i>Add Feature
+                </button>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-eye text-gray-600"></i>
+                    Display Settings
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
+                        <input type="number" id="displayOrder" min="0" placeholder="0" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
+                        <input type="text" id="badgeText" placeholder="e.g., Most Popular" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Badge Color</label>
+                        <input type="text" id="badgeColor" placeholder="e.g., #10b981" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div class="flex flex-col justify-center space-y-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isFeatured" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <label for="isFeatured" class="ml-3 text-sm font-medium text-gray-700">Featured Plan</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isVisible" checked class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <label for="isVisible" class="ml-3 text-sm font-medium text-gray-700">Visible to Customers</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isActive" checked class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <label for="isActive" class="ml-3 text-sm font-medium text-gray-700">Active</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex space-x-3 sticky bottom-0 bg-white pt-4 border-t border-gray-200">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition shadow-lg">
+                    <i class="fas fa-save mr-2"></i>Save Plan
+                </button>
+                <button type="button" onclick="closePlanModal()" class="px-6 py-4 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Subscription Plan?</h3>
+            <p class="text-gray-600 mb-6">This action cannot be undone. This plan will be permanently deleted.</p>
+            
+            <div class="flex space-x-3">
+                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+                <button onclick="confirmDelete()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let plans = [];
+let currentPlanId = null;
+let planToDelete = null;
+
+// Load all plans
+async function loadPlans() {
+    try {
+        const response = await fetch('/system-admin/subscriptions/api/plans');
+        const data = await response.json();
+        
+        if (data.success) {
+            plans = data.plans;
+            renderPlans();
+            updateStats();
+        }
+    } catch (error) {
+        console.error('Error loading plans:', error);
+        showNotification('Error loading plans', 'error');
+    }
+}
+
+// Render plans grid
+function renderPlans() {
+    const grid = document.getElementById('plansGrid');
+    
+    if (plans.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-layer-group text-gray-400 text-3xl"></i>
+                </div>
+                <p class="text-gray-500 text-lg mb-4">No subscription plans configured yet</p>
+                <button onclick="openPlanModal()" class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Create Your First Plan
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = plans.map(plan => {
+        const yearlyDiscount = plan.yearly_discount > 0 ? `<span class="text-xs text-green-600 font-medium">${plan.yearly_discount}% off yearly</span>` : '';
+        const badge = plan.badge_text ? `<span class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white" style="background-color: ${plan.badge_color || '#10b981'}">${plan.badge_text}</span>` : '';
+        const featuredClass = plan.is_featured ? 'ring-2 ring-indigo-500 shadow-2xl' : '';
+        const featuredBadge = plan.is_featured ? '<span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-xs font-bold text-white shadow-lg"><i class="fas fa-star mr-1"></i>Featured</span>' : '';
+        
+        return `
+            <div class="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200 ${featuredClass} hover:shadow-xl transition p-6">
+                ${badge}
+                ${featuredBadge}
+                
+                <!-- Plan Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">${plan.plan_name}</h3>
+                        <div class="flex items-center gap-2">
+                            ${plan.is_active ? '<span class="w-3 h-3 bg-green-500 rounded-full"></span>' : '<span class="w-3 h-3 bg-gray-400 rounded-full"></span>'}
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm">${plan.description || 'No description'}</p>
+                </div>
+                
+                <!-- Pricing -->
+                <div class="mb-6">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-indigo-600">${plan.currency === 'USD' ? '$' : plan.currency}${parseFloat(plan.monthly_price).toFixed(2)}</span>
+                        <span class="text-gray-500">/month</span>
+                    </div>
+                    ${plan.yearly_price > 0 ? `
+                        <div class="text-sm text-gray-600 mt-1">
+                            ${plan.currency === 'USD' ? '$' : plan.currency}${parseFloat(plan.yearly_price).toFixed(2)}/year
+                            ${yearlyDiscount}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Trial Badge -->
+                ${plan.has_trial ? `
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-4">
+                        <span class="text-xs font-medium text-blue-700">
+                            <i class="fas fa-gift mr-1"></i>${plan.trial_days} days free trial
+                        </span>
+                    </div>
+                ` : ''}
+                
+                <!-- Features -->
+                <div class="space-y-2 mb-6">
+                    ${(plan.features || []).slice(0, 4).map(feature => `
+                        <div class="flex items-center gap-2 text-sm text-gray-700">
+                            <i class="fas fa-check text-green-500"></i>
+                            <span>${feature}</span>
+                        </div>
+                    `).join('')}
+                    ${plan.features && plan.features.length > 4 ? `
+                        <div class="text-xs text-gray-500 ml-6">+${plan.features.length - 4} more features</div>
+                    ` : ''}
+                </div>
+                
+                <!-- Limits -->
+                <div class="grid grid-cols-2 gap-2 mb-6 text-xs">
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-500">Users</div>
+                        <div class="font-semibold text-gray-800">${plan.max_users === -1 ? 'Unlimited' : plan.max_users}</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-500">Storage</div>
+                        <div class="font-semibold text-gray-800">${(plan.max_storage_mb / 1024).toFixed(1)} GB</div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2">
+                    <button onclick="editPlan(${plan.id})" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                    <button onclick="togglePlanStatus(${plan.id})" class="px-4 py-2 ${plan.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg transition text-sm">
+                        <i class="fas fa-${plan.is_active ? 'pause' : 'play'}"></i>
+                    </button>
+                    <button onclick="deletePlan(${plan.id})" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Update stats
+function updateStats() {
+    document.getElementById('totalPlans').textContent = plans.length;
+    document.getElementById('activePlans').textContent = plans.filter(p => p.is_active).length;
+    document.getElementById('featuredPlans').textContent = plans.filter(p => p.is_featured).length;
+    document.getElementById('trialPlans').textContent = plans.filter(p => p.has_trial).length;
+}
+
+// Open plan modal
+function openPlanModal(planId = null) {
+    currentPlanId = planId;
+    document.getElementById('planForm').reset();
+    document.getElementById('featuresList').innerHTML = '';
+    
+    if (planId) {
+        const plan = plans.find(p => p.id === planId);
+        if (plan) {
+            document.getElementById('modalTitle').textContent = 'Edit Subscription Plan';
+            document.getElementById('planId').value = plan.id;
+            document.getElementById('planCode').value = plan.plan_code;
+            document.getElementById('planName').value = plan.plan_name;
+            document.getElementById('planDescription').value = plan.description || '';
+            document.getElementById('monthlyPrice').value = plan.monthly_price;
+            document.getElementById('yearlyPrice').value = plan.yearly_price;
+            document.getElementById('currency').value = plan.currency;
+            document.getElementById('hasTrial').checked = plan.has_trial;
+            document.getElementById('trialDays').value = plan.trial_days;
+            document.getElementById('maxUsers').value = plan.max_users;
+            document.getElementById('maxMenuItems').value = plan.max_menu_items;
+            document.getElementById('maxInventoryItems').value = plan.max_inventory_items;
+            document.getElementById('maxMonthlySales').value = plan.max_monthly_sales;
+            document.getElementById('maxStorageMb').value = plan.max_storage_mb;
+            document.getElementById('advancedReports').checked = plan.advanced_reports;
+            document.getElementById('multiLocation').checked = plan.multi_location;
+            document.getElementById('apiAccess').checked = plan.api_access;
+            document.getElementById('prioritySupport').checked = plan.priority_support;
+            document.getElementById('customBranding').checked = plan.custom_branding;
+            document.getElementById('dataExport').checked = plan.data_export;
+            document.getElementById('displayOrder').value = plan.display_order;
+            document.getElementById('badgeText').value = plan.badge_text || '';
+            document.getElementById('badgeColor').value = plan.badge_color || '';
+            document.getElementById('isFeatured').checked = plan.is_featured;
+            document.getElementById('isVisible').checked = plan.is_visible;
+            document.getElementById('isActive').checked = plan.is_active;
+            
+            // Load features
+            (plan.features || []).forEach(feature => {
+                addFeature(feature);
+            });
+        }
+    } else {
+        document.getElementById('modalTitle').textContent = 'Create Subscription Plan';
+    }
+    
+    document.getElementById('planModal').classList.remove('hidden');
+    document.getElementById('planModal').classList.add('flex');
+}
+
+// Close plan modal
+function closePlanModal() {
+    document.getElementById('planModal').classList.add('hidden');
+    document.getElementById('planModal').classList.remove('flex');
+    currentPlanId = null;
+}
+
+// Add feature input
+function addFeature(value = '') {
+    const container = document.getElementById('featuresList');
+    const featureId = 'feature_' + Date.now();
+    
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2';
+    div.innerHTML = `
+        <input type="text" id="${featureId}" value="${value}" placeholder="Enter feature description" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+        <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(div);
+}
+
+// Get features from form
+function getFeatures() {
+    const inputs = document.querySelectorAll('#featuresList input[type="text"]');
+    return Array.from(inputs).map(input => input.value).filter(val => val.trim() !== '');
+}
+
+// Edit plan
+function editPlan(planId) {
+    openPlanModal(planId);
+}
+
+// Delete plan
+function deletePlan(planId) {
+    planToDelete = planId;
+    document.getElementById('deleteModal').classList.remove('hidden');
+    document.getElementById('deleteModal').classList.add('flex');
+}
+
+// Close delete modal
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    document.getElementById('deleteModal').classList.remove('flex');
+    planToDelete = null;
+}
+
+// Confirm delete
+async function confirmDelete() {
+    if (!planToDelete) return;
+    
+    try {
+        const response = await fetch(`/system-admin/subscriptions/api/plans/${planToDelete}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Plan deleted successfully!', 'success');
+            closeDeleteModal();
+            loadPlans();
+        } else {
+            showNotification(data.error || 'Failed to delete plan', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting plan:', error);
+        showNotification('Error deleting plan', 'error');
+    }
+}
+
+// Toggle plan status
+async function togglePlanStatus(planId) {
+    try {
+        const response = await fetch(`/system-admin/subscriptions/api/plans/${planId}/toggle-status`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification(data.message, 'success');
+            loadPlans();
+        } else {
+            showNotification(data.error || 'Failed to toggle plan status', 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling plan status:', error);
+        showNotification('Error toggling plan status', 'error');
+    }
+}
+
+// Handle form submission
+document.getElementById('planForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const planId = document.getElementById('planId').value;
+    const isEdit = !!planId;
+    
+    const planData = {
+        plan_code: document.getElementById('planCode').value,
+        plan_name: document.getElementById('planName').value,
+        description: document.getElementById('planDescription').value,
+        monthly_price: parseFloat(document.getElementById('monthlyPrice').value) || 0,
+        yearly_price: parseFloat(document.getElementById('yearlyPrice').value) || 0,
+        currency: document.getElementById('currency').value,
+        has_trial: document.getElementById('hasTrial').checked,
+        trial_days: parseInt(document.getElementById('trialDays').value) || 0,
+        max_users: parseInt(document.getElementById('maxUsers').value) || -1,
+        max_menu_items: parseInt(document.getElementById('maxMenuItems').value) || -1,
+        max_inventory_items: parseInt(document.getElementById('maxInventoryItems').value) || -1,
+        max_monthly_sales: parseInt(document.getElementById('maxMonthlySales').value) || -1,
+        max_storage_mb: parseInt(document.getElementById('maxStorageMb').value) || 1024,
+        features: getFeatures(),
+        advanced_reports: document.getElementById('advancedReports').checked,
+        multi_location: document.getElementById('multiLocation').checked,
+        api_access: document.getElementById('apiAccess').checked,
+        priority_support: document.getElementById('prioritySupport').checked,
+        custom_branding: document.getElementById('customBranding').checked,
+        data_export: document.getElementById('dataExport').checked,
+        display_order: parseInt(document.getElementById('displayOrder').value) || 0,
+        badge_text: document.getElementById('badgeText').value || null,
+        badge_color: document.getElementById('badgeColor').value || null,
+        is_featured: document.getElementById('isFeatured').checked,
+        is_visible: document.getElementById('isVisible').checked,
+        is_active: document.getElementById('isActive').checked
+    };
+    
+    try {
+        const url = isEdit 
+            ? `/system-admin/subscriptions/api/plans/${planId}`
+            : '/system-admin/subscriptions/api/plans';
+        
+        const response = await fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(planData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification(data.message || (isEdit ? 'Plan updated successfully!' : 'Plan created successfully!'), 'success');
+            closePlanModal();
+            loadPlans();
+        } else {
+            showNotification(data.error || 'Failed to save plan', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving plan:', error);
+        showNotification('Error saving plan', 'error');
+    }
+});
+
+// Notification function
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    const colors = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'info': 'bg-blue-500'
+    };
+    
+    notification.className = `fixed top-4 right-4 ${colors[type] || colors.info} text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-fade-in`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Load plans on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPlans();
+});
+</script>
+{% endblock %}

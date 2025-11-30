@@ -274,16 +274,10 @@ def _serialize_businesses():
 
     business_list = []
     for business, user_count in businesses.items:
-        business_list.append({
-            'id': business.id,
-            'business_name': business.business_name,
-            'owner_email': business.owner_email,
-            'subscription_plan': business.subscription_plan,
-            'is_active': business.is_active,
-            'created_at': business.created_at.isoformat(),
-            'updated_at': business.updated_at.isoformat() if business.updated_at else None,
-            'user_count': user_count
-        })
+        business_data = business.to_dict()
+        business_data['user_count'] = user_count
+        business_data['updated_at'] = business.updated_at.isoformat() if business.updated_at else None
+        business_list.append(business_data)
 
     return {
         'businesses': business_list,
@@ -321,17 +315,11 @@ def manage_business(business_id):
 
     if request.method == 'GET':
         user_count = User.query.filter_by(business_id=business_id).count()
+        business_data = business.to_dict()
+        business_data['user_count'] = user_count
+        business_data['updated_at'] = business.updated_at.isoformat() if business.updated_at else None
         return jsonify({
-            'business': {
-                'id': business.id,
-                'business_name': business.business_name,
-                'owner_email': business.owner_email,
-                'subscription_plan': business.subscription_plan,
-                'is_active': business.is_active,
-                'created_at': business.created_at.isoformat(),
-                'updated_at': business.updated_at.isoformat() if business.updated_at else None,
-                'user_count': user_count
-            }
+            'business': business_data
         })
 
     if request.method == 'PUT':
