@@ -818,7 +818,6 @@ def save_settings():
             'openingTime': 'opening_time',
             'closingTime': 'closing_time',
             'newDayStartTime': 'new_day_start_time',
-            'language': 'language',
             'notifications': 'notifications',
             'backupFrequency': 'backup_frequency',
             'sessionTimeout': 'session_timeout'
