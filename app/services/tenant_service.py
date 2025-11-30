@@ -84,7 +84,7 @@ class TenantService:
                 first_name=first_name,
                 last_name=last_name,
                 full_name=f"{first_name} {last_name}".strip(),
-                role='admin',
+                role='owner',  # Business owner role
                 is_owner=True,
                 is_active=True,
                 requires_password_change=requires_password_change,
