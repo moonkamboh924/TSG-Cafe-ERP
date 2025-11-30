@@ -298,12 +298,6 @@
                     <p class="text-sm text-purple-600">Upgraded subscriptions</p>
                 </div>
             </div>
-            <div class="mt-6">
-                <h4 class="font-semibold text-gray-800 mb-3">Recent Business Activity</h4>
-                <div id="businessActivityList" class="space-y-2">
-                    <!-- Dynamic content will be loaded here -->
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -350,12 +344,6 @@
                     <p class="text-sm text-orange-600">Regular accounts</p>
                 </div>
             </div>
-            <div class="mt-6">
-                <h4 class="font-semibold text-gray-800 mb-3">User Role Distribution</h4>
-                <div id="userRoleChart" class="bg-gray-50 rounded-xl p-4 text-center text-gray-500">
-                    Role distribution chart will be displayed here
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -400,12 +388,6 @@
                     <h4 class="font-semibold text-indigo-800 mb-2">Active Sessions</h4>
                     <p class="text-2xl font-bold text-indigo-600" id="modalActiveSessions">-</p>
                     <p class="text-sm text-indigo-600">Current online users</p>
-                </div>
-            </div>
-            <div class="mt-6">
-                <h4 class="font-semibold text-gray-800 mb-3">Recent System Events</h4>
-                <div id="systemEventsList" class="space-y-2">
-                    <!-- Dynamic content will be loaded here -->
                 </div>
             </div>
         </div>
@@ -847,54 +829,6 @@ async function loadBusinessDetails() {
             document.getElementById('modalInactiveBusinesses').textContent = inactiveBusinesses;
             document.getElementById('modalNewBusinesses').textContent = newThisMonth;
             document.getElementById('modalPremiumBusinesses').textContent = premiumBusinesses;
-            
-            // Load recent business activity from LIVE data
-            const activityList = document.getElementById('businessActivityList');
-            
-            // Get most recent businesses and their timestamps
-            const recentBusinesses = data.businesses ? [...data.businesses]
-                .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || b.created_at))
-                .slice(0, 3) : [];
-            
-            if (recentBusinesses.length > 0) {
-                activityList.innerHTML = recentBusinesses.map(business => {
-                    const timestamp = new Date(business.updated_at || business.created_at);
-                    const diffHours = Math.floor((now - timestamp) / (1000 * 60 * 60));
-                    const diffDays = Math.floor(diffHours / 24);
-                    
-                    let timeAgo;
-                    if (diffHours < 1) timeAgo = 'Less than 1 hour ago';
-                    else if (diffHours < 24) timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-                    else timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-                    
-                    // Determine activity type and color
-                    const isNew = new Date(business.created_at) > firstDayOfMonth;
-                    const hasUpgrade = business.subscription_plan && business.subscription_plan.toLowerCase().includes('premium');
-                    
-                    let activityText, colorClass;
-                    if (isNew && diffHours < 48) {
-                        activityText = 'New business registered';
-                        colorClass = 'blue';
-                    } else if (hasUpgrade) {
-                        activityText = 'Subscription upgraded';
-                        colorClass = 'green';
-                    } else {
-                        activityText = 'Business profile updated';
-                        colorClass = 'purple';
-                    }
-                    
-                    return `
-                        <div class="p-3 bg-${colorClass}-50 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-${colorClass}-800">${activityText}</span>
-                                <span class="text-xs text-${colorClass}-600">${timeAgo}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                activityList.innerHTML = '<p class="text-gray-500 text-center py-3">No recent activity</p>';
-            }
         }
     } catch (error) {
         console.error('Error loading business details:', error);
@@ -913,14 +847,42 @@ async function loadUserDetails() {
         if (response.ok) {
             const data = await response.json();
             
-            // Update modal content with user analytics
-            document.getElementById('modalActiveUsers').textContent = data.total_users || 0;
-            document.getElementById('modalNewUsers').textContent = Math.floor((data.total_users || 0) * 0.1); // 10% as new users
-            document.getElementById('modalSystemAdmins').textContent = data.system_admins || 1;
-            document.getElementById('modalBusinessUsers').textContent = (data.total_users || 0) - (data.system_admins || 1);
+            // Calculate system admins count from database
+            const allUsersResponse = await fetch('/system-admin/businesses/api/employee-details?per_page=1000');
+            let systemAdminsCount = 1; // Default to 1 (current admin)
+            let businessUsersCount = 0;
+            let newUsersCount = 0;
+            
+            if (allUsersResponse.ok) {
+                const allUsersData = await allUsersResponse.json();
+                const employees = allUsersData.employees || [];
+                
+                // Count system administrators and business users
+                systemAdminsCount = employees.filter(emp => emp.role === 'system_administrator').length;
+                businessUsersCount = employees.filter(emp => emp.role !== 'system_administrator').length;
+                
+                // Count new users this month
+                const now = new Date();
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                newUsersCount = employees.filter(emp => {
+                    const createdDate = new Date(emp.created_at);
+                    return createdDate >= firstDayOfMonth;
+                }).length;
+            }
+            
+            // Update modal content with LIVE user analytics
+            document.getElementById('modalActiveUsers').textContent = data.active_users || 0;
+            document.getElementById('modalNewUsers').textContent = newUsersCount;
+            document.getElementById('modalSystemAdmins').textContent = systemAdminsCount;
+            document.getElementById('modalBusinessUsers').textContent = businessUsersCount;
         }
     } catch (error) {
         console.error('Error loading user details:', error);
+        // Show error state
+        document.getElementById('modalActiveUsers').textContent = 'Error';
+        document.getElementById('modalNewUsers').textContent = 'Error';
+        document.getElementById('modalSystemAdmins').textContent = 'Error';
+        document.getElementById('modalBusinessUsers').textContent = 'Error';
     }
 }
 
