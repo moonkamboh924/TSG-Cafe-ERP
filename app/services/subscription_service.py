@@ -242,15 +242,54 @@ class SubscriptionService:
         )
         
         db.session.add(subscription)
+        db.session.flush()  # Flush to get subscription.id
         
         # Update business subscription info
         business.subscription_plan = plan
         business.subscription_status = 'trial' if trial_days > 0 else 'active'
         business.trial_end_date = trial_end_date
         
+        # Create trial period invoice if trial exists
+        if trial_days > 0 and trial_end_date:
+            cls._create_trial_invoice(subscription, trial_days)
+        
         db.session.commit()
         
         return subscription
+    
+    @classmethod
+    def _create_trial_invoice(cls, subscription, trial_days):
+        """Create a $0 invoice for trial period"""
+        import json
+        invoice_number = f"INV-{subscription.business_id}-TRIAL-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        
+        payment_details = json.dumps({
+            "type": "trial_period",
+            "duration_days": trial_days,
+            "note": "Free trial period - no payment required"
+        })
+        
+        trial_invoice = Invoice(
+            subscription_id=subscription.id,
+            business_id=subscription.business_id,
+            invoice_number=invoice_number,
+            amount=Decimal('0.00'),
+            currency=subscription.currency,
+            tax_amount=Decimal('0.00'),
+            total_amount=Decimal('0.00'),
+            status='paid',
+            payment_status='paid',
+            billing_period_start=subscription.start_date,
+            billing_period_end=subscription.trial_end_date,
+            due_date=subscription.trial_end_date,
+            paid_at=datetime.now(timezone.utc),
+            payment_method='trial',
+            transaction_id=f"TRIAL-{subscription.business_id}-{int(datetime.now(timezone.utc).timestamp())}",
+            payment_details=payment_details
+        )
+        
+        db.session.add(trial_invoice)
+
     
     @classmethod
     def upgrade_subscription(cls, business_id, new_plan, billing_cycle='monthly'):

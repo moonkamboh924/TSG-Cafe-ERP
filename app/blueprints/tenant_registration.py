@@ -21,7 +21,7 @@ def register():
         password = request.form.get('password', '')
         email_verification_code = request.form.get('email_verification_code', '').strip()
         mobile_verification_code = request.form.get('mobile_verification_code', '').strip()
-        subscription_plan = request.form.get('subscription_plan', 'free')
+        subscription_plan = request.form.get('subscription_plan', 'basic')
         
         # Validation
         errors = []
@@ -47,13 +47,22 @@ def register():
         if not mobile_verification_code or len(mobile_verification_code) != 6:
             errors.append('Please enter the 6-digit mobile verification code')
         
-        if subscription_plan not in ['free', 'basic', 'premium']:
-            subscription_plan = 'free'
+        # Validate plan exists in database
+        from ..models import SubscriptionPlan
+        plan_exists = SubscriptionPlan.query.filter_by(plan_code=subscription_plan, is_active=True).first()
+        if not plan_exists:
+            subscription_plan = 'basic'  # Fallback to basic plan
+        
+        # Get plans for rendering
+        from ..models import SubscriptionPlan
+        plans_query = SubscriptionPlan.query.filter_by(is_active=True, is_visible=True).order_by(SubscriptionPlan.display_order).all()
+        plans = [plan.to_dict() for plan in plans_query]
         
         if errors:
             for error in errors:
                 flash(error, 'error')
             return render_template('tenant/register.html', 
+                                 plans=plans,
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
@@ -81,6 +90,7 @@ def register():
         except ValueError as e:
             flash(str(e), 'error')
             return render_template('tenant/register.html',
+                                 plans=plans,
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
@@ -94,13 +104,19 @@ def register():
             print(f"Registration error: {str(e)}")
             print(f"Traceback: {traceback.format_exc()}")
             return render_template('tenant/register.html',
+                                 plans=plans,
                                  business_name=business_name,
                                  owner_email=owner_email,
                                  owner_name=owner_name,
                                  phone_number=phone_number,
                                  subscription_plan=subscription_plan)
     
-    return render_template('tenant/register.html')
+    # GET request - fetch plans from database
+    from ..models import SubscriptionPlan
+    plans_query = SubscriptionPlan.query.filter_by(is_active=True, is_visible=True).order_by(SubscriptionPlan.display_order).all()
+    plans = [plan.to_dict() for plan in plans_query]
+    
+    return render_template('tenant/register.html', plans=plans)
 
 @bp.route('/api/check-availability', methods=['POST'])
 def check_availability():

@@ -1250,14 +1250,14 @@ class SubscriptionPlan(db.Model):
     plan_name = db.Column(db.String(100), nullable=False)  # Display name
     description = db.Column(db.Text, nullable=True)
     
-    # Pricing
+    # Pricing (simplified - billing period handled on customer side)
+    price = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)  # Base monthly price
+    discount_percentage = db.Column(db.Numeric(5, 2), default=0.00, nullable=False)  # Discount for longer periods
+    currency = db.Column(db.String(3), default='USD', nullable=False)
+    
+    # Legacy fields for backward compatibility
     monthly_price = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
-    monthly_period = db.Column(db.String(1), default='M', nullable=False)  # M=Monthly, D=Daily, Y=Yearly
-    monthly_currency = db.Column(db.String(3), default='USD', nullable=False)
     yearly_price = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
-    yearly_period = db.Column(db.String(1), default='Y', nullable=False)  # M=Monthly, D=Daily, Y=Yearly
-    yearly_currency = db.Column(db.String(3), default='USD', nullable=False)
-    currency = db.Column(db.String(3), default='USD', nullable=False)  # Default currency for backward compatibility
     
     # Trial configuration
     has_trial = db.Column(db.Boolean, default=False, nullable=False)
@@ -1311,26 +1311,41 @@ class SubscriptionPlan(db.Model):
         self.features = json.dumps(features_list)
     
     def calculate_yearly_discount(self):
-        """Calculate discount percentage for yearly plan"""
-        if self.monthly_price > 0 and self.yearly_price > 0:
-            yearly_as_monthly = self.monthly_price * 12
-            discount = ((yearly_as_monthly - self.yearly_price) / yearly_as_monthly) * 100
-            return round(discount, 1)
-        return 0
+        """Get discount percentage (backward compatibility)"""
+        return float(self.discount_percentage) if self.discount_percentage else 0
+    
+    def get_price_for_period(self, months=1):
+        """Calculate price with discount for given billing period"""
+        base_price = float(self.price) if self.price else float(self.monthly_price)
+        discount = float(self.discount_percentage) if self.discount_percentage else 0
+        
+        # Apply discount based on period length
+        if months >= 12:
+            discount_multiplier = 1.0  # Full discount for 12+ months
+        elif months >= 6:
+            discount_multiplier = 0.66  # 2/3 discount for 6-11 months
+        elif months >= 3:
+            discount_multiplier = 0.33  # 1/3 discount for 3-5 months
+        else:
+            discount_multiplier = 0  # No discount for 1-2 months
+        
+        applied_discount = discount * discount_multiplier / 100
+        total = base_price * months * (1 - applied_discount)
+        return round(total, 2)
     
     def to_dict(self):
+        base_price = float(self.price) if self.price else float(self.monthly_price)
         return {
             'id': self.id,
             'plan_code': self.plan_code,
             'plan_name': self.plan_name,
             'description': self.description,
-            'monthly_price': float(self.monthly_price),
-            'monthly_period': self.monthly_period,
-            'monthly_currency': self.monthly_currency,
-            'yearly_price': float(self.yearly_price),
-            'yearly_period': self.yearly_period,
-            'yearly_currency': self.yearly_currency,
+            'price': base_price,
+            'discount_percentage': float(self.discount_percentage) if self.discount_percentage else 0,
             'currency': self.currency,
+            # Backward compatibility
+            'monthly_price': base_price,
+            'yearly_price': float(self.yearly_price) if self.yearly_price else base_price * 12,
             'has_trial': self.has_trial,
             'trial_days': self.trial_days,
             'max_users': self.max_users,

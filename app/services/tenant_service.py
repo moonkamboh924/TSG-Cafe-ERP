@@ -15,7 +15,7 @@ class TenantService:
     """Service for managing multi-tenant operations"""
     
     @staticmethod
-    def create_tenant(business_name, owner_email, owner_name=None, phone_number=None, password=None, subscription_plan='free'):
+    def create_tenant(business_name, owner_email, owner_name=None, phone_number=None, password=None, subscription_plan='basic'):
         """
         Create a new tenant (business) with owner user
         
@@ -25,7 +25,7 @@ class TenantService:
             owner_name (str): Full name of the owner (optional)
             phone_number (str): Phone number of the owner (optional)
             password (str): Password for the owner account (optional, generates temp password if not provided)
-            subscription_plan (str): Subscription plan (free, basic, premium)
+            subscription_plan (str): Subscription plan code from SubscriptionPlan table
             
         Returns:
             dict: Created business and user information
@@ -41,11 +41,25 @@ class TenantService:
             if existing_user:
                 raise ValueError(f"Email '{owner_email}' already registered")
             
+            # Get plan details from SubscriptionPlan table
+            from ..models import SubscriptionPlan
+            plan_config = SubscriptionPlan.query.filter_by(plan_code=subscription_plan, is_active=True).first()
+            
+            # Calculate trial end date if plan has trial
+            trial_end_date = None
+            subscription_status = 'active'
+            if plan_config and plan_config.has_trial and plan_config.trial_days > 0:
+                from datetime import timedelta
+                trial_end_date = datetime.now(timezone.utc) + timedelta(days=plan_config.trial_days)
+                subscription_status = 'trial'
+            
             # Create business
             business = Business(
                 business_name=business_name,
                 owner_email=owner_email,
                 subscription_plan=subscription_plan,
+                subscription_status=subscription_status,
+                trial_end_date=trial_end_date,
                 is_active=True
             )
             db.session.add(business)

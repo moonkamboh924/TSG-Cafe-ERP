@@ -3,10 +3,11 @@ Billing Blueprint
 Handles subscription and payment management
 """
 
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app, make_response
 from flask_login import login_required, current_user
 from datetime import datetime, timezone
 import logging
+import json
 
 from ..extensions import db
 from ..models import Business, Subscription, Invoice, PaymentMethod
@@ -160,13 +161,16 @@ def upgrade():
     business = get_current_business()
     
     if request.method == 'GET':
-        # Get available plans
-        plans = SubscriptionService.PLAN_PRICING
+        # Get available plans from SubscriptionPlan configuration
+        from ..models import SubscriptionPlan
+        plans_query = SubscriptionPlan.query.filter_by(is_active=True, is_visible=True).order_by(SubscriptionPlan.display_order).all()
+        plans = [plan.to_dict() for plan in plans_query]
         current_plan = business.subscription_plan
         
         return render_template('billing/upgrade.html',
                              plans=plans,
                              current_plan=current_plan,
+                             current_plan_name=business.get_plan_name(),
                              business=business,
                              stripe_key=PaymentService.get_publishable_key())
     

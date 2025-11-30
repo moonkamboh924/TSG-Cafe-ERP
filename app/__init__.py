@@ -188,6 +188,17 @@ def create_app(config_object="config.Config"):
         from .utils.timezone_utils import convert_utc_to_local
         return convert_utc_to_local(dt)
     
+    @app.template_filter('from_json')
+    def from_json_filter(json_str):
+        """Parse JSON string to Python object"""
+        import json
+        try:
+            if json_str:
+                return json.loads(json_str)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return None
+    
     # Add favicon route to prevent 404 errors
     @app.route('/favicon.ico')
     def favicon():

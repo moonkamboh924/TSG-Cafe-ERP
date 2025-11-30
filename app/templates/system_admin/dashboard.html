@@ -826,42 +826,83 @@ async function loadBusinessDetails() {
         if (response.ok) {
             const data = await response.json();
             
-            // Calculate business metrics
+            // Calculate business metrics from LIVE data
             const activeBusinesses = data.businesses ? data.businesses.filter(b => b.is_active).length : 0;
             const inactiveBusinesses = data.businesses ? data.businesses.filter(b => !b.is_active).length : 0;
-            const premiumBusinesses = data.businesses ? data.businesses.filter(b => b.subscription_plan === 'premium').length : 0;
+            const premiumBusinesses = data.businesses ? data.businesses.filter(b => 
+                b.subscription_plan && (b.subscription_plan.toLowerCase().includes('premium') || 
+                b.subscription_plan.toLowerCase().includes('advance'))
+            ).length : 0;
             
-            // Update modal content
+            // Calculate new businesses this month from LIVE data
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const newThisMonth = data.businesses ? data.businesses.filter(b => {
+                const createdDate = new Date(b.created_at);
+                return createdDate >= firstDayOfMonth;
+            }).length : 0;
+            
+            // Update modal content with LIVE numbers
             document.getElementById('modalActiveBusinesses').textContent = activeBusinesses;
             document.getElementById('modalInactiveBusinesses').textContent = inactiveBusinesses;
-            document.getElementById('modalNewBusinesses').textContent = Math.floor(Math.random() * 5) + 1; // Placeholder
+            document.getElementById('modalNewBusinesses').textContent = newThisMonth;
             document.getElementById('modalPremiumBusinesses').textContent = premiumBusinesses;
             
-            // Load recent activity
+            // Load recent business activity from LIVE data
             const activityList = document.getElementById('businessActivityList');
-            activityList.innerHTML = `
-                <div class="p-3 bg-blue-50 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-blue-800">New business registered</span>
-                        <span class="text-xs text-blue-600">2 hours ago</span>
-                    </div>
-                </div>
-                <div class="p-3 bg-green-50 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-green-800">Subscription upgraded</span>
-                        <span class="text-xs text-green-600">5 hours ago</span>
-                    </div>
-                </div>
-                <div class="p-3 bg-purple-50 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-purple-800">Business profile updated</span>
-                        <span class="text-xs text-purple-600">1 day ago</span>
-                    </div>
-                </div>
-            `;
+            
+            // Get most recent businesses and their timestamps
+            const recentBusinesses = data.businesses ? [...data.businesses]
+                .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || b.created_at))
+                .slice(0, 3) : [];
+            
+            if (recentBusinesses.length > 0) {
+                activityList.innerHTML = recentBusinesses.map(business => {
+                    const timestamp = new Date(business.updated_at || business.created_at);
+                    const diffHours = Math.floor((now - timestamp) / (1000 * 60 * 60));
+                    const diffDays = Math.floor(diffHours / 24);
+                    
+                    let timeAgo;
+                    if (diffHours < 1) timeAgo = 'Less than 1 hour ago';
+                    else if (diffHours < 24) timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                    else timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    
+                    // Determine activity type and color
+                    const isNew = new Date(business.created_at) > firstDayOfMonth;
+                    const hasUpgrade = business.subscription_plan && business.subscription_plan.toLowerCase().includes('premium');
+                    
+                    let activityText, colorClass;
+                    if (isNew && diffHours < 48) {
+                        activityText = 'New business registered';
+                        colorClass = 'blue';
+                    } else if (hasUpgrade) {
+                        activityText = 'Subscription upgraded';
+                        colorClass = 'green';
+                    } else {
+                        activityText = 'Business profile updated';
+                        colorClass = 'purple';
+                    }
+                    
+                    return `
+                        <div class="p-3 bg-${colorClass}-50 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-${colorClass}-800">${activityText}</span>
+                                <span class="text-xs text-${colorClass}-600">${timeAgo}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                activityList.innerHTML = '<p class="text-gray-500 text-center py-3">No recent activity</p>';
+            }
         }
     } catch (error) {
         console.error('Error loading business details:', error);
+        // Show error state
+        document.getElementById('modalActiveBusinesses').textContent = 'Error';
+        document.getElementById('modalInactiveBusinesses').textContent = 'Error';
+        document.getElementById('modalNewBusinesses').textContent = 'Error';
+        document.getElementById('modalPremiumBusinesses').textContent = 'Error';
     }
 }
 
@@ -977,6 +1018,26 @@ async function loadHealthDetails() {
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadSystemStats();
+    
+    // Auto-refresh stats every 30 seconds
+    setInterval(function() {
+        loadSystemStats();
+    }, 30000);
 });
+
+// Function to refresh live data when modals are opened
+function refreshModalData(modalType) {
+    switch(modalType) {
+        case 'business':
+            loadBusinessDetails();
+            break;
+        case 'activity':
+            loadActivityDetails();
+            break;
+        case 'health':
+            loadHealthDetails();
+            break;
+    }
+}
 </script>
 {% endblock %}

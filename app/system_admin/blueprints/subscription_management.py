@@ -484,9 +484,12 @@ def create_plan():
             plan_code=data['plan_code'],
             plan_name=data['plan_name'],
             description=data.get('description'),
-            monthly_price=data.get('monthly_price', 0),
-            yearly_price=data.get('yearly_price', 0),
-            currency=data.get('currency', 'USD'),
+            price=data.get('price', 0),
+            discount_percentage=data.get('discount_percentage', 0),
+            currency=data.get('currency', '$'),
+            # Backward compatibility
+            monthly_price=data.get('price', 0),
+            yearly_price=data.get('price', 0) * 12 if data.get('price') else 0,
             has_trial=data.get('has_trial', False),
             trial_days=data.get('trial_days', 0),
             max_users=data.get('max_users', -1),
@@ -556,10 +559,12 @@ def update_plan(plan_id):
             plan.plan_name = data['plan_name']
         if 'description' in data:
             plan.description = data['description']
-        if 'monthly_price' in data:
-            plan.monthly_price = data['monthly_price']
-        if 'yearly_price' in data:
-            plan.yearly_price = data['yearly_price']
+        if 'price' in data:
+            plan.price = data['price']
+            plan.monthly_price = data['price']  # Backward compatibility
+            plan.yearly_price = data['price'] * 12
+        if 'discount_percentage' in data:
+            plan.discount_percentage = data['discount_percentage']
         if 'currency' in data:
             plan.currency = data['currency']
         if 'has_trial' in data:

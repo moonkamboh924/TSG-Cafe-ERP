@@ -36,33 +36,31 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-purple-100 text-sm font-medium mb-1">Current Plan</p>
-                            <h2 class="text-3xl font-bold capitalize">{{ subscription.plan if subscription else 'No Plan' }}</h2>
+                            <h2 class="text-3xl font-bold">{{ business.get_plan_name() }}</h2>
                         </div>
                         <div class="text-right">
-                            {% if subscription %}
-                                {% if subscription.status == 'active' %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-                                        <i class="fas fa-check-circle mr-1"></i> Active
-                                    </span>
-                                {% elif subscription.status == 'trial' %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                                        <i class="fas fa-clock mr-1"></i> Trial
-                                    </span>
-                                {% elif subscription.status == 'past_due' %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i> Past Due
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500 text-white">
-                                        {{ subscription.status|capitalize }}
-                                    </span>
-                                {% endif %}
+                            {% if business.subscription_status == 'active' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
+                                    <i class="fas fa-check-circle mr-1"></i> Active
+                                </span>
+                            {% elif business.subscription_status == 'trial' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
+                                    <i class="fas fa-clock mr-1"></i> Trial
+                                </span>
+                            {% elif business.subscription_status == 'past_due' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Past Due
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500 text-white">
+                                    {{ business.subscription_status|capitalize }}
+                                </span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                {% if subscription %}
+                {% if business.subscription_plan %}
                 <!-- Subscription Details -->
                 <div class="p-6">
                     <div class="grid grid-cols-2 gap-6 mb-6">
@@ -73,8 +71,14 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-500 font-medium">Billing Amount</p>
-                                    <p class="text-lg font-bold text-gray-800">${{ "%.2f"|format(subscription.amount) }}</p>
-                                    <p class="text-xs text-gray-500">per {{ subscription.billing_cycle.replace('_', ' ') }}</p>
+                                    {% set plan_pricing = business.get_plan_pricing() %}
+                                    {% if plan_pricing %}
+                                    <p class="text-lg font-bold text-gray-800">{{ plan_pricing.currency }}{{ "%.2f"|format(plan_pricing.monthly_price) }}</p>
+                                    <p class="text-xs text-gray-500">per {{ subscription.billing_cycle.replace('_', ' ') if subscription else '1 months' }}</p>
+                                    {% else %}
+                                    <p class="text-lg font-bold text-gray-800">$0.00</p>
+                                    <p class="text-xs text-gray-500">per 1 months</p>
+                                    {% endif %}
                                 </div>
                             </div>
 
@@ -84,25 +88,25 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-500 font-medium">Member Since</p>
-                                    <p class="text-lg font-bold text-gray-800">{{ subscription.start_date.strftime('%b %d, %Y') }}</p>
+                                    <p class="text-lg font-bold text-gray-800">{{ business.created_at.strftime('%b %d, %Y') }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="space-y-4">
-                            {% if subscription.is_trial() %}
+                            {% if business.subscription_status == 'trial' and business.trial_end_date %}
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                                     <i class="fas fa-gift text-yellow-600"></i>
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-500 font-medium">Trial Ends</p>
-                                    <p class="text-lg font-bold text-gray-800">{{ subscription.trial_end_date.strftime('%b %d, %Y') }}</p>
+                                    <p class="text-lg font-bold text-gray-800">{{ business.trial_end_date.strftime('%b %d, %Y') }}</p>
                                 </div>
                             </div>
                             {% endif %}
 
-                            {% if subscription.next_billing_date %}
+                            {% if subscription and subscription.next_billing_date %}
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                     <i class="fas fa-calendar-check text-green-600"></i>
@@ -122,7 +126,7 @@
                             <i class="fas fa-arrow-up"></i>
                             Upgrade Plan
                         </button>
-                        {% if subscription.status == 'active' %}
+                        {% if business.subscription_status == 'active' %}
                         <button onclick="confirmCancelSubscription()" class="flex-1 bg-white border-2 border-red-200 text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-red-50 transition-all duration-300 flex items-center justify-center gap-2">
                             <i class="fas fa-times"></i>
                             Cancel Subscription
@@ -224,17 +228,35 @@
                             {% for invoice in invoices %}
                             <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
                                 <td class="py-4 px-4">
-                                    <span class="font-semibold text-gray-800">{{ invoice.invoice_number }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-800">{{ invoice.invoice_number }}</span>
+                                        {% if invoice.payment_method == 'trial' %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 border border-purple-200">
+                                            <i class="fas fa-gift mr-1"></i> Trial
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td class="py-4 px-4 text-gray-600">{{ invoice.created_at.strftime('%b %d, %Y') }}</td>
                                 <td class="py-4 px-4">
-                                    <span class="font-bold text-gray-800">${{ "%.2f"|format(invoice.total_amount) }}</span>
+                                    {% if invoice.payment_method == 'trial' %}
+                                        <span class="font-bold text-purple-600">$0.00</span>
+                                        <span class="text-xs text-gray-500 ml-1">(Free Trial)</span>
+                                    {% else %}
+                                        <span class="font-bold text-gray-800">${{ "%.2f"|format(invoice.total_amount) }}</span>
+                                    {% endif %}
                                 </td>
                                 <td class="py-4 px-4">
                                     {% if invoice.status == 'paid' %}
+                                        {% if invoice.payment_method == 'trial' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 border border-purple-200">
+                                            <i class="fas fa-gift mr-1"></i> Trial Active
+                                        </span>
+                                        {% else %}
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                                             <i class="fas fa-check-circle mr-1"></i> Paid
                                         </span>
+                                        {% endif %}
                                     {% elif invoice.status == 'pending' %}
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
                                             <i class="fas fa-clock mr-1"></i> Pending

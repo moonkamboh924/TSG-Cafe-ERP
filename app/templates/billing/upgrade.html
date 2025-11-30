@@ -14,9 +14,9 @@
                         <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                             <i class="fas fa-crown text-white text-xl"></i>
                         </div>
-                        Choose Your Plan
+                        <span id="pageTitle">Choose Your Plan</span>
                     </h1>
-                    <p class="text-gray-600 mt-2 ml-15">Select the perfect plan for your business needs</p>
+                    <p class="text-gray-600 mt-2 ml-15" id="pageSubtitle">Select the perfect plan for your business needs</p>
                 </div>
                 <div>
                     <a href="{{ url_for('billing.index') }}" class="inline-flex items-center bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition gap-2 shadow-sm">
@@ -27,269 +27,398 @@
             </div>
         </div>
 
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center gap-4">
+                <!-- Step 1 -->
+                <div class="flex items-center">
+                    <div id="step1-indicator" class="step-indicator active flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 text-white font-bold transition-all">
+                        1
+                    </div>
+                    <span id="step1-label" class="ml-2 text-sm font-semibold text-purple-600">Select Plan</span>
+                </div>
+                <div class="w-16 h-1 bg-gray-300" id="connector1"></div>
+                
+                <!-- Step 2 -->
+                <div class="flex items-center">
+                    <div id="step2-indicator" class="step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold transition-all">
+                        2
+                    </div>
+                    <span id="step2-label" class="ml-2 text-sm font-medium text-gray-500">Choose Duration</span>
+                </div>
+                <div class="w-16 h-1 bg-gray-300" id="connector2"></div>
+                
+                <!-- Step 3 -->
+                <div class="flex items-center">
+                    <div id="step3-indicator" class="step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold transition-all">
+                        3
+                    </div>
+                    <span id="step3-label" class="ml-2 text-sm font-medium text-gray-500">Payment</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Current Plan Badge -->
-        {% if current_plan %}
+        {% if current_plan_name %}
         <div class="mb-6 text-center">
             <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                 <i class="fas fa-star mr-2"></i>
-                Current Plan: <span class="capitalize ml-1">{{ current_plan }}</span>
+                Current Plan: <span class="ml-1">{{ current_plan_name }}</span>
             </span>
         </div>
         {% endif %}
 
-        <!-- Pricing Plans -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            
-            <!-- Cafe Plan -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl {% if current_plan == 'cafe' %}border-blue-500{% endif %}">
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white text-center">
-                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-coffee text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Cafe</h3>
-                    <div class="text-4xl font-bold mb-2">$29<span class="text-lg font-normal">/month</span></div>
-                    <p class="text-blue-100 text-sm">Perfect for small cafes</p>
-                </div>
+        <!-- Step 1: Select Plan -->
+        <div id="step1-content" class="step-content">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                {% for plan in plans %}
+                {% set colors = {
+                    0: {'from': 'blue-500', 'to': 'blue-600', 'border': 'blue-500'},
+                    1: {'from': 'purple-500', 'to': 'purple-600', 'border': 'purple-500'},
+                    2: {'from': 'indigo-500', 'to': 'indigo-600', 'border': 'indigo-500'},
+                    3: {'from': 'emerald-500', 'to': 'emerald-600', 'border': 'emerald-500'}
+                } %}
+                {% set color = colors[loop.index0 % 4] %}
                 
-                <div class="p-6">
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Up to 50 menu items</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Basic POS system</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Inventory management</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Basic reports</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Email support</span>
-                        </li>
-                    </ul>
+                <div class="plan-card bg-white/80 backdrop-blur-sm rounded-2xl border-2 {% if plan.is_featured %}border-{{ color.border }} shadow-2xl scale-105{% else %}border-gray-200{% endif %} shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl relative {% if current_plan == plan.plan_code %}ring-4 ring-{{ color.border }}{% endif %}"
+                     data-plan-code="{{ plan.plan_code }}"
+                     data-plan-name="{{ plan.plan_name }}"
+                     data-plan-price="{{ plan.monthly_price }}"
+                     data-plan-currency="{{ plan.currency }}"
+                     data-plan-discount="{{ plan.discount_percentage or 0 }}"
+                     data-color-from="{{ color.from }}"
+                     data-color-to="{{ color.to }}">
                     
-                    {% if current_plan == 'cafe' %}
-                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
-                        Current Plan
-                    </button>
-                    {% else %}
-                    <button onclick="selectPlan('cafe', 29)" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                        Choose Cafe
-                    </button>
+                    <!-- Featured/Badge Label -->
+                    {% if plan.badge_text %}
+                    <div class="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <i class="fas fa-star"></i>
+                        {{ plan.badge_text }}
+                    </div>
                     {% endif %}
+                    
+                    <!-- Plan Header -->
+                    <div class="bg-gradient-to-br from-{{ color.from }} to-{{ color.to }} p-6 text-white text-center">
+                        <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="{{ plan.icon or 'fas fa-star' }} text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2">{{ plan.plan_name }}</h3>
+                        <div class="text-4xl font-bold mb-2">
+                            {{ plan.currency }}{{ "%.2f"|format(plan.monthly_price) }}
+                            <span class="text-lg font-normal">/month</span>
+                        </div>
+                        {% if plan.description %}
+                        <p class="text-white/90 text-sm">{{ plan.description }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Plan Features -->
+                    <div class="p-6">
+                        <ul class="space-y-3 mb-6">
+                            {% for feature in plan.features %}
+                            <li class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                <span class="text-gray-700">{{ feature }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <!-- Action Button -->
+                        {% if current_plan == plan.plan_code %}
+                        <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
+                            Current Plan
+                        </button>
+                        {% else %}
+                        <button onclick="selectPlanStep1('{{ plan.plan_code }}')" 
+                                class="w-full py-3 px-6 bg-gradient-to-r from-{{ color.from }} to-{{ color.to }} text-white rounded-xl font-semibold hover:from-{{ color.to }} hover:to-{{ color.from }} transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Select {{ plan.plan_name }}
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
             </div>
+        </div>
 
-            <!-- Restaurant Plan -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-purple-400 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl relative {% if current_plan == 'restaurant' %}border-purple-600{% endif %}">
-                <div class="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
-                    POPULAR
-                </div>
-                <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white text-center">
-                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-utensils text-3xl"></i>
+        <!-- Step 2: Choose Duration -->
+        <div id="step2-content" class="step-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <!-- Selected Plan Summary -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-1">Selected Plan</h3>
+                            <p class="text-3xl font-bold text-purple-600" id="selectedPlanDisplay"></p>
+                        </div>
+                        <button onclick="goToStep(1)" class="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                            <i class="fas fa-edit mr-1"></i>Change Plan
+                        </button>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Restaurant</h3>
-                    <div class="text-4xl font-bold mb-2">$79<span class="text-lg font-normal">/month</span></div>
-                    <p class="text-purple-100 text-sm">Ideal for restaurants</p>
                 </div>
-                
-                <div class="p-6">
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Unlimited menu items</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Advanced POS system</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Full inventory management</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Advanced reports & analytics</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Multi-user support</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Priority support</span>
-                        </li>
-                    </ul>
-                    
-                    {% if current_plan == 'restaurant' %}
-                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
-                        Current Plan
-                    </button>
-                    {% else %}
-                    <button onclick="selectPlan('restaurant', 79)" class="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                        Choose Restaurant
-                    </button>
-                    {% endif %}
-                </div>
-            </div>
 
-            <!-- Hotel Plan -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl {% if current_plan == 'hotel' %}border-indigo-500{% endif %}">
-                <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 text-white text-center">
-                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-hotel text-3xl"></i>
+                <!-- Duration Selection -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Choose Billing Duration</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="durationOptions">
+                        <!-- Duration cards will be populated by JavaScript -->
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Hotel</h3>
-                    <div class="text-4xl font-bold mb-2">$199<span class="text-lg font-normal">/month</span></div>
-                    <p class="text-indigo-100 text-sm">Complete solution for hotels</p>
-                </div>
-                
-                <div class="p-6">
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Everything in Restaurant</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Room service integration</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Multiple outlets management</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Custom integrations</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">Dedicated account manager</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                            <span class="text-gray-700">24/7 premium support</span>
-                        </li>
-                    </ul>
                     
-                    {% if current_plan == 'hotel' %}
-                    <button disabled class="w-full py-3 px-6 bg-gray-100 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
-                        Current Plan
-                    </button>
-                    {% else %}
-                    <button onclick="selectPlan('hotel', 199)" class="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                        Choose Hotel
-                    </button>
-                    {% endif %}
+                    <div class="flex justify-center gap-4">
+                        <button onclick="goToStep(1)" class="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button onclick="goToStep(3)" id="continueToPayment" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition shadow-lg">
+                            Continue to Payment<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Billing Period Selection -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-xl p-8 text-center">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Save more with longer billing periods</h3>
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="setBillingPeriod(1)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200 active">
-                    1 Month
-                </button>
-                <button onclick="setBillingPeriod(3)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
-                    3 Months <span class="text-green-600 text-sm ml-1">(Save 5%)</span>
-                </button>
-                <button onclick="setBillingPeriod(6)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
-                    6 Months <span class="text-green-600 text-sm ml-1">(Save 10%)</span>
-                </button>
-                <button onclick="setBillingPeriod(12)" class="billing-period-btn px-6 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:border-purple-500 transition-all duration-200">
-                    12 Months <span class="text-green-600 text-sm ml-1">(Save 15%)</span>
-                </button>
+        <!-- Step 3: Payment -->
+        <div id="step3-content" class="step-content hidden">
+            <div class="max-w-3xl mx-auto">
+                <!-- Order Summary -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Order Summary</h3>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-center pb-4 border-b">
+                            <div>
+                                <p class="font-semibold text-gray-800" id="summaryPlanName"></p>
+                                <p class="text-sm text-gray-600" id="summaryDuration"></p>
+                            </div>
+                            <button onclick="goToStep(1)" class="text-purple-600 hover:text-purple-700 text-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between text-gray-700">
+                            <span>Base Price</span>
+                            <span id="summaryBasePrice"></span>
+                        </div>
+                        
+                        <div class="flex justify-between text-green-600" id="summaryDiscountRow">
+                            <span>Discount</span>
+                            <span id="summaryDiscount"></span>
+                        </div>
+                        
+                        <div class="flex justify-between text-xl font-bold text-gray-900 pt-4 border-t-2">
+                            <span>Total</span>
+                            <span id="summaryTotal"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button onclick="goToStep(2)" class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button onclick="confirmSubscription()" class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition shadow-lg">
+                            <i class="fas fa-check mr-2"></i>Confirm & Pay
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div id="confirmationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-800">Confirm Plan Selection</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="p-6">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-star text-purple-600 text-2xl"></i>
-                </div>
-                <p class="text-gray-700 mb-2">You're about to subscribe to:</p>
-                <p class="text-2xl font-bold text-gray-800 capitalize mb-1" id="selectedPlanName"></p>
-                <p class="text-3xl font-bold text-purple-600" id="selectedPlanPrice"></p>
-                <p class="text-sm text-gray-500 mt-2" id="billingPeriodText"></p>
-            </div>
-            
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition">
-                    Cancel
-                </button>
-                <button onclick="confirmSubscription()" class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition">
-                    Confirm
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
+// Global state
+let currentStep = 1;
 let selectedPlan = null;
 let selectedPrice = 0;
-let billingMonths = 1;
+let selectedPlanName = '';
+let selectedCurrency = '$';
+let selectedMaxDiscount = 0;
+let selectedDuration = 1;
 
-function selectPlan(plan, price) {
-    selectedPlan = plan;
-    selectedPrice = price;
-    
-    document.getElementById('selectedPlanName').textContent = plan + ' Plan';
-    updatePriceDisplay();
-    
-    document.getElementById('confirmationModal').classList.remove('hidden');
-}
-
-function setBillingPeriod(months) {
-    billingMonths = months;
-    
-    // Update active button
-    document.querySelectorAll('.billing-period-btn').forEach(btn => {
-        btn.classList.remove('active', 'border-purple-500', 'bg-purple-50');
+// Step navigation
+function goToStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.add('hidden');
     });
-    event.target.classList.add('active', 'border-purple-500', 'bg-purple-50');
-}
-
-function updatePriceDisplay() {
-    let discount = 0;
-    if (billingMonths === 3) discount = 0.05;
-    else if (billingMonths === 6) discount = 0.10;
-    else if (billingMonths === 12) discount = 0.15;
     
-    const totalPrice = selectedPrice * billingMonths * (1 - discount);
+    // Show selected step
+    document.getElementById(`step${step}-content`).classList.remove('hidden');
     
-    document.getElementById('selectedPlanPrice').textContent = '$' + totalPrice.toFixed(2);
-    document.getElementById('billingPeriodText').textContent = 'For ' + billingMonths + ' month' + (billingMonths > 1 ? 's' : '');
+    // Update progress indicators
+    updateProgressIndicators(step);
+    
+    // Update page title
+    const titles = {
+        1: 'Choose Your Plan',
+        2: 'Select Billing Duration',
+        3: 'Review & Payment'
+    };
+    const subtitles = {
+        1: 'Select the perfect plan for your business needs',
+        2: 'Choose how long you want to subscribe',
+        3: 'Review your order and complete payment'
+    };
+    document.getElementById('pageTitle').textContent = titles[step];
+    document.getElementById('pageSubtitle').textContent = subtitles[step];
+    
+    currentStep = step;
+    
+    // Step-specific actions
+    if (step === 2) {
+        renderDurationOptions();
+    } else if (step === 3) {
+        renderOrderSummary();
+    }
 }
 
-function closeModal() {
-    document.getElementById('confirmationModal').classList.add('hidden');
+function updateProgressIndicators(activeStep) {
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}-indicator`);
+        const label = document.getElementById(`step${i}-label`);
+        
+        if (i < activeStep) {
+            // Completed step
+            indicator.className = 'step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white font-bold transition-all';
+            indicator.innerHTML = '<i class="fas fa-check"></i>';
+            label.className = 'ml-2 text-sm font-semibold text-green-600';
+        } else if (i === activeStep) {
+            // Active step
+            indicator.className = 'step-indicator active flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 text-white font-bold transition-all';
+            indicator.textContent = i;
+            label.className = 'ml-2 text-sm font-semibold text-purple-600';
+        } else {
+            // Upcoming step
+            indicator.className = 'step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold transition-all';
+            indicator.textContent = i;
+            label.className = 'ml-2 text-sm font-medium text-gray-500';
+        }
+    }
+    
+    // Update connectors
+    document.getElementById('connector1').className = activeStep >= 2 ? 'w-16 h-1 bg-green-500 transition-all' : 'w-16 h-1 bg-gray-300 transition-all';
+    document.getElementById('connector2').className = activeStep >= 3 ? 'w-16 h-1 bg-green-500 transition-all' : 'w-16 h-1 bg-gray-300 transition-all';
 }
 
+// Step 1: Plan selection
+function selectPlanStep1(planCode) {
+    const planCard = document.querySelector(`[data-plan-code="${planCode}"]`);
+    selectedPlan = planCode;
+    selectedPlanName = planCard.getAttribute('data-plan-name');
+    selectedPrice = parseFloat(planCard.getAttribute('data-plan-price'));
+    selectedCurrency = planCard.getAttribute('data-plan-currency');
+    selectedMaxDiscount = parseFloat(planCard.getAttribute('data-plan-discount')) || 0;
+    
+    // Visual feedback
+    document.querySelectorAll('.plan-card').forEach(card => {
+        card.classList.remove('ring-4', 'ring-purple-500');
+    });
+    planCard.classList.add('ring-4', 'ring-purple-500');
+    
+    // Go to step 2
+    setTimeout(() => goToStep(2), 300);
+}
+
+// Step 2: Duration selection
+function renderDurationOptions() {
+    document.getElementById('selectedPlanDisplay').textContent = selectedPlanName;
+    
+    const durations = [
+        { months: 1, label: '1 Month' },
+        { months: 3, label: '3 Months' },
+        { months: 6, label: '6 Months' },
+        { months: 12, label: '12 Months' }
+    ];
+    
+    const container = document.getElementById('durationOptions');
+    container.innerHTML = '';
+    
+    durations.forEach(duration => {
+        const discount = calculateDiscount(duration.months);
+        const baseTotal = selectedPrice * duration.months;
+        const discountedTotal = baseTotal * (1 - discount / 100);
+        const savings = baseTotal - discountedTotal;
+        
+        const card = document.createElement('div');
+        card.className = 'duration-card relative bg-white border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-purple-500 transition-all';
+        card.setAttribute('data-months', duration.months);
+        card.onclick = () => selectDuration(duration.months);
+        
+        if (selectedDuration === duration.months) {
+            card.classList.add('border-purple-500', 'bg-purple-50');
+        }
+        
+        card.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-xl font-bold text-gray-800">${duration.label}</h4>
+                ${discount > 0 ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Save ${discount.toFixed(1)}%</span>` : ''}
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>Base Price:</span>
+                    <span class="${discount > 0 ? 'line-through' : ''}">${selectedCurrency}${baseTotal.toFixed(2)}</span>
+                </div>
+                ${savings > 0 ? `
+                <div class="flex justify-between text-green-600 font-medium">
+                    <span>You Save:</span>
+                    <span>-${selectedCurrency}${savings.toFixed(2)}</span>
+                </div>` : ''}
+                <div class="flex justify-between text-xl font-bold text-purple-600 pt-2 border-t">
+                    <span>Total:</span>
+                    <span>${selectedCurrency}${discountedTotal.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center justify-center">
+                <div class="radio-indicator w-5 h-5 rounded-full border-2 ${selectedDuration === duration.months ? 'border-purple-600 bg-purple-600' : 'border-gray-300'}">
+                    ${selectedDuration === duration.months ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+function selectDuration(months) {
+    selectedDuration = months;
+    renderDurationOptions();
+}
+
+function calculateDiscount(months) {
+    if (!selectedMaxDiscount || selectedMaxDiscount <= 0) return 0;
+    
+    if (months >= 12) {
+        return selectedMaxDiscount * 1.0;
+    } else if (months >= 6) {
+        return selectedMaxDiscount * 0.66;
+    } else if (months >= 3) {
+        return selectedMaxDiscount * 0.33;
+    } else {
+        return 0;
+    }
+}
+
+// Step 3: Order summary
+function renderOrderSummary() {
+    const discount = calculateDiscount(selectedDuration);
+    const baseTotal = selectedPrice * selectedDuration;
+    const discountAmount = baseTotal * (discount / 100);
+    const total = baseTotal - discountAmount;
+    
+    document.getElementById('summaryPlanName').textContent = selectedPlanName;
+    document.getElementById('summaryDuration').textContent = `${selectedDuration} month${selectedDuration > 1 ? 's' : ''} subscription`;
+    document.getElementById('summaryBasePrice').textContent = `${selectedCurrency}${baseTotal.toFixed(2)}`;
+    
+    if (discount > 0) {
+        document.getElementById('summaryDiscountRow').classList.remove('hidden');
+        document.getElementById('summaryDiscount').textContent = `-${selectedCurrency}${discountAmount.toFixed(2)} (${discount.toFixed(1)}%)`;
+    } else {
+        document.getElementById('summaryDiscountRow').classList.add('hidden');
+    }
+    
+    document.getElementById('summaryTotal').textContent = `${selectedCurrency}${total.toFixed(2)}`;
+}
+
+// Payment confirmation
 function confirmSubscription() {
     if (!selectedPlan) return;
     
@@ -300,7 +429,7 @@ function confirmSubscription() {
         },
         body: JSON.stringify({
             plan: selectedPlan,
-            subscription_months: billingMonths
+            subscription_months: selectedDuration
         })
     })
     .then(response => response.json())
@@ -313,12 +442,10 @@ function confirmSubscription() {
         } else {
             showNotification('Error: ' + (data.error || 'Failed to update subscription'), 'error');
         }
-        closeModal();
     })
     .catch(error => {
         showNotification('Error updating subscription', 'error');
         console.error(error);
-        closeModal();
     });
 }
 
@@ -335,12 +462,52 @@ function showNotification(message, type) {
         setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    goToStep(1);
+});
 </script>
 
 <style>
-.billing-period-btn.active {
+.step-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-indicator {
+    transition: all 0.3s ease;
+}
+
+.duration-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.duration-card.selected {
     border-color: rgb(168, 85, 247);
     background-color: rgb(250, 245, 255);
+}
+
+.radio-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.plan-card {
+    cursor: pointer;
 }
 </style>
 
