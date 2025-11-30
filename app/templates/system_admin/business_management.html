@@ -742,7 +742,23 @@ function businessManager() {
                 this.selectedBusiness = business;
                 document.getElementById('detailsName').textContent = business.business_name;
                 document.getElementById('detailsEmail').textContent = business.owner_email || '—';
-                document.getElementById('detailsPlan').textContent = business.plan_name || business.subscription_plan;
+                
+                // Load plan name dynamically
+                let planDisplayName = business.subscription_plan;
+                try {
+                    const plansResponse = await fetch('/system-admin/subscriptions/api/plans');
+                    const plansData = await plansResponse.json();
+                    if (plansResponse.ok && plansData.plans) {
+                        const plan = plansData.plans.find(p => p.plan_code === business.subscription_plan);
+                        if (plan) {
+                            planDisplayName = `${plan.plan_name} - $${plan.price || 0}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load plan name:', error);
+                }
+                
+                document.getElementById('detailsPlan').textContent = planDisplayName;
                 document.getElementById('detailsStatus').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsActiveUsers').textContent = business.user_count || '0';
                 document.getElementById('detailsCreated').textContent = new Date(business.created_at).toLocaleString();
@@ -753,8 +769,8 @@ function businessManager() {
                 document.getElementById('detailsUsersCount').textContent = business.user_count || '0';
                 document.getElementById('detailsStatusBadge').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsStatusBadge').className = `px-3 py-1 backdrop-blur-sm rounded-full text-xs font-medium ${business.is_active ? 'bg-green-500/30 text-green-100' : 'bg-gray-500/30 text-gray-100'}`;
-                document.getElementById('detailsPlanBadge').textContent = business.plan_name || business.subscription_plan;
-                document.getElementById('detailsSubPlan').textContent = business.plan_name || business.subscription_plan;
+                document.getElementById('detailsPlanBadge').textContent = planDisplayName;
+                document.getElementById('detailsSubPlan').textContent = planDisplayName;
                 document.getElementById('detailsSubSince').textContent = new Date(business.created_at).toLocaleDateString();
                 document.getElementById('detailsToggleBtn').textContent = business.is_active ? 'Deactivate' : 'Activate';
                 
