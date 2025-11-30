@@ -303,7 +303,8 @@ async function loadSubscriptionStats() {
         
         const planDistribution = data.plan_distribution || {};
         document.getElementById('freePlans').textContent = planDistribution.free || 0;
-        document.getElementById('premiumPlans').textContent = (planDistribution.premium || 0) + (planDistribution.enterprise || 0) + (planDistribution.basic || 0);
+        // Fixed: Premium Plans now includes basic, advance, premium, and enterprise (all paid plans)
+        document.getElementById('premiumPlans').textContent = (planDistribution.basic || 0) + (planDistribution.advance || 0) + (planDistribution.premium || 0) + (planDistribution.enterprise || 0);
         
     } catch (error) {
         console.error('Error loading subscription stats:', error);
