@@ -685,6 +685,13 @@ class BillTemplate(db.Model):
                 template = cls()
                 for key, value in result._mapping.items():
                     if hasattr(template, key):
+                        # Convert string dates back to datetime objects
+                        if key in ('created_at', 'updated_at') and isinstance(value, str):
+                            from datetime import datetime
+                            try:
+                                value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                            except:
+                                pass
                         setattr(template, key, value)
                 return template
             else:
@@ -721,7 +728,7 @@ class BillTemplate(db.Model):
             'paper_size': self.paper_size,
             'font_size': self.font_size,
             'auto_cut': self.auto_cut,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at and hasattr(self.updated_at, 'isoformat') else None
         }
 
 class SystemSetting(db.Model):
