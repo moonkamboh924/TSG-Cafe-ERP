@@ -652,11 +652,33 @@ class BillTemplate(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     @classmethod
-    def get_template(cls, template_type='receipt'):
-        template = cls.query.filter_by(template_type=template_type).first()
+    def get_template(cls, template_type='receipt', business_id=None):
+        """Get bill template for specific business or current user's business"""
+        # Determine business_id to use
+        if business_id is None:
+            try:
+                from flask_login import current_user
+                if current_user.is_authenticated and hasattr(current_user, 'business_id'):
+                    business_id = current_user.business_id
+            except:
+                pass
+        
+        # Query with business_id filter
+        if business_id is not None:
+            template = cls.query.filter_by(
+                template_type=template_type,
+                business_id=business_id
+            ).first()
+        else:
+            # Fallback for system-wide templates (no business_id)
+            template = cls.query.filter_by(
+                template_type=template_type,
+                business_id=None
+            ).first()
+        
         if not template:
             # Create default template if none exists
-            template = cls(template_type=template_type)
+            template = cls(template_type=template_type, business_id=business_id)
             db.session.add(template)
             db.session.commit()
         return template
