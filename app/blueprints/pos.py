@@ -636,7 +636,7 @@ def print_bill(sale_id):
     
     # Get bill template settings and business name from global settings
     from ..models import BillTemplate, SystemSetting
-    template = BillTemplate.query.filter_by(template_type='receipt').first()
+    template = BillTemplate.get_template('receipt')
     business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
     
     template_data = {
