@@ -663,24 +663,24 @@ class BillTemplate(db.Model):
             except:
                 pass
         
-        # Query with business_id filter
+        # Build query conditions
+        query = cls.query.filter(cls.template_type == template_type)
+        
         if business_id is not None:
-            template = cls.query.filter_by(
-                template_type=template_type,
-                business_id=business_id
-            ).first()
+            query = query.filter(cls.business_id == business_id)
         else:
-            # Fallback for system-wide templates (no business_id)
-            template = cls.query.filter_by(
-                template_type=template_type,
-                business_id=None
-            ).first()
+            query = query.filter(cls.business_id.is_(None))
+        
+        template = query.first()
         
         if not template:
             # Create default template if none exists
             template = cls(template_type=template_type, business_id=business_id)
             db.session.add(template)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
         return template
     
     def to_dict(self):
