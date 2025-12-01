@@ -102,10 +102,6 @@
                 <h3 class="text-lg font-medium text-gray-900 mb-3">Content Settings</h3>
                 <div class="space-y-3">
                     <div class="flex items-center">
-                        <input type="checkbox" id="showRestaurantName" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                        <label for="showRestaurantName" class="ml-2 block text-sm text-gray-700">Show Restaurant Name</label>
-                    </div>
-                    <div class="flex items-center">
                         <input type="checkbox" id="showOrderNumber" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         <label for="showOrderNumber" class="ml-2 block text-sm text-gray-700">Show Order Number</label>
                     </div>
@@ -271,7 +267,6 @@ function populateForm(template) {
     document.getElementById('headerName').value = '{{ business_name }}';
     document.getElementById('headerTagline').value = template.header_tagline || 'Authentic Pakistani Cuisine';
     document.getElementById('showLogo').checked = template.show_logo;
-    document.getElementById('showRestaurantName').checked = template.show_restaurant_name !== undefined ? template.show_restaurant_name : true;
     document.getElementById('showOrderNumber').checked = template.show_order_number;
     document.getElementById('showDateTime').checked = template.show_date_time;
     document.getElementById('showCashier').checked = template.show_cashier;
@@ -430,15 +425,11 @@ function updatePreview() {
 
 function updatePreviewVisibility() {
     // Show/hide elements based on checkbox states
-    const showRestaurantName = document.getElementById('showRestaurantName').checked;
     const showOrderNumber = document.getElementById('showOrderNumber').checked;
     const showDateTime = document.getElementById('showDateTime').checked;
     const showCashier = document.getElementById('showCashier').checked;
     const showTable = document.getElementById('showTable').checked;
     const showTax = document.getElementById('showTax').checked;
-    
-    // Toggle restaurant name visibility
-    document.getElementById('previewHeaderName').style.display = showRestaurantName ? 'block' : 'none';
     
     // Toggle visibility
     document.getElementById('previewOrderNumber').style.display = showOrderNumber ? 'flex' : 'none';
@@ -622,7 +613,6 @@ function saveBillTemplate() {
         header_name: document.getElementById('headerName').value,
         header_tagline: document.getElementById('headerTagline').value,
         show_logo: document.getElementById('showLogo').checked,
-        show_restaurant_name: document.getElementById('showRestaurantName').checked,
         show_order_number: document.getElementById('showOrderNumber').checked,
         show_date_time: document.getElementById('showDateTime').checked,
         show_cashier: document.getElementById('showCashier').checked,

@@ -637,7 +637,6 @@ class BillTemplate(db.Model):
     header_tagline = db.Column(db.String(200), default='Authentic Pakistani Cuisine')
     logo_filename = db.Column(db.String(255))  # Store logo file path
     show_logo = db.Column(db.Boolean, default=True)
-    show_restaurant_name = db.Column(db.Boolean, default=True)
     show_order_number = db.Column(db.Boolean, default=True)
     show_date_time = db.Column(db.Boolean, default=True)
     show_cashier = db.Column(db.Boolean, default=True)
@@ -679,8 +678,11 @@ class BillTemplate(db.Model):
             db.session.add(template)
             try:
                 db.session.commit()
-            except:
+            except Exception as e:
                 db.session.rollback()
+                print(f"Error creating template: {str(e)}")
+                import traceback
+                traceback.print_exc()
         return template
     
     def to_dict(self):
@@ -691,7 +693,6 @@ class BillTemplate(db.Model):
             'header_tagline': self.header_tagline,
             'logo_filename': self.logo_filename,
             'show_logo': self.show_logo,
-            'show_restaurant_name': self.show_restaurant_name,
             'show_order_number': self.show_order_number,
             'show_date_time': self.show_date_time,
             'show_cashier': self.show_cashier,

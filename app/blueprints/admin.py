@@ -917,7 +917,6 @@ def save_bill_template():
         template.header_name = data.get('header_name', template.header_name)
         template.header_tagline = data.get('header_tagline', template.header_tagline)
         template.show_logo = data.get('show_logo', template.show_logo)
-        template.show_restaurant_name = data.get('show_restaurant_name', template.show_restaurant_name)
         template.show_order_number = data.get('show_order_number', template.show_order_number)
         template.show_date_time = data.get('show_date_time', template.show_date_time)
         template.show_cashier = data.get('show_cashier', template.show_cashier)
@@ -943,9 +942,13 @@ def save_bill_template():
         
     except Exception as e:
         db.session.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error saving bill template: {str(e)}")
+        print(error_details)
         return jsonify({
             'success': False,
-            'message': str(e)
+            'message': f'Error: {str(e)}'
         }), 400
 
 @bp.route('/api/upload-logo', methods=['POST'])
@@ -1068,7 +1071,6 @@ def bill_preview():
     header_name = business_name
     header_tagline = request.args.get('header_tagline', 'Authentic Pakistani Cuisine')
     show_logo = request.args.get('show_logo', 'false') == 'true'
-    show_restaurant_name = request.args.get('show_restaurant_name', 'true') == 'true'
     show_order_number = request.args.get('show_order_number', 'true') == 'true'
     show_date_time = request.args.get('show_date_time', 'true') == 'true'
     show_cashier = request.args.get('show_cashier', 'true') == 'true'
@@ -1090,7 +1092,6 @@ def bill_preview():
         'header_name': header_name,
         'header_tagline': header_tagline,
         'show_logo': show_logo,
-        'show_restaurant_name': show_restaurant_name,
         'show_order_number': show_order_number,
         'show_date_time': show_date_time,
         'show_cashier': show_cashier,
