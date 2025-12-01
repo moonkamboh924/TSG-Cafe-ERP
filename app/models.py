@@ -663,28 +663,33 @@ class BillTemplate(db.Model):
             except:
                 pass
         
-        # Build query conditions
-        query = cls.query.filter(cls.template_type == template_type)
-        
-        if business_id is not None:
-            query = query.filter(cls.business_id == business_id)
-        else:
-            query = query.filter(cls.business_id.is_(None))
-        
-        template = query.first()
-        
-        if not template:
-            # Create default template if none exists
-            template = cls(template_type=template_type, business_id=business_id)
-            db.session.add(template)
-            try:
+        # Use simple direct query without filter chaining
+        try:
+            if business_id is not None:
+                template = cls.query.filter_by(
+                    template_type=template_type,
+                    business_id=business_id
+                ).first()
+            else:
+                template = cls.query.filter_by(
+                    template_type=template_type,
+                    business_id=None
+                ).first()
+            
+            if not template:
+                # Create default template if none exists
+                template = cls(template_type=template_type, business_id=business_id)
+                db.session.add(template)
                 db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error creating template: {str(e)}")
-                import traceback
-                traceback.print_exc()
-        return template
+            
+            return template
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error in get_template: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            # Return a default template object even if there's an error
+            return cls(template_type=template_type, business_id=business_id)
     
     def to_dict(self):
         return {
