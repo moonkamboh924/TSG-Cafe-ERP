@@ -637,12 +637,13 @@ class BillTemplate(db.Model):
     header_tagline = db.Column(db.String(200), default='Authentic Pakistani Cuisine')
     logo_filename = db.Column(db.String(255))  # Store logo file path
     show_logo = db.Column(db.Boolean, default=True)
+    show_restaurant_name = db.Column(db.Boolean, default=True)
     show_order_number = db.Column(db.Boolean, default=True)
     show_date_time = db.Column(db.Boolean, default=True)
     show_cashier = db.Column(db.Boolean, default=True)
     show_table = db.Column(db.Boolean, default=True)
     show_tax = db.Column(db.Boolean, default=True)
-    footer_message = db.Column(db.Text, default='Thank you for dining with us!\nVisit us again soon.\nFollow us on social media @sangatcafe')
+    footer_message = db.Column(db.Text, default='')
     show_qr_code = db.Column(db.Boolean, default=False)
     paper_size = db.Column(db.String(10), default='80mm')
     font_size = db.Column(db.String(10), default='medium')
@@ -668,6 +669,7 @@ class BillTemplate(db.Model):
             'header_tagline': self.header_tagline,
             'logo_filename': self.logo_filename,
             'show_logo': self.show_logo,
+            'show_restaurant_name': self.show_restaurant_name,
             'show_order_number': self.show_order_number,
             'show_date_time': self.show_date_time,
             'show_cashier': self.show_cashier,
