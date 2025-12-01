@@ -67,11 +67,47 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
                     <select id="currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="PKR" {% if get_setting('currency', 'PKR') == 'PKR' %}selected{% endif %}>Pakistani Rupee (PKR)</option>
-                        <option value="USD" {% if get_setting('currency', 'PKR') == 'USD' %}selected{% endif %}>US Dollar (USD)</option>
-                        <option value="EUR" {% if get_setting('currency', 'PKR') == 'EUR' %}selected{% endif %}>Euro (EUR)</option>
-                        <option value="GBP" {% if get_setting('currency', 'PKR') == 'GBP' %}selected{% endif %}>British Pound (GBP)</option>
+                        <optgroup label="South Asia">
+                            <option value="PKR" {% if get_setting('currency', 'PKR') == 'PKR' %}selected{% endif %}>Pakistani Rupee (₨ PKR)</option>
+                            <option value="INR" {% if get_setting('currency', 'PKR') == 'INR' %}selected{% endif %}>Indian Rupee (₹ INR)</option>
+                            <option value="BDT" {% if get_setting('currency', 'PKR') == 'BDT' %}selected{% endif %}>Bangladeshi Taka (৳ BDT)</option>
+                            <option value="LKR" {% if get_setting('currency', 'PKR') == 'LKR' %}selected{% endif %}>Sri Lankan Rupee (Rs LKR)</option>
+                            <option value="NPR" {% if get_setting('currency', 'PKR') == 'NPR' %}selected{% endif %}>Nepalese Rupee (रू NPR)</option>
+                            <option value="AFN" {% if get_setting('currency', 'PKR') == 'AFN' %}selected{% endif %}>Afghan Afghani (؋ AFN)</option>
+                            <option value="MVR" {% if get_setting('currency', 'PKR') == 'MVR' %}selected{% endif %}>Maldivian Rufiyaa (Rf MVR)</option>
+                        </optgroup>
+                        <optgroup label="Middle East">
+                            <option value="AED" {% if get_setting('currency', 'PKR') == 'AED' %}selected{% endif %}>UAE Dirham (د.إ AED)</option>
+                            <option value="SAR" {% if get_setting('currency', 'PKR') == 'SAR' %}selected{% endif %}>Saudi Riyal (﷼ SAR)</option>
+                            <option value="QAR" {% if get_setting('currency', 'PKR') == 'QAR' %}selected{% endif %}>Qatari Riyal (ر.ق QAR)</option>
+                            <option value="OMR" {% if get_setting('currency', 'PKR') == 'OMR' %}selected{% endif %}>Omani Rial (ر.ع. OMR)</option>
+                            <option value="KWD" {% if get_setting('currency', 'PKR') == 'KWD' %}selected{% endif %}>Kuwaiti Dinar (د.ك KWD)</option>
+                            <option value="BHD" {% if get_setting('currency', 'PKR') == 'BHD' %}selected{% endif %}>Bahraini Dinar (د.ب BHD)</option>
+                        </optgroup>
+                        <optgroup label="East Asia">
+                            <option value="CNY" {% if get_setting('currency', 'PKR') == 'CNY' %}selected{% endif %}>Chinese Yuan (¥ CNY)</option>
+                            <option value="JPY" {% if get_setting('currency', 'PKR') == 'JPY' %}selected{% endif %}>Japanese Yen (¥ JPY)</option>
+                            <option value="KRW" {% if get_setting('currency', 'PKR') == 'KRW' %}selected{% endif %}>South Korean Won (₩ KRW)</option>
+                            <option value="HKD" {% if get_setting('currency', 'PKR') == 'HKD' %}selected{% endif %}>Hong Kong Dollar (HK$ HKD)</option>
+                            <option value="TWD" {% if get_setting('currency', 'PKR') == 'TWD' %}selected{% endif %}>Taiwan Dollar (NT$ TWD)</option>
+                        </optgroup>
+                        <optgroup label="Southeast Asia">
+                            <option value="THB" {% if get_setting('currency', 'PKR') == 'THB' %}selected{% endif %}>Thai Baht (฿ THB)</option>
+                            <option value="MYR" {% if get_setting('currency', 'PKR') == 'MYR' %}selected{% endif %}>Malaysian Ringgit (RM MYR)</option>
+                            <option value="SGD" {% if get_setting('currency', 'PKR') == 'SGD' %}selected{% endif %}>Singapore Dollar (S$ SGD)</option>
+                            <option value="IDR" {% if get_setting('currency', 'PKR') == 'IDR' %}selected{% endif %}>Indonesian Rupiah (Rp IDR)</option>
+                            <option value="PHP" {% if get_setting('currency', 'PKR') == 'PHP' %}selected{% endif %}>Philippine Peso (₱ PHP)</option>
+                            <option value="VND" {% if get_setting('currency', 'PKR') == 'VND' %}selected{% endif %}>Vietnamese Dong (₫ VND)</option>
+                        </optgroup>
+                        <optgroup label="Major Currencies">
+                            <option value="USD" {% if get_setting('currency', 'PKR') == 'USD' %}selected{% endif %}>US Dollar ($ USD)</option>
+                            <option value="EUR" {% if get_setting('currency', 'PKR') == 'EUR' %}selected{% endif %}>Euro (€ EUR)</option>
+                            <option value="GBP" {% if get_setting('currency', 'PKR') == 'GBP' %}selected{% endif %}>British Pound (£ GBP)</option>
+                            <option value="AUD" {% if get_setting('currency', 'PKR') == 'AUD' %}selected{% endif %}>Australian Dollar (A$ AUD)</option>
+                            <option value="CAD" {% if get_setting('currency', 'PKR') == 'CAD' %}selected{% endif %}>Canadian Dollar (C$ CAD)</option>
+                        </optgroup>
                     </select>
+                    <p class="text-xs text-gray-500 mt-1">Currency will be used throughout the system for all transactions</p>
                 </div>
                 
                 <div>

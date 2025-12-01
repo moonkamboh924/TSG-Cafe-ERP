@@ -356,8 +356,8 @@
                 <tr>
                     <td class="qty-col">{{ line.qty|int if line.qty == line.qty|int else line.qty }}</td>
                     <td class="item-col">{{ line.item.name }}</td>
-                    <td class="price-col">₨{{ "%.2f"|format(line.unit_price) }}</td>
-                    <td class="total-col">₨{{ "%.2f"|format(line.line_total) }}</td>
+                    <td class="price-col">{{ line.unit_price|format_currency }}</td>
+                    <td class="total-col">{{ line.line_total|format_currency }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -366,19 +366,19 @@
         <div class="totals">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>₨{{ "%.2f"|format(sale.subtotal) }}</span>
+                <span>{{ sale.subtotal|format_currency }}</span>
             </div>
             
             {% if show_tax %}
             <div class="total-row">
                 <span>Tax ({{ get_setting('tax_rate', '17') }}%):</span>
-                <span>₨{{ "%.2f"|format(sale.tax) }}</span>
+                <span>{{ sale.tax|format_currency }}</span>
             </div>
             {% endif %}
             
             <div class="total-row grand-total">
                 <span>TOTAL:</span>
-                <span>₨{{ "%.2f"|format(sale.total) }}</span>
+                <span>{{ sale.total|format_currency }}</span>
             </div>
         </div>
 

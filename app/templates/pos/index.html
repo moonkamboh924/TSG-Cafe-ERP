@@ -54,15 +54,15 @@
                 <div class="border-t pt-4 space-y-3">
                     <div class="flex justify-between text-gray-600">
                         <span>Subtotal:</span>
-                        <span id="subtotal">₨0.00</span>
+                        <span id="subtotal">{{ 0|format_currency }}</span>
                     </div>
                     <div class="flex justify-between text-gray-600">
                         <span>Tax (<span id="taxRate">16</span>%):</span>
-                        <span id="tax">₨0.00</span>
+                        <span id="tax">{{ 0|format_currency }}</span>
                     </div>
                     <div class="flex justify-between text-xl font-bold text-gray-800 border-t pt-2">
                         <span>Total:</span>
-                        <span id="total">₨0.00</span>
+                        <span id="total">{{ 0|format_currency }}</span>
                     </div>
                 </div>
                 
@@ -293,6 +293,19 @@
 
 {% block extra_js %}
 <script>
+// Currency configuration from system settings
+const CURRENCY_SYMBOL = '{{ currency_symbol }}';
+const CURRENCY_CODE = '{{ currency_code }}';
+
+// Helper function to format currency
+function formatCurrency(amount) {
+    if (amount === null || amount === undefined) {
+        amount = 0;
+    }
+    const formatted = parseFloat(amount).toFixed(2);
+    return `${CURRENCY_SYMBOL}${formatted}`;
+}
+
 let cart = [];
 let menuItems = [];
 let categories = [];
@@ -465,7 +478,7 @@ function renderMenuItems(items) {
                 </div>
                 <h3 class="font-semibold text-gray-800 mb-2">${item.name}</h3>
                 <p class="text-sm text-gray-500 mb-3">${item.category || 'No Category'}</p>
-                <p class="text-xl font-bold text-blue-600">₨${parseFloat(item.price).toFixed(2)}</p>
+                <p class="text-xl font-bold text-blue-600">${formatCurrency(item.price)}</p>
             </div>
         </div>
     `).join('');
@@ -541,7 +554,7 @@ function updateCart() {
             <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                 <div class="flex-1">
                     <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                    <p class="text-sm text-gray-500">₨${item.price.toFixed(2)} each</p>
+                    <p class="text-sm text-gray-500">${formatCurrency(item.price)} each</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button onclick="updateQuantity(${item.item_id}, ${item.qty - 1})" class="w-8 h-8 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">-</button>
@@ -560,9 +573,9 @@ function updateCart() {
     const tax = subtotal * taxRate;
     const total = subtotal + tax;
     
-    document.getElementById('subtotal').textContent = `₨${subtotal.toFixed(2)}`;
-    document.getElementById('tax').textContent = `₨${tax.toFixed(2)}`;
-    document.getElementById('total').textContent = `₨${total.toFixed(2)}`;
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('tax').textContent = formatCurrency(tax);
+    document.getElementById('total').textContent = formatCurrency(total);
 }
 
 async function saveCart() {
@@ -874,13 +887,10 @@ function renderCreditOrders(creditSales) {
                 <td class="px-4 py-3">${credit.invoice_no}</td>
                 <td class="px-4 py-3">${credit.customer_name}</td>
                 <td class="px-4 py-3">${credit.customer_phone || '-'}</td>
-                <td class="px-4 py-3 text-right">₨${credit.credit_amount.toFixed(2)}</td>
-                <td class="px-4 py-3 text-right">₨${credit.paid_amount.toFixed(2)}</td>
-                <td class="px-4 py-3 text-right">₨${credit.remaining_amount.toFixed(2)}</td>
-                <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">
-                        ${credit.status.toUpperCase()}
-                    </span>
+                <td class="px-4 py-3 text-right">${formatCurrency(credit.credit_amount)}</td>
+                <td class="px-4 py-3 text-right">${formatCurrency(credit.paid_amount)}</td>
+                <td class="px-4 py-3 text-right">${formatCurrency(credit.remaining_amount)}</td>
+                <td class="px-4 py-3">\n                    <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">\n                        ${credit.status.toUpperCase()}\n                    </span>
                 </td>
                 <td class="px-4 py-3 text-center">
                     <div class="flex justify-center space-x-2">

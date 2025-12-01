@@ -159,13 +159,21 @@ def create_app(config_object="config.Config"):
     @app.context_processor
     def inject_settings():
         from .models import SystemSetting
+        from .utils.currency_utils import get_currency_symbol, get_system_currency
+        
         def get_setting(key, default=None):
             try:
                 return SystemSetting.get_setting(key, default)
             except Exception as e:
                 app.logger.warning(f"Error getting setting {key}: {str(e)}")
                 return default
-        return dict(get_setting=get_setting)
+        
+        # Make currency functions available in all templates
+        return dict(
+            get_setting=get_setting,
+            currency_symbol=get_currency_symbol(),
+            currency_code=get_system_currency()
+        )
     
     # Add template filters for timezone handling
     @app.template_filter('format_datetime')
@@ -187,6 +195,17 @@ def create_app(config_object="config.Config"):
     def to_local_time_filter(dt):
         from .utils.timezone_utils import convert_utc_to_local
         return convert_utc_to_local(dt)
+    
+    # Add template filters for currency handling
+    @app.template_filter('format_currency')
+    def format_currency_filter(amount, currency_code=None):
+        from .utils.currency_utils import format_currency
+        return format_currency(amount, currency_code)
+    
+    @app.template_filter('currency_symbol')
+    def currency_symbol_filter(currency_code=None):
+        from .utils.currency_utils import get_currency_symbol
+        return get_currency_symbol(currency_code)
     
     @app.template_filter('from_json')
     def from_json_filter(json_str):

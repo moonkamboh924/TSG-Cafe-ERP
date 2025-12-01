@@ -3,29 +3,19 @@ Utility functions for the ERP system
 """
 from decimal import Decimal
 
-def format_currency(amount, currency_symbol="₨"):
+def format_currency(amount, currency_code=None):
     """
-    Format currency amounts with PKR symbol
+    Format currency amounts with system currency
     
     Args:
         amount: Numeric amount to format
-        currency_symbol: Currency symbol (default: ₨ for PKR)
+        currency_code: Currency code (defaults to system currency)
     
     Returns:
         Formatted currency string
     """
-    if amount is None:
-        return f"{currency_symbol}0.00"
-    
-    # Convert to Decimal for precise formatting
-    if isinstance(amount, (int, float)):
-        amount = Decimal(str(amount))
-    elif isinstance(amount, str):
-        amount = Decimal(amount)
-    
-    # Format with commas and 2 decimal places
-    formatted = f"{amount:,.2f}"
-    return f"{currency_symbol}{formatted}"
+    from app.utils.currency_utils import format_currency as format_curr
+    return format_curr(amount, currency_code)
 
 def parse_currency(currency_string):
     """
@@ -37,14 +27,15 @@ def parse_currency(currency_string):
     Returns:
         Decimal value
     """
-    if not currency_string:
-        return Decimal('0.00')
-    
-    # Remove currency symbol and commas
-    cleaned = currency_string.replace('₨', '').replace(',', '').strip()
-    return Decimal(cleaned)
+    from app.utils.currency_utils import parse_currency as parse_curr
+    return parse_curr(currency_string)
 
-# Currency configuration
+def get_currency_symbol():
+    """Get current system currency symbol"""
+    from app.utils.currency_utils import get_currency_symbol as get_symbol
+    return get_symbol()
+
+# Legacy support - keep for backward compatibility
 CURRENCY_SYMBOL = "₨"
 CURRENCY_CODE = "PKR"
 CURRENCY_NAME = "Pakistani Rupee"
