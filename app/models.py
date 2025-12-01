@@ -663,26 +663,37 @@ class BillTemplate(db.Model):
             except:
                 pass
         
-        # Use simple direct query without filter chaining
+        # Use raw SQL to avoid parameter binding issues
         try:
-            if business_id is not None:
-                template = cls.query.filter_by(
-                    template_type=template_type,
-                    business_id=business_id
-                ).first()
-            else:
-                template = cls.query.filter_by(
-                    template_type=template_type,
-                    business_id=None
-                ).first()
+            from sqlalchemy import text
             
-            if not template:
+            if business_id is not None:
+                # Convert business_id to int to ensure it's not a dict
+                business_id_val = int(business_id) if business_id is not None else None
+                result = db.session.execute(
+                    text("SELECT * FROM bill_templates WHERE template_type = :type AND business_id = :bid LIMIT 1"),
+                    {"type": template_type, "bid": business_id_val}
+                ).fetchone()
+            else:
+                result = db.session.execute(
+                    text("SELECT * FROM bill_templates WHERE template_type = :type AND business_id IS NULL LIMIT 1"),
+                    {"type": template_type}
+                ).fetchone()
+            
+            if result:
+                # Convert result to model instance
+                template = cls()
+                for key, value in result._mapping.items():
+                    if hasattr(template, key):
+                        setattr(template, key, value)
+                return template
+            else:
                 # Create default template if none exists
                 template = cls(template_type=template_type, business_id=business_id)
                 db.session.add(template)
                 db.session.commit()
-            
-            return template
+                return template
+                
         except Exception as e:
             db.session.rollback()
             print(f"Error in get_template: {str(e)}")
