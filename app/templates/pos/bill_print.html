@@ -309,9 +309,11 @@
             {% if show_logo and logo_filename %}
             <img src="{{ url_for('static', filename='uploads/logos/' + logo_filename) }}" alt="Logo" class="logo">
             {% endif %}
+            {% if show_restaurant_name %}
             <div class="business-name">{{ header_name }}</div>
             {% if header_tagline %}
             <div class="header-tagline">{{ header_tagline }}</div>
+            {% endif %}
             {% endif %}
             {% if business_address or business_phone or business_email %}
             <div class="contact-info" style="font-size: 8px; color: #666; margin-top: 5px;">

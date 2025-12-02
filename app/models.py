@@ -514,13 +514,17 @@ class Sale(db.Model):
     user = db.relationship('User', backref='sales')
     
     def to_dict(self):
+        from app.utils.timezone_utils import convert_utc_to_local
+        # Convert UTC timestamp to local timezone for display
+        local_time = convert_utc_to_local(self.created_at) if self.created_at else None
+        
         return {
             'id': self.id,
             'invoice_no': self.invoice_no,
             'customer_name': self.customer_name,
             'customer_phone': self.customer_phone,
             'table_number': self.table_number,
-            'created_at': self.created_at.isoformat(),
+            'created_at': local_time.isoformat() if local_time else None,
             'subtotal': float(self.subtotal),
             'tax': float(self.tax),
             'total': float(self.total),
