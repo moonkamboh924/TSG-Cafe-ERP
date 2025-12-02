@@ -313,6 +313,19 @@
             {% if header_tagline %}
             <div class="header-tagline">{{ header_tagline }}</div>
             {% endif %}
+            {% if business_address or business_phone or business_email %}
+            <div class="contact-info" style="font-size: 8px; color: #666; margin-top: 5px;">
+                {% if business_address %}
+                <div>{{ business_address }}</div>
+                {% endif %}
+                {% if business_phone %}
+                <div>Phone: {{ business_phone }}</div>
+                {% endif %}
+                {% if business_email %}
+                <div>{{ business_email }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
 
         <div class="bill-info">

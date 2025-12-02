@@ -186,8 +186,15 @@
             <div class="restaurant-name">{{ template.header_name }}</div>
             <div class="tagline">{{ template.header_tagline }}</div>
             <div class="contact-info">
-                <div>123 Main Street, Lahore</div>
-                <div>Phone: +92 300 1234567</div>
+                {% if business_address %}
+                <div>{{ business_address }}</div>
+                {% endif %}
+                {% if business_phone %}
+                <div>Phone: {{ business_phone }}</div>
+                {% endif %}
+                {% if business_email %}
+                <div>{{ business_email }}</div>
+                {% endif %}
             </div>
         </div>
         

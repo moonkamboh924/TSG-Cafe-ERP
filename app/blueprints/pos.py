@@ -592,8 +592,13 @@ def print_sale_bill(sale_id):
         sale = Sale.query.get_or_404(sale_id)
         
         # Get bill template settings
-        from app.models import BillTemplate
+        from app.models import BillTemplate, SystemSetting
         template = BillTemplate.get_template('receipt')
+        
+        # Get business contact information from settings
+        business_address = SystemSetting.get_setting('restaurant_address', '', business_id=current_user.business_id)
+        business_phone = SystemSetting.get_setting('restaurant_phone', '', business_id=current_user.business_id)
+        business_email = SystemSetting.get_setting('restaurant_email', '', business_id=current_user.business_id)
         
         # Map font size to actual pixel values
         font_size_map = {
@@ -620,7 +625,10 @@ def print_sale_bill(sale_id):
             'show_qr_code': template.show_qr_code,
             'paper_size': template.paper_size,
             'font_size': font_size,
-            'auto_cut': template.auto_cut
+            'auto_cut': template.auto_cut,
+            'business_address': business_address,
+            'business_phone': business_phone,
+            'business_email': business_email
         }
         
         return render_template('pos/bill_print.html', **template_data)
@@ -634,22 +642,32 @@ def print_sale_bill(sale_id):
 def print_bill(sale_id):
     sale = Sale.query.get_or_404(sale_id)
     
-    # Get bill template settings and business name from global settings
+    # Get bill template settings and business info from global settings
     from ..models import BillTemplate, SystemSetting
     template = BillTemplate.get_template('receipt')
-    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
+    business_name = SystemSetting.get_setting('restaurant_name', 'My Business', business_id=current_user.business_id)
+    business_address = SystemSetting.get_setting('restaurant_address', '', business_id=current_user.business_id)
+    business_phone = SystemSetting.get_setting('restaurant_phone', '', business_id=current_user.business_id)
+    business_email = SystemSetting.get_setting('restaurant_email', '', business_id=current_user.business_id)
     
     template_data = {
         'sale': sale.to_dict(),
         'template_type': 'receipt',
         'header_name': template.header_name if template else business_name,
+        'header_tagline': template.header_tagline if template else '',
         'show_logo': template.show_logo if template else False,
-        'logo_path': template.logo_path if template and template.logo_path else None,
-        'footer_text': template.footer_text if template else 'Thank you for your visit!',
-        'paper_size': template.paper_size if template else 'A4',
+        'logo_filename': template.logo_filename if template else None,
+        'footer_message': template.footer_message if template else 'Thank you for your visit!',
+        'paper_size': template.paper_size if template else '80mm',
         'font_size': template.font_size if template else 12,
-        'show_tax_details': template.show_tax_details if template else True,
-        'show_customer_info': template.show_customer_info if template else True
+        'show_tax': template.show_tax if template else True,
+        'show_order_number': template.show_order_number if template else True,
+        'show_date_time': template.show_date_time if template else True,
+        'show_cashier': template.show_cashier if template else True,
+        'show_table': template.show_table if template else True,
+        'business_address': business_address,
+        'business_phone': business_phone,
+        'business_email': business_email
     }
     
     return render_template('pos/bill_print.html', **template_data)
