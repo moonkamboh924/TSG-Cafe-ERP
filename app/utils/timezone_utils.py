@@ -17,40 +17,40 @@ def get_system_timezone():
         return pytz.timezone('Asia/Karachi')
 
 def get_current_time():
-    """Get current time in system timezone"""
-    system_tz = get_system_timezone()
-    utc_now = datetime.now(timezone.utc)
-    return utc_now.astimezone(system_tz)
+    """Get current time in system's local timezone"""
+    # Use system's local timezone directly
+    return datetime.now()
 
 def convert_utc_to_local(utc_datetime):
-    """Convert UTC datetime to system timezone"""
+    """Convert UTC datetime to system's local timezone"""
     if utc_datetime is None:
         return None
     
-    system_tz = get_system_timezone()
-    
     # If datetime is naive, assume it's UTC
     if utc_datetime.tzinfo is None:
-        utc_datetime = pytz.UTC.localize(utc_datetime)
+        utc_datetime = utc_datetime.replace(tzinfo=timezone.utc)
     
-    return utc_datetime.astimezone(system_tz)
+    # Convert to local timezone using system's timezone
+    return utc_datetime.astimezone()
 
 def convert_local_to_utc(local_datetime):
     """Convert local datetime to UTC"""
     if local_datetime is None:
         return None
     
-    system_tz = get_system_timezone()
-    
-    # If datetime is naive, assume it's in system timezone
+    # If datetime is naive, assume it's in system's local timezone
     if local_datetime.tzinfo is None:
-        try:
-            local_datetime = system_tz.localize(local_datetime)
-        except AttributeError:
-            # Handle case where local_datetime might already be timezone-aware
-            local_datetime = local_datetime.replace(tzinfo=system_tz)
+        # Get system's local timezone offset
+        import time
+        if time.daylight:
+            offset_seconds = -time.altzone
+        else:
+            offset_seconds = -time.timezone
+        from datetime import timedelta
+        local_tz = timezone(timedelta(seconds=offset_seconds))
+        local_datetime = local_datetime.replace(tzinfo=local_tz)
     
-    return local_datetime.astimezone(pytz.UTC)
+    return local_datetime.astimezone(timezone.utc)
 
 def format_datetime(dt, format_str=None):
     """Format datetime according to system settings"""
@@ -58,14 +58,11 @@ def format_datetime(dt, format_str=None):
         return ''
     
     # Always convert to local timezone first
-    if hasattr(dt, 'tzinfo'):
-        if dt.tzinfo is None:
-            # Naive datetime, assume UTC
-            dt = pytz.UTC.localize(dt)
+    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
         dt = convert_utc_to_local(dt)
-    else:
-        # Not a datetime object, convert to local time
-        dt = convert_utc_to_local(dt)
+    elif not hasattr(dt, 'tzinfo'):
+        # Not a datetime object, return as is
+        return str(dt)
     
     # Get system date and time format settings
     from app.models import SystemSetting
@@ -98,11 +95,7 @@ def format_date_only(dt):
         return ''
     
     # Always convert to local timezone first
-    if hasattr(dt, 'tzinfo'):
-        if dt.tzinfo is None:
-            dt = pytz.UTC.localize(dt)
-        dt = convert_utc_to_local(dt)
-    else:
+    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
         dt = convert_utc_to_local(dt)
     
     from app.models import SystemSetting
@@ -123,11 +116,7 @@ def format_time_only(dt):
         return ''
     
     # Always convert to local timezone first
-    if hasattr(dt, 'tzinfo'):
-        if dt.tzinfo is None:
-            dt = pytz.UTC.localize(dt)
-        dt = convert_utc_to_local(dt)
-    else:
+    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
         dt = convert_utc_to_local(dt)
     
     from app.models import SystemSetting

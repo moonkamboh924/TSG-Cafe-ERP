@@ -587,6 +587,7 @@ function previewBill() {
         header_name: document.getElementById('headerName').value,
         header_tagline: document.getElementById('headerTagline').value,
         show_logo: document.getElementById('showLogo').checked,
+        show_restaurant_name: document.getElementById('showRestaurantName').checked,
         show_order_number: document.getElementById('showOrderNumber').checked,
         show_date_time: document.getElementById('showDateTime').checked,
         show_cashier: document.getElementById('showCashier').checked,
@@ -616,11 +617,13 @@ function saveBillTemplate() {
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
     saveBtn.disabled = true;
     
+    const templateType = document.getElementById('templateType').value;
     const templateData = {
         template_type: templateType,
         header_name: document.getElementById('headerName').value,
         header_tagline: document.getElementById('headerTagline').value,
         show_logo: document.getElementById('showLogo').checked,
+        show_restaurant_name: document.getElementById('showRestaurantName').checked,
         show_order_number: document.getElementById('showOrderNumber').checked,
         show_date_time: document.getElementById('showDateTime').checked,
         show_cashier: document.getElementById('showCashier').checked,

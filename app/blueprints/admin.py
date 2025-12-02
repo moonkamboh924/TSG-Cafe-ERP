@@ -1061,14 +1061,14 @@ def remove_logo():
 @require_permissions('admin.view')
 def bill_preview():
     """Generate bill preview page"""
-    # Get settings from global settings - ALWAYS use current settings, not saved template
+    # Get settings from global settings - ALWAYS use current settings for multi-tenant support
     from app.models import SystemSetting
-    business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
-    tax_rate = float(SystemSetting.get_setting('tax_rate', '0'))
+    business_name = SystemSetting.get_setting('restaurant_name', 'My Business', business_id=current_user.business_id)
+    tax_rate = float(SystemSetting.get_setting('tax_rate', '0', business_id=current_user.business_id))
     
     # Get template data from query parameters
     template_type = request.args.get('template_type', 'receipt')
-    # ALWAYS use current business name from global settings, ignore URL parameter
+    # ALWAYS use current business name from global settings (multi-tenant), ignore URL parameter
     header_name = business_name
     header_tagline = request.args.get('header_tagline', 'Authentic Pakistani Cuisine')
     show_logo = request.args.get('show_logo', 'false') == 'true'
@@ -1105,7 +1105,8 @@ def bill_preview():
         'paper_size': paper_size,
         'font_size': font_size,
         'logo_filename': logo_filename,
-        'tax_rate': tax_rate
+        'tax_rate': tax_rate,
+        'business_id': current_user.business_id
     }
     
     return render_template('admin/bill_preview.html', **template_data)

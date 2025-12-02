@@ -20,6 +20,7 @@ def get_new_day_start_time():
     """Get the configured new day start time"""
     from app.models import SystemSetting
     
+    # Get setting for current user's business (SystemSetting.get_setting handles this automatically)
     new_day_start_str = SystemSetting.get_setting('new_day_start_time', '06:00')
     return time.fromisoformat(new_day_start_str)
 
@@ -84,17 +85,25 @@ def get_business_day_range(business_date):
         business_date: date object for the business day
     
     Returns:
-        tuple: (start_datetime, end_datetime) for the business day
+        tuple: (start_datetime, end_datetime) for the business day as naive UTC datetimes for database queries
     """
+    from app.utils.timezone_utils import convert_local_to_utc
+    
     new_day_start = get_new_day_start_time()
     
-    # Start of business day
-    start_datetime = datetime.combine(business_date, new_day_start)
+    # Start of business day in local time
+    start_local = datetime.combine(business_date, new_day_start)
     
-    # End of business day (just before next day starts)
-    end_datetime = datetime.combine(business_date + timedelta(days=1), new_day_start)
+    # End of business day in local time (just before next day starts)
+    end_local = datetime.combine(business_date + timedelta(days=1), new_day_start)
     
-    return start_datetime, end_datetime
+    # Convert to UTC for database queries (stored as naive UTC)
+    start_utc = convert_local_to_utc(start_local)
+    end_utc = convert_local_to_utc(end_local)
+    
+    # Return as naive UTC datetimes (remove timezone info for database comparison)
+    return (start_utc.replace(tzinfo=None) if start_utc and start_utc.tzinfo else start_utc,
+            end_utc.replace(tzinfo=None) if end_utc and end_utc.tzinfo else end_utc)
 
 def format_business_hours():
     """

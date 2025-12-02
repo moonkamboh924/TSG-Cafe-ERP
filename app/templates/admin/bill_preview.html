@@ -154,10 +154,12 @@
                 [Logo enabled but no file uploaded]
             </div>
             {% endif %}
+            {% if show_restaurant_name %}
             <div class="header-name">{{ header_name.upper() }}</div>
+            {% endif %}
             <div class="header-tagline">{{ header_tagline }}</div>
-            <div class="address-line">123 Main Street, Lahore</div>
-            <div class="address-line">Phone: +92 300 1234567</div>
+            <div class="address-line">{{ get_setting('restaurant_address', '123 Main Street, Lahore') }}</div>
+            <div class="address-line">Phone: {{ get_setting('restaurant_phone', '+92 300 1234567') }}</div>
         </div>
         
         <div class="order-info">

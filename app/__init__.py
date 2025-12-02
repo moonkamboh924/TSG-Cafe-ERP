@@ -160,10 +160,15 @@ def create_app(config_object="config.Config"):
     def inject_settings():
         from .models import SystemSetting
         from .utils.currency_utils import get_currency_symbol, get_system_currency
+        from flask_login import current_user
         
         def get_setting(key, default=None):
             try:
-                return SystemSetting.get_setting(key, default)
+                # MULTI-TENANT: Use current user's business_id if authenticated
+                business_id = None
+                if current_user.is_authenticated and hasattr(current_user, 'business_id'):
+                    business_id = current_user.business_id
+                return SystemSetting.get_setting(key, default, business_id=business_id)
             except Exception as e:
                 app.logger.warning(f"Error getting setting {key}: {str(e)}")
                 return default

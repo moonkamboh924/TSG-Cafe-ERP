@@ -207,9 +207,8 @@ def checkout():
         return jsonify({'error': 'No items in cart'}), 400
     
     try:
-        # Generate unique invoice number in format YYMMDD-NN
-        from app.utils.timezone_utils import get_current_time
-        current_time = get_current_time()
+        # Generate unique invoice number in format YYMMDD-NN using system's local time
+        current_time = datetime.now()  # Use system's actual local time
         
         # Format: YYMMDD (Year-Year-Month-Month-Day-Day)
         date_part = current_time.strftime('%y%m%d')
@@ -280,9 +279,10 @@ def checkout():
         tax = subtotal * tax_rate
         total = subtotal + tax
         
-        # Create sale record with timezone-aware timestamp
+        # Create sale record with current local time converted to UTC for storage
         from app.utils.timezone_utils import convert_local_to_utc
-        utc_time = convert_local_to_utc(current_time)
+        current_local = datetime.now()  # Get actual system time
+        utc_time = convert_local_to_utc(current_local)
         
         # MULTI-TENANT: Add business_id
         sale = Sale(
@@ -296,7 +296,7 @@ def checkout():
             total=total,
             payment_method=payment_method,
             user_id=current_user.id,
-            created_at=utc_time.replace(tzinfo=None)  # Store as naive UTC in database
+            created_at=utc_time.replace(tzinfo=None) if utc_time.tzinfo else utc_time  # Store as naive UTC
         )
         
         db.session.add(sale)

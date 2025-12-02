@@ -384,9 +384,16 @@ let weeklySalesChart;
 
 async function loadDashboardData() {
     try {
+        // Add cache busting to ensure fresh data
+        const timestamp = new Date().getTime();
+        
+        console.log('Loading dashboard data at:', new Date().toLocaleString());
+        
         // Load KPIs
-        const kpiResponse = await fetch('/api/dashboard/kpis/today');
+        const kpiResponse = await fetch(`/dashboard/api/kpis/today?_=${timestamp}`);
         const kpiData = await kpiResponse.json();
+        
+        console.log('KPI Data received:', kpiData);
         
         document.getElementById('revenue-kpi').textContent = `₨${(kpiData.revenue || 0).toFixed(2)}`;
         document.getElementById('orders-kpi').textContent = kpiData.orders || 0;
@@ -408,12 +415,12 @@ async function loadDashboardData() {
         }
         
         // Load weekly sales chart
-        const salesResponse = await fetch('/api/dashboard/weekly-sales');
+        const salesResponse = await fetch(`/dashboard/api/dashboard/weekly-sales?_=${timestamp}`);
         const weeklyData = await salesResponse.json();
         
         // Load weekly summary data
         try {
-            const summaryResponse = await fetch('/api/dashboard/weekly-summary');
+            const summaryResponse = await fetch(`/dashboard/api/dashboard/weekly-summary?_=${timestamp}`);
             if (summaryResponse.ok) {
                 const summaryData = await summaryResponse.json();
                 console.log('Weekly summary data:', summaryData);
@@ -585,7 +592,7 @@ async function loadDashboardData() {
         const avgDaily = salesData.reduce((a, b) => a + b, 0) / salesData.length;
         
         // Use API data for weekly summary instead of chart calculations
-        const summaryResponse = await fetch('/api/dashboard/weekly-summary');
+        const summaryResponse = await fetch('/dashboard/api/dashboard/weekly-summary');
         const summaryData = await summaryResponse.json();
         
         if (summaryData.success) {
@@ -608,7 +615,7 @@ async function loadDashboardData() {
         }
         
         // Load recent activities
-        const activitiesResponse = await fetch('/api/dashboard/activities');
+        const activitiesResponse = await fetch('/dashboard/api/dashboard/activities');
         const activities = await activitiesResponse.json();
         
         const activitiesContainer = document.getElementById('recent-activities');
@@ -685,7 +692,7 @@ document.addEventListener('click', function(event) {
 // Load modal data functions
 async function loadRevenueDetails() {
     try {
-        const response = await fetch('/api/dashboard/revenue-details');
+        const response = await fetch('/dashboard/api/dashboard/revenue-details');
         const data = await response.json();
         
         const totalRevenue = data.total_revenue || 0;
@@ -763,7 +770,7 @@ async function loadRevenueDetails() {
 
 async function loadOrdersDetails() {
     try {
-        const response = await fetch('/api/dashboard/orders-details');
+        const response = await fetch('/dashboard/api/dashboard/orders-details');
         const data = await response.json();
         
         document.getElementById('modal-total-orders').textContent = data.total_orders || 0;
@@ -816,7 +823,7 @@ async function loadOrdersDetails() {
 
 async function loadInventoryDetails() {
     try {
-        const response = await fetch('/api/dashboard/inventory-details');
+        const response = await fetch('/dashboard/api/dashboard/inventory-details');
         const data = await response.json();
         
         document.getElementById('modal-critical-items').textContent = data.critical_items || 0;
@@ -850,7 +857,7 @@ async function loadInventoryDetails() {
 
 async function loadExpenseDetails() {
     try {
-        const response = await fetch('/api/dashboard/expense-details');
+        const response = await fetch('/dashboard/api/dashboard/expense-details');
         const data = await response.json();
         
         if (data.success) {

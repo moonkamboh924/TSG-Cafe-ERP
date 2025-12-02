@@ -663,40 +663,48 @@ class BillTemplate(db.Model):
             except:
                 pass
         
-        # Use raw SQL to avoid parameter binding issues
+        # Ensure business_id is an integer or None
+        if business_id is not None:
+            try:
+                business_id = int(business_id)
+            except (ValueError, TypeError):
+                print(f"ERROR: Cannot convert business_id to int: {business_id}, type: {type(business_id)}")
+                business_id = None
+        
+        # Use ORM query (SQLAlchemy should handle this correctly)
         try:
-            from sqlalchemy import text
-            
             if business_id is not None:
-                # Convert business_id to int to ensure it's not a dict
-                business_id_val = int(business_id) if business_id is not None else None
-                result = db.session.execute(
-                    text("SELECT * FROM bill_templates WHERE template_type = :type AND business_id = :bid LIMIT 1"),
-                    {"type": template_type, "bid": business_id_val}
-                ).fetchone()
+                template = cls.query.filter_by(
+                    template_type=template_type,
+                    business_id=business_id
+                ).first()
             else:
-                result = db.session.execute(
-                    text("SELECT * FROM bill_templates WHERE template_type = :type AND business_id IS NULL LIMIT 1"),
-                    {"type": template_type}
-                ).fetchone()
+                template = cls.query.filter_by(
+                    template_type=template_type
+                ).filter(cls.business_id.is_(None)).first()
             
-            if result:
-                # Convert result to model instance
-                template = cls()
-                for key, value in result._mapping.items():
-                    if hasattr(template, key):
-                        # Convert string dates back to datetime objects
-                        if key in ('created_at', 'updated_at') and isinstance(value, str):
-                            from datetime import datetime
-                            try:
-                                value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-                            except:
-                                pass
-                        setattr(template, key, value)
+            if template:
                 return template
             else:
                 # Create default template if none exists
-                template = cls(template_type=template_type, business_id=business_id)
+                template = cls(
+                    template_type=template_type,
+                    business_id=business_id,
+                    header_name='My Business',
+                    header_tagline='Authentic Pakistani Cuisine',
+                    show_logo=True,
+                    show_restaurant_name=True,
+                    show_order_number=True,
+                    show_date_time=True,
+                    show_cashier=True,
+                    show_table=True,
+                    show_tax=True,
+                    footer_message='',
+                    show_qr_code=False,
+                    paper_size='80mm',
+                    font_size='medium',
+                    auto_cut=True
+                )
                 db.session.add(template)
                 db.session.commit()
                 return template
@@ -707,7 +715,13 @@ class BillTemplate(db.Model):
             import traceback
             traceback.print_exc()
             # Return a default template object even if there's an error
-            return cls(template_type=template_type, business_id=business_id)
+            return cls(
+                template_type=template_type,
+                business_id=business_id,
+                header_name='My Business',
+                header_tagline='Authentic Pakistani Cuisine',
+                show_restaurant_name=True
+            )
     
     def to_dict(self):
         return {

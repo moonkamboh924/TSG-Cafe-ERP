@@ -5,6 +5,7 @@ from sqlalchemy import func, and_
 from ..models import Sale, AuditLog, Expense, Business
 from ..extensions import db
 from ..auth import require_permissions
+from ..utils.business_hours import get_business_day, get_business_day_range
 
 bp = Blueprint('dashboard', __name__)
 
@@ -23,14 +24,20 @@ def index():
 @login_required
 @require_permissions('dashboard.view')
 def today_kpis():
-    today = datetime.now(timezone.utc).date()
+    # Get current business day (accounts for new_day_start_time)
+    today = get_business_day()
     yesterday = today - timedelta(days=1)
+    
+    # Get datetime ranges for filtering
+    today_start, today_end = get_business_day_range(today)
+    yesterday_start, yesterday_end = get_business_day_range(yesterday)
     
     # MULTI-TENANT: Today's revenue = Cash + Online + Account Sales + Credit Payments Received
     revenue = db.session.query(func.sum(Sale.total)).filter(
         and_(
             Sale.business_id == current_user.business_id,
-            func.date(Sale.created_at) == today,
+            Sale.created_at >= today_start,
+            Sale.created_at < today_end,
             Sale.payment_method.in_(['cash', 'online', 'account']),
             ~Sale.invoice_no.like('%-PAY-%')
         )
@@ -41,7 +48,8 @@ def today_kpis():
     credit_payments_today = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
         and_(
             CreditPayment.business_id == current_user.business_id,
-            func.date(CreditPayment.payment_date) == today
+            CreditPayment.payment_date >= today_start,
+            CreditPayment.payment_date < today_end
         )
     ).scalar() or 0
     
@@ -51,7 +59,8 @@ def today_kpis():
     yesterday_revenue = db.session.query(func.sum(Sale.total)).filter(
         and_(
             Sale.business_id == current_user.business_id,
-            func.date(Sale.created_at) == yesterday,
+            Sale.created_at >= yesterday_start,
+            Sale.created_at < yesterday_end,
             Sale.payment_method != 'credit',
             ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
         )
@@ -61,7 +70,8 @@ def today_kpis():
     yesterday_credit_payments = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
         and_(
             CreditPayment.business_id == current_user.business_id,
-            func.date(CreditPayment.payment_date) == yesterday
+            CreditPayment.payment_date >= yesterday_start,
+            CreditPayment.payment_date < yesterday_end
         )
     ).scalar() or 0
     
@@ -77,7 +87,8 @@ def today_kpis():
     orders = Sale.query.filter(
         and_(
             Sale.business_id == current_user.business_id,
-            func.date(Sale.created_at) == today,
+            Sale.created_at >= today_start,
+            Sale.created_at < today_end,
             ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
         )
     ).count()
@@ -86,7 +97,8 @@ def today_kpis():
     yesterday_orders = Sale.query.filter(
         and_(
             Sale.business_id == current_user.business_id,
-            func.date(Sale.created_at) == yesterday,
+            Sale.created_at >= yesterday_start,
+            Sale.created_at < yesterday_end,
             ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
         )
     ).count()
@@ -110,7 +122,8 @@ def today_kpis():
     expenses = db.session.query(func.sum(Expense.amount)).filter(
         and_(
             Expense.business_id == current_user.business_id,
-            func.date(Expense.incurred_at) == today
+            Expense.incurred_at >= today_start,
+            Expense.incurred_at < today_end
         )
     ).scalar() or 0
     
@@ -127,48 +140,32 @@ def today_kpis():
 @login_required
 @require_permissions('dashboard.view')
 def weekly_sales():
-    end_date = datetime.now(timezone.utc).date()
+    # Use business day to keep dashboard synchronized
+    end_date = get_business_day()
     start_date = end_date - timedelta(days=6)
     
-    # MULTI-TENANT: Get sales data for the week (all order types: Cash+Online+Account+Credit)
-    sales_data = db.session.query(
-        func.date(Sale.created_at).label('date'),
-        func.sum(Sale.total).label('total')
-    ).filter(
-        and_(
-            Sale.business_id == current_user.business_id,
-            func.date(Sale.created_at) >= start_date,
-            func.date(Sale.created_at) <= end_date,
-            ~Sale.invoice_no.like('%-PAY-%')  # Exclude only credit payment tracking records
-        )
-    ).group_by(func.date(Sale.created_at)).all()
-    
-    # MULTI-TENANT: Get credit payments by date
-    from ..models import CreditPayment
-    credit_payments_data = db.session.query(
-        func.date(CreditPayment.payment_date).label('date'),
-        func.sum(CreditPayment.payment_amount).label('total')
-    ).filter(
-        and_(
-            CreditPayment.business_id == current_user.business_id,
-            func.date(CreditPayment.payment_date) >= start_date,
-            func.date(CreditPayment.payment_date) <= end_date
-        )
-    ).group_by(func.date(CreditPayment.payment_date)).all()
-    
-    # Create a complete week with zeros for missing days
-    sales_dict = {str(row.date): float(row.total) for row in sales_data}
-    credit_payments_dict = {str(row.date): float(row.total) for row in credit_payments_data}
-    
+    # Build data for each day using business day ranges
     labels = []
     data = []
     
     for i in range(7):
         date = start_date + timedelta(days=i)
         labels.append(date.strftime('%a'))  # Mon, Tue, etc.
-        # Sales trend shows all orders (Cash+Online+Account+Credit) - no need to add credit payments separately
-        daily_sales = sales_dict.get(str(date), 0)
-        data.append(daily_sales)
+        
+        # Get the business day range (converted to UTC for database queries)
+        day_start, day_end = get_business_day_range(date)
+        
+        # MULTI-TENANT: Query sales for this specific business day
+        daily_total = db.session.query(func.sum(Sale.total)).filter(
+            and_(
+                Sale.business_id == current_user.business_id,
+                Sale.created_at >= day_start,
+                Sale.created_at < day_end,
+                ~Sale.invoice_no.like('%-PAY-%')  # Exclude only credit payment tracking records
+            )
+        ).scalar() or 0
+        
+        data.append(float(daily_total))
     
     return jsonify({
         'labels': labels,
@@ -181,38 +178,30 @@ def weekly_sales():
 def weekly_summary():
     """Get weekly summary data for dashboard"""
     try:
-        end_date = datetime.now(timezone.utc).date()
+        # Use business day to keep dashboard synchronized
+        end_date = get_business_day()
         start_date = end_date - timedelta(days=6)
         
-        # MULTI-TENANT: Total revenue for the week = Cash + Online + Account Sales + Credit Payments Received
+        # Get datetime ranges for the entire week using business day logic
+        week_start, _ = get_business_day_range(start_date)
+        _, week_end = get_business_day_range(end_date)
+        
+        # MULTI-TENANT: Total revenue for the week = All sales (Cash+Online+Account+Credit)
         total_revenue = db.session.query(func.sum(Sale.total)).filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) >= start_date,
-                func.date(Sale.created_at) <= end_date,
-                Sale.payment_method.in_(['cash', 'online', 'account']),
+                Sale.created_at >= week_start,
+                Sale.created_at < week_end,
                 ~Sale.invoice_no.like('%-PAY-%')
             )
         ).scalar() or 0
-        
-        # MULTI-TENANT: Add credit payments received during the week
-        from ..models import CreditPayment
-        credit_payments_week = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
-            and_(
-                CreditPayment.business_id == current_user.business_id,
-                func.date(CreditPayment.payment_date) >= start_date,
-                func.date(CreditPayment.payment_date) <= end_date
-            )
-        ).scalar() or 0
-        
-        total_revenue += credit_payments_week
         
         # MULTI-TENANT: Total orders for the week (exclude payment tracking records)
         total_orders = Sale.query.filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) >= start_date,
-                func.date(Sale.created_at) <= end_date,
+                Sale.created_at >= week_start,
+                Sale.created_at < week_end,
                 ~Sale.invoice_no.like('%-PAY-%')
             )
         ).count()
@@ -221,29 +210,21 @@ def weekly_summary():
         avg_daily_orders = round(total_orders / 7, 1) if total_orders > 0 else 0
         
         # Growth rate calculation (compare with previous week)
-        prev_week_start = start_date - timedelta(days=7)
         prev_week_end = start_date - timedelta(days=1)
+        prev_week_start = prev_week_end - timedelta(days=6)
+        
+        prev_week_start_dt, _ = get_business_day_range(prev_week_start)
+        _, prev_week_end_dt = get_business_day_range(prev_week_end)
         
         # MULTI-TENANT: Previous week revenue
         prev_week_revenue = db.session.query(func.sum(Sale.total)).filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) >= prev_week_start,
-                func.date(Sale.created_at) <= prev_week_end,
-                Sale.payment_method != 'credit'
+                Sale.created_at >= prev_week_start_dt,
+                Sale.created_at < prev_week_end_dt,
+                ~Sale.invoice_no.like('%-PAY-%')
             )
         ).scalar() or 0
-        
-        # MULTI-TENANT: Add previous week's credit payments
-        prev_week_credit_payments = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
-            and_(
-                CreditPayment.business_id == current_user.business_id,
-                func.date(CreditPayment.payment_date) >= prev_week_start,
-                func.date(CreditPayment.payment_date) <= prev_week_end
-            )
-        ).scalar() or 0
-        
-        prev_week_revenue += prev_week_credit_payments
         
         # Calculate growth rate
         if prev_week_revenue > 0:
@@ -251,29 +232,26 @@ def weekly_summary():
         else:
             growth_rate = 0 if total_revenue == 0 else 100
         
-        # MULTI-TENANT: Peak day calculation
-        peak_day_data = db.session.query(
-            func.date(Sale.created_at).label('date'),
-            func.sum(Sale.total).label('total')
-        ).filter(
-            and_(
-                Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) >= start_date,
-                func.date(Sale.created_at) <= end_date
-            )
-        ).group_by(func.date(Sale.created_at)).order_by(func.sum(Sale.total).desc()).first()
-        
+        # MULTI-TENANT: Find peak day by checking each business day
         peak_day = 'N/A'
         peak_day_revenue = 0
-        if peak_day_data and hasattr(peak_day_data, 'date') and hasattr(peak_day_data, 'total'):
-            # Convert string date to datetime object if needed
-            if isinstance(peak_day_data.date, str):
-                from datetime import datetime as dt
-                date_obj = dt.strptime(peak_day_data.date, '%Y-%m-%d').date()
-                peak_day = date_obj.strftime('%A')
-            else:
-                peak_day = peak_day_data.date.strftime('%A')
-            peak_day_revenue = float(peak_day_data.total)
+        
+        for i in range(7):
+            date = start_date + timedelta(days=i)
+            day_start, day_end = get_business_day_range(date)
+            
+            day_revenue = db.session.query(func.sum(Sale.total)).filter(
+                and_(
+                    Sale.business_id == current_user.business_id,
+                    Sale.created_at >= day_start,
+                    Sale.created_at < day_end,
+                    ~Sale.invoice_no.like('%-PAY-%')
+                )
+            ).scalar() or 0
+            
+            if day_revenue > peak_day_revenue:
+                peak_day_revenue = day_revenue
+                peak_day = date.strftime('%A')
         
         # Average daily revenue
         avg_daily_revenue = round(total_revenue / 7, 2) if total_revenue > 0 else 0
@@ -326,12 +304,15 @@ def recent_activities():
 def revenue_details():
     """Get detailed revenue information for dashboard modal"""
     try:
-        today = datetime.now(timezone.utc).date()
+        # Get current business day (accounts for new_day_start_time)
+        today = get_business_day()
+        today_start, today_end = get_business_day_range(today)
         
         # Today's total revenue = Cash + Online + Account Sales + Credit Payments Received
         total_revenue = db.session.query(func.sum(Sale.total)).filter(
             and_(
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 Sale.payment_method.in_(['cash', 'online', 'account']),
                 ~Sale.invoice_no.like('%-PAY-%')
             )
@@ -340,16 +321,21 @@ def revenue_details():
         # Add credit payments received today (actual cash flow from credit sales)
         from ..models import CreditPayment
         credit_payments_today = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
-            func.date(CreditPayment.payment_date) == today
+            and_(
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end
+            )
         ).scalar() or 0
         
         total_revenue += credit_payments_today
         
         # Yesterday's revenue for comparison (exclude credit sales and credit payment sales, add credit payments)
         yesterday = today - timedelta(days=1)
+        yesterday_start, yesterday_end = get_business_day_range(yesterday)
         yesterday_revenue = db.session.query(func.sum(Sale.total)).filter(
             and_(
-                func.date(Sale.created_at) == yesterday,
+                Sale.created_at >= yesterday_start,
+                Sale.created_at < yesterday_end,
                 Sale.payment_method != 'credit',
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
@@ -357,7 +343,10 @@ def revenue_details():
         
         # Add yesterday's credit payments
         yesterday_credit_payments = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
-            func.date(CreditPayment.payment_date) == yesterday
+            and_(
+                CreditPayment.payment_date >= yesterday_start,
+                CreditPayment.payment_date < yesterday_end
+            )
         ).scalar() or 0
         
         yesterday_revenue += yesterday_credit_payments
@@ -371,7 +360,8 @@ def revenue_details():
         # Cash vs Card sales breakdown (exclude credit payment sales)
         cash_sales = db.session.query(func.sum(Sale.total)).filter(
             and_(
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 Sale.payment_method == 'cash',
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
@@ -380,7 +370,8 @@ def revenue_details():
         # Account sales (online payments, bank transfers, etc.) - exclude credit payment sales
         account_sales = db.session.query(func.sum(Sale.total)).filter(
             and_(
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 Sale.payment_method.in_(['online', 'bank_transfer', 'account']),
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
@@ -391,7 +382,8 @@ def revenue_details():
         credit_sales = db.session.query(func.sum(Sale.total)).filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 Sale.payment_method == 'credit'
             )
         ).scalar() or 0
@@ -400,7 +392,8 @@ def revenue_details():
         credit_payments_today = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
             and_(
                 CreditPayment.business_id == current_user.business_id,
-                func.date(CreditPayment.payment_date) == today
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end
             )
         ).scalar() or 0
         
@@ -408,7 +401,8 @@ def revenue_details():
         credit_payments_cash = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
             and_(
                 CreditPayment.business_id == current_user.business_id,
-                func.date(CreditPayment.payment_date) == today,
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end,
                 CreditPayment.payment_method == 'cash'
             )
         ).scalar() or 0
@@ -416,7 +410,8 @@ def revenue_details():
         credit_payments_online = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
             and_(
                 CreditPayment.business_id == current_user.business_id,
-                func.date(CreditPayment.payment_date) == today,
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end,
                 CreditPayment.payment_method.in_(['online', 'bank_transfer', 'account'])
             )
         ).scalar() or 0
@@ -434,7 +429,8 @@ def revenue_details():
         recent_transactions = Sale.query.filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) == today
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end
             )
         ).order_by(Sale.created_at.desc()).limit(10).all()
         
@@ -475,23 +471,28 @@ def revenue_details():
 def orders_details():
     """Get detailed orders information for dashboard modal"""
     try:
-        today = datetime.now(timezone.utc).date()
+        # Get current business day (accounts for new_day_start_time)
+        today = get_business_day()
+        today_start, today_end = get_business_day_range(today)
         
         # MULTI-TENANT: Today's total orders (exclude credit payment sales)
         total_orders = Sale.query.filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
         ).count()
         
         # MULTI-TENANT: Calculate yesterday's orders for comparison (exclude credit payment sales)
         yesterday = today - timedelta(days=1)
+        yesterday_start, yesterday_end = get_business_day_range(yesterday)
         yesterday_orders = Sale.query.filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) == yesterday,
+                Sale.created_at >= yesterday_start,
+                Sale.created_at < yesterday_end,
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
         ).count()
@@ -514,7 +515,8 @@ def orders_details():
         recent_orders = Sale.query.filter(
             and_(
                 Sale.business_id == current_user.business_id,
-                func.date(Sale.created_at) == today,
+                Sale.created_at >= today_start,
+                Sale.created_at < today_end,
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
         ).order_by(Sale.created_at.desc()).limit(10).all()
@@ -621,22 +623,27 @@ def inventory_details():
 def expense_details():
     """Get detailed expense information for dashboard modal"""
     try:
-        today = datetime.now(timezone.utc).date()
+        # Get current business day (accounts for new_day_start_time)
+        today = get_business_day()
+        today_start, today_end = get_business_day_range(today)
         
         # MULTI-TENANT: Today's total expenses
         total_expenses = db.session.query(func.sum(Expense.amount)).filter(
             and_(
                 Expense.business_id == current_user.business_id,
-                func.date(Expense.incurred_at) == today
+                Expense.incurred_at >= today_start,
+                Expense.incurred_at < today_end
             )
         ).scalar() or 0
         
         # MULTI-TENANT: Calculate yesterday's expenses for comparison
         yesterday = today - timedelta(days=1)
+        yesterday_start, yesterday_end = get_business_day_range(yesterday)
         yesterday_expenses = db.session.query(func.sum(Expense.amount)).filter(
             and_(
                 Expense.business_id == current_user.business_id,
-                func.date(Expense.incurred_at) == yesterday
+                Expense.incurred_at >= yesterday_start,
+                Expense.incurred_at < yesterday_end
             )
         ).scalar() or 0
         
@@ -654,7 +661,8 @@ def expense_details():
         ).filter(
             and_(
                 Expense.business_id == current_user.business_id,
-                func.date(Expense.incurred_at) == today
+                Expense.incurred_at >= today_start,
+                Expense.incurred_at < today_end
             )
         ).group_by(Expense.category).all()
         
@@ -670,7 +678,8 @@ def expense_details():
         recent_expenses = Expense.query.filter(
             and_(
                 Expense.business_id == current_user.business_id,
-                func.date(Expense.incurred_at) == today
+                Expense.incurred_at >= today_start,
+                Expense.incurred_at < today_end
             )
         ).order_by(Expense.incurred_at.desc()).limit(10).all()
         
