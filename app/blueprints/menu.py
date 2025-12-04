@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
-from ..models import MenuItem, MenuCategory, InventoryItem, MenuRecipe, SystemSetting
+from ..models import MenuItem, MenuCategory, InventoryItem, MenuRecipe
 from ..extensions import db
 from ..auth import require_permissions, log_audit
 from ..utils.currency_utils import get_system_currency, get_currency_symbol

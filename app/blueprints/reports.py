@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, make_response
-from flask_login import login_required
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, and_
 from ..models import Sale, SaleLine, MenuItem, MenuCategory, Expense
