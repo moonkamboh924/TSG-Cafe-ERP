@@ -86,15 +86,18 @@ def get_currency_info(currency_code='PKR'):
     """
     return CURRENCIES.get(currency_code.upper(), CURRENCIES['PKR'])
 
-def get_system_currency():
+def get_system_currency(business_id=None):
     """
     Get the system's configured currency from settings
+    
+    Args:
+        business_id: Optional business ID to get currency for specific business
     
     Returns:
         str: Currency code (e.g., 'PKR')
     """
     from app.models import SystemSetting
-    return SystemSetting.get_setting('currency', 'PKR')
+    return SystemSetting.get_setting('currency', 'PKR', business_id=business_id)
 
 def get_currency_symbol(currency_code=None):
     """
