@@ -7,6 +7,7 @@
     // Currency configuration from backend
     const CURRENCY_CODE = '{{ currency_code }}';
     const CURRENCY_SYMBOL = '{{ currency_symbol }}';
+    const CASHIER_NAME = '{{ cashier_name }}';
     
     // Helper function to format currency
     function formatCurrency(amount) {
@@ -205,7 +206,7 @@
                         <span id="previewDate">Date: 05/09/2025</span>
                         <span id="previewTime">Time: 4:37 PM</span>
                     </div>
-                    <div id="previewCashier" class="text-xs">Cashier: Muhammad Mamoon</div>
+                    <div id="previewCashier" class="text-xs">Cashier: {{ cashier_name }}</div>
                 </div>
                 
                 <div class="mb-2">
@@ -716,7 +717,7 @@ function generatePreviewHTML(templateData) {
         </div>` : '';
     
     const cashierHTML = templateData.show_cashier ? 
-        `<div style="font-size: 12px;">Cashier: Muhammad Mamoon</div>` : '';
+        `<div style="font-size: 12px;">Cashier: ${CASHIER_NAME}</div>` : '';
     
     const taxHTML = templateData.show_tax ? 
         `<div style="display: flex; justify-content: space-between;">

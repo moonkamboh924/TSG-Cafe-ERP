@@ -60,10 +60,15 @@ def bill_editor():
     business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
     currency_code = get_system_currency()
     currency_symbol = get_currency_symbol(currency_code)
+    
+    # Get current user's full name for preview
+    cashier_name = f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.username
+    
     return render_template('admin/bill_editor.html', 
                          business_name=business_name,
                          currency_code=currency_code,
-                         currency_symbol=currency_symbol)
+                         currency_symbol=currency_symbol,
+                         cashier_name=cashier_name)
 
 @bp.route('/api/users')
 @login_required
@@ -1112,7 +1117,8 @@ def bill_preview():
         'font_size': font_size,
         'logo_filename': logo_filename,
         'tax_rate': tax_rate,
-        'business_id': current_user.business_id
+        'business_id': current_user.business_id,
+        'cashier_name': f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.username
     }
     
     return render_template('admin/bill_preview.html', **template_data)
