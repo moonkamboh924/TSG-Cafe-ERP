@@ -443,8 +443,8 @@ class InventoryManager {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.unit}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${item.current_stock}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${item.min_stock_level}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">₨${item.unit_cost}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">₨${totalCost.toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${formatCurrency(item.unit_cost)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">${formatCurrency(totalCost)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">${statusBadge}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                     <button onclick="inventoryManager.editItem(${item.id})" class="text-blue-600 hover:text-blue-900 mr-3" title="Edit Item">
@@ -487,7 +487,7 @@ class InventoryManager {
         
         if (totalStockValueElement) {
             const formattedValue = typeof totalStockValue === 'number' ? totalStockValue.toFixed(2) : '0.00';
-            totalStockValueElement.textContent = `₨${formattedValue}`;
+            totalStockValueElement.textContent = formatCurrency(formattedValue);
         }
         if (totalItemsElement) {
             totalItemsElement.textContent = totalItemsCount;

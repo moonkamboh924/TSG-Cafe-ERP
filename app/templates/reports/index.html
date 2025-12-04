@@ -354,7 +354,7 @@ async function loadTopItems(dateFrom, dateTo) {
         const data = result.data;
         
         const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.total_revenue), 0);
-        document.getElementById('topItemsRevenue').textContent = `₨${totalRevenue.toFixed(2)}`;
+        document.getElementById('topItemsRevenue').textContent = formatCurrency(totalRevenue);
         
         // Update chart
         if (topItemsChart) {
@@ -397,7 +397,7 @@ async function loadTopItems(dateFrom, dateTo) {
                 <td class="py-3 px-4 font-semibold text-gray-800">${item.item_name}</td>
                 <td class="py-3 px-4 text-gray-600">${item.category}</td>
                 <td class="py-3 px-4 text-gray-600">${parseFloat(item.total_qty).toFixed(0)}</td>
-                <td class="py-3 px-4 font-semibold text-green-600">₨${parseFloat(item.total_revenue).toFixed(2)}</td>
+                <td class="py-3 px-4 font-semibold text-green-600">${formatCurrency(item.total_revenue)}</td>
             </tr>
         `).join('');
     } catch (error) {
@@ -428,8 +428,8 @@ async function loadExpenseCategories(dateFrom, dateTo) {
         const data = result.data;
         
         // Calculate total
-        const total = data.reduce((sum, item) => sum + parseFloat(item.total_amount), 0);
-        document.getElementById('expenseCategoriesTotal').textContent = `₨${total.toFixed(2)}`;
+        const total = data.reduce((sum, item) => sum + parseFloat(item.total), 0);
+        document.getElementById('expenseCategoriesTotal').textContent = formatCurrency(total);
         
         // Update chart
         if (expenseCategoriesChart) {
@@ -570,10 +570,10 @@ async function loadSalesSummary(dateFrom, dateTo) {
         if (tbody) {
             tbody.innerHTML = data.map(item => `
                 <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="py-3 px-4 font-semibold text-gray-800">${new Date(item.date).toLocaleDateString()}</td>
+                    <td class="py-3 px-4 text-gray-600">${new Date(item.date).toLocaleDateString()}</td>
                     <td class="py-3 px-4 text-gray-600">${item.order_count}</td>
-                    <td class="py-3 px-4 font-semibold text-green-600">₨${parseFloat(item.total_sales).toFixed(2)}</td>
-                    <td class="py-3 px-4 text-gray-600">₨${parseFloat(item.avg_order_value).toFixed(2)}</td>
+                    <td class="py-3 px-4 font-semibold text-green-600">${formatCurrency(item.total_sales)}</td>
+                    <td class="py-3 px-4 text-gray-600">${formatCurrency(item.avg_order_value)}</td>
                 </tr>
             `).join('');
         }
@@ -589,7 +589,7 @@ function updateSalesTrendChart(data) {
         }
         
         if (!data || data.length === 0) {
-            document.getElementById('salesTrendTotal').textContent = '0 Orders • ₨0.00 Total • ₨0.00 Revenue';
+            document.getElementById('salesTrendTotal').textContent = `0 Orders • ${formatCurrency(0)} Total • ${formatCurrency(0)} Revenue`;
             return;
         }
         

@@ -376,10 +376,10 @@ async function loadFinancialSummary() {
         const response = await fetch('/finance/api/summary');
         const data = await response.json();
         
-        document.getElementById('todayRevenue').textContent = `₨${parseFloat(data.today_revenue).toFixed(2)}`;
-        document.getElementById('todayExpenses').textContent = `₨${parseFloat(data.today_expenses).toFixed(2)}`;
-        document.getElementById('netProfit').textContent = `₨${parseFloat(data.net_profit).toFixed(2)}`;
-        document.getElementById('monthRevenue').textContent = `₨${parseFloat(data.month_revenue).toFixed(2)}`;
+        document.getElementById('todayRevenue').textContent = formatCurrency(data.today_revenue);
+        document.getElementById('todayExpenses').textContent = formatCurrency(data.today_expenses);
+        document.getElementById('netProfit').textContent = formatCurrency(data.net_profit);
+        document.getElementById('monthRevenue').textContent = formatCurrency(data.month_revenue);
     } catch (error) {
         console.error('Error loading financial summary:', error);
     }
@@ -430,7 +430,7 @@ function renderExpensesTable() {
                 </span>
             </td>
             <td class="py-3 px-4 text-gray-600">${expense.note || 'No description'}</td>
-            <td class="py-3 px-4 font-semibold text-red-600">₨${parseFloat(expense.amount).toFixed(2)}</td>
+            <td class="py-3 px-4 font-semibold text-red-600">${formatCurrency(expense.amount)}</td>
             <td class="py-3 px-4 text-gray-600">${expense.user}</td>
             <td class="py-3 px-4">
                 <button onclick="viewExpense(${expense.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm mr-2">
