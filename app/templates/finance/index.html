@@ -548,8 +548,8 @@ async function loadClosingData() {
         const response = await fetch(`/finance/api/closing-data?date=${date}`);
         const data = await response.json();
         
-        document.getElementById('salesTotal').value = `₨${parseFloat(data.sales_total).toFixed(2)}`;
-        document.getElementById('expenseTotal').value = `₨${parseFloat(data.expense_total).toFixed(2)}`;
+        document.getElementById('salesTotal').value = formatCurrency(data.sales_total);
+        document.getElementById('expenseTotal').value = formatCurrency(data.expense_total);
     } catch (error) {
         console.error('Error loading closing data:', error);
     }
@@ -632,7 +632,7 @@ async function deleteExpense(expenseId) {
     // Store expense to delete and show modal
     expenseToDelete = expense;
     document.getElementById('deleteExpenseCategory').textContent = expense.category;
-    document.getElementById('deleteExpenseAmount').textContent = `₨${parseFloat(expense.amount).toFixed(2)}`;
+    document.getElementById('deleteExpenseAmount').textContent = formatCurrency(expense.amount);
     document.getElementById('deleteExpenseDate').textContent = new Date(expense.incurred_at).toLocaleDateString();
     
     const deleteModal = document.getElementById('deleteExpenseModal');
@@ -700,7 +700,7 @@ async function viewExpense(expenseId) {
             const expense = data.expense;
             document.getElementById('viewExpenseDate').textContent = new Date(expense.incurred_at).toLocaleDateString();
             document.getElementById('viewExpenseCategory').textContent = expense.category;
-            document.getElementById('viewExpenseAmount').textContent = `₨${parseFloat(expense.amount).toFixed(2)}`;
+            document.getElementById('viewExpenseAmount').textContent = formatCurrency(expense.amount);
             document.getElementById('viewExpenseNote').textContent = expense.note || 'No description';
             document.getElementById('viewExpenseUser').textContent = expense.user;
             
@@ -797,10 +797,10 @@ async function viewClosing(closingId) {
         if (data.success) {
             const closing = data.closing;
             document.getElementById('viewClosingDate').textContent = new Date(closing.date).toLocaleDateString();
-            document.getElementById('viewClosingOpeningCash').textContent = `₨${parseFloat(closing.opening_cash).toFixed(2)}`;
-            document.getElementById('viewClosingSalesTotal').textContent = `₨${parseFloat(closing.sales_total).toFixed(2)}`;
-            document.getElementById('viewClosingExpenseTotal').textContent = `₨${parseFloat(closing.expense_total || 0).toFixed(2)}`;
-            document.getElementById('viewClosingClosingCash').textContent = `₨${parseFloat(closing.closing_cash).toFixed(2)}`;
+            document.getElementById('viewClosingOpeningCash').textContent = formatCurrency(closing.opening_cash);
+            document.getElementById('viewClosingSalesTotal').textContent = formatCurrency(closing.sales_total);
+            document.getElementById('viewClosingExpenseTotal').textContent = formatCurrency(closing.expense_total || 0);
+            document.getElementById('viewClosingClosingCash').textContent = formatCurrency(closing.closing_cash);
             document.getElementById('viewClosingUser').textContent = closing.user;
             
             document.getElementById('viewClosingModal').classList.remove('hidden');
