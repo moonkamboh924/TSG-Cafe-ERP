@@ -474,10 +474,10 @@ function renderClosingsTable() {
     tbody.innerHTML = closings.map(closing => `
         <tr class="border-b border-gray-100 hover:bg-gray-50">
             <td class="py-3 px-4 font-semibold text-gray-800">${new Date(closing.date).toLocaleDateString()}</td>
-            <td class="py-3 px-4 text-gray-600">₨${parseFloat(closing.opening_cash).toFixed(2)}</td>
-            <td class="py-3 px-4 text-green-600 font-semibold">₨${parseFloat(closing.sales_total).toFixed(2)}</td>
-            <td class="py-3 px-4 text-red-600 font-semibold">₨${parseFloat(closing.expense_total).toFixed(2)}</td>
-            <td class="py-3 px-4 text-gray-600">₨${parseFloat(closing.closing_cash).toFixed(2)}</td>
+            <td class="py-3 px-4 text-gray-600">${formatCurrency(closing.opening_cash)}</td>
+            <td class="py-3 px-4 text-green-600 font-semibold">${formatCurrency(closing.sales_total)}</td>
+            <td class="py-3 px-4 text-red-600 font-semibold">${formatCurrency(closing.expense_total)}</td>
+            <td class="py-3 px-4 text-gray-600">${formatCurrency(closing.closing_cash)}</td>
             <td class="py-3 px-4 text-gray-600">${closing.user}</td>
             <td class="py-3 px-4">
                 <button onclick="viewClosing(${closing.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm mr-2">
