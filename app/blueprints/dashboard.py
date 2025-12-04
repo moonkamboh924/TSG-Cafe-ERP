@@ -6,6 +6,7 @@ from ..models import Sale, AuditLog, Expense, Business
 from ..extensions import db
 from ..auth import require_permissions
 from ..utils.business_hours import get_business_day, get_business_day_range
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 
 bp = Blueprint('dashboard', __name__)
 
@@ -18,7 +19,9 @@ def index():
         from flask import redirect, url_for
         return redirect(url_for('system_admin_dashboard.index'))
     
-    return render_template('dashboard/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('dashboard/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/kpis/today')
 @login_required

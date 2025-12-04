@@ -539,6 +539,42 @@
                 setTimeout(() => notification.remove(), 300);
             }, 5000);
         }
+        
+        // Global Currency Variables and Formatter
+        window.CURRENCY_CODE = '{{ currency_code | default("PKR") }}';
+        window.CURRENCY_SYMBOL = '{{ currency_symbol | default("₨") }}';
+        
+        /**
+         * Format currency with the system currency symbol
+         * @param {number} amount - The amount to format
+         * @param {number} decimals - Number of decimal places (default 2)
+         * @returns {string} Formatted currency string
+         */
+        window.formatCurrency = function(amount, decimals = 2) {
+            if (isNaN(amount) || amount === null || amount === undefined) {
+                amount = 0;
+            }
+            const formatted = parseFloat(amount).toFixed(decimals);
+            return `${window.CURRENCY_SYMBOL}${formatted}`;
+        };
+        
+        /**
+         * Format currency with thousand separators
+         * @param {number} amount - The amount to format
+         * @param {number} decimals - Number of decimal places (default 2)
+         * @returns {string} Formatted currency string with separators
+         */
+        window.formatCurrencyWithSeparators = function(amount, decimals = 2) {
+            if (isNaN(amount) || amount === null || amount === undefined) {
+                amount = 0;
+            }
+            const formatted = parseFloat(amount).toFixed(decimals);
+            const parts = formatted.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return `${window.CURRENCY_SYMBOL}${parts.join('.')}`;
+        };
+        
+        console.log('Currency system initialized:', { code: window.CURRENCY_CODE, symbol: window.CURRENCY_SYMBOL });
     </script>
     
     {% block extra_js %}{% endblock %}

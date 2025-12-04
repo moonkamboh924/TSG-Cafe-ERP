@@ -6,6 +6,7 @@ from ..models import Sale, SaleLine, MenuItem, MenuCategory, Expense
 from ..extensions import db
 from ..auth import require_permissions
 from ..utils.business_hours import get_business_day, get_business_day_range
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 import csv
 import io
 
@@ -15,7 +16,9 @@ bp = Blueprint('reports', __name__)
 @login_required
 @require_permissions('reports.view')
 def index():
-    return render_template('reports/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('reports/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/sales')
 @login_required

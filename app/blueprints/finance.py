@@ -7,6 +7,7 @@ from ..extensions import db
 from ..auth import require_permissions, log_audit
 from ..utils.timezone_utils import safe_fromisoformat
 from ..utils.business_hours import get_business_day, get_business_day_range
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 
 bp = Blueprint('finance', __name__)
 
@@ -14,7 +15,9 @@ bp = Blueprint('finance', __name__)
 @login_required
 @require_permissions('finance.view')
 def index():
-    return render_template('finance/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('finance/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/summary')
 @login_required

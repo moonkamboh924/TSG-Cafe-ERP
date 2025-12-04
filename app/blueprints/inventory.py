@@ -5,6 +5,7 @@ from sqlalchemy import func
 from ..models import MenuItem, InventoryLot, PurchaseOrder, PurchaseOrderLine, Supplier, InventoryItem
 from ..extensions import db
 from ..auth import require_permissions, log_audit
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 
 bp = Blueprint('inventory', __name__)
 
@@ -12,7 +13,9 @@ bp = Blueprint('inventory', __name__)
 @login_required
 @require_permissions('inventory.view')
 def index():
-    return render_template('inventory/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('inventory/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/items')
 @login_required

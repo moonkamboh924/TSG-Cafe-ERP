@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
-from ..models import MenuItem, MenuCategory, InventoryItem, MenuRecipe
+from ..models import MenuItem, MenuCategory, InventoryItem, MenuRecipe, SystemSetting
 from ..extensions import db
 from ..auth import require_permissions, log_audit
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 
 bp = Blueprint('menu', __name__)
 
@@ -10,7 +11,9 @@ bp = Blueprint('menu', __name__)
 @login_required
 @require_permissions('menu.view')
 def index():
-    return render_template('menu/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('menu/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/categories')
 @login_required

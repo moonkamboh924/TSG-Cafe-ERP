@@ -5,6 +5,7 @@ from sqlalchemy import and_
 from ..models import MenuItem, MenuCategory, Sale, SaleLine, InventoryLot, CreditSale, InventoryItem, MenuRecipe
 from ..extensions import db
 from ..auth import require_permissions, log_audit
+from ..utils.currency_utils import get_system_currency, get_currency_symbol
 import uuid
 
 bp = Blueprint('pos', __name__)
@@ -78,7 +79,9 @@ def deduct_inventory_for_menu_item(menu_item_id, quantity):
 @login_required
 @require_permissions('pos.view')
 def index():
-    return render_template('pos/index.html')
+    currency_code = get_system_currency(current_user.business_id)
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('pos/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
 
 @bp.route('/api/menu')
 @login_required
