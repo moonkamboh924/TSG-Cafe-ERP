@@ -463,7 +463,7 @@ async function loadExpenseCategories(dateFrom, dateTo) {
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return '₨' + value.toLocaleString();
+                                return CURRENCY_SYMBOL + value.toLocaleString();
                             }
                         }
                     }
@@ -542,7 +542,7 @@ async function loadRevenueExpenses(dateFrom, dateTo) {
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return '₨' + value.toLocaleString();
+                                return CURRENCY_SYMBOL + value.toLocaleString();
                             }
                         }
                     }
@@ -597,7 +597,7 @@ function updateSalesTrendChart(data) {
         const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.total_sales), 0);
         const totalOrderValue = data.reduce((sum, item) => sum + parseFloat(item.total_order_value || 0), 0);
         
-        document.getElementById('salesTrendTotal').textContent = `${totalOrders} Orders • ₨${totalOrderValue.toFixed(2)} Total • ₨${totalRevenue.toFixed(2)} Revenue`;
+        document.getElementById('salesTrendTotal').textContent = `${totalOrders} Orders • ${formatCurrency(totalOrderValue)} Total • ${formatCurrency(totalRevenue)} Revenue`;
         
         const ctx = document.getElementById('salesTrendChart').getContext('2d');
         salesTrendChart = new Chart(ctx, {
@@ -763,7 +763,7 @@ async function loadInventoryReport() {
         if (result.success) {
             // Update summary cards
             document.getElementById('totalItems').textContent = result.summary.total_items;
-            document.getElementById('totalInventoryValue').textContent = `₨${result.summary.total_value.toFixed(2)}`;
+            document.getElementById('totalInventoryValue').textContent = formatCurrency(result.summary.total_value);
             document.getElementById('lowStockItems').textContent = result.summary.low_stock_items;
             
             // Update table
@@ -781,8 +781,8 @@ async function loadInventoryReport() {
                         <td class="py-3 px-4 text-sm text-gray-600">${item.category}</td>
                         <td class="py-3 px-4 text-sm text-gray-900">${parseFloat(item.current_stock).toFixed(2)} ${item.unit}</td>
                         <td class="py-3 px-4 text-sm text-gray-600">${parseFloat(item.min_stock_level).toFixed(2)} ${item.unit}</td>
-                        <td class="py-3 px-4 text-sm text-gray-900">₨${parseFloat(item.unit_cost).toFixed(2)}</td>
-                        <td class="py-3 px-4 text-sm font-semibold text-green-600">₨${totalValue.toFixed(2)}</td>
+                        <td class="py-3 px-4 text-sm text-gray-900">${formatCurrency(item.unit_cost)}</td>
+                        <td class="py-3 px-4 text-sm font-semibold text-green-600">${formatCurrency(totalValue)}</td>
                         <td class="py-3 px-4">
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
                                 ${statusText}
