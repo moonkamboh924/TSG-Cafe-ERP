@@ -187,32 +187,32 @@
         <div class="items">
             <div class="item-row">
                 <span>Chicken Karahi</span>
-                <span>PKR 850</span>
+                <span>{{ 850|format_currency }}</span>
             </div>
             <div class="item-row">
                 <span>Naan (2x)</span>
-                <span>PKR 120</span>
+                <span>{{ 120|format_currency }}</span>
             </div>
             <div class="item-row">
                 <span>Lassi</span>
-                <span>PKR 180</span>
+                <span>{{ 180|format_currency }}</span>
             </div>
         </div>
         
         <div class="totals">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>PKR 1,150</span>
+                <span>{{ 1150|format_currency }}</span>
             </div>
             {% if show_tax %}
             <div class="total-row">
-                <span>Tax ({{ tax_rate|int }}%):</span>
-                <span>PKR {{ (1150 * tax_rate / 100)|round|int }}</span>
+                <span>Tax ({{ tax_rate }}%):</span>
+                <span>{{ (1150 * tax_rate / 100)|round|int|format_currency }}</span>
             </div>
             {% endif %}
-            <div class="total-row final">
+            <div class="total-row grand-total">
                 <span>Total:</span>
-                <span>PKR {% if show_tax %}{{ (1150 + (1150 * tax_rate / 100))|round|int }}{% else %}1,150{% endif %}</span>
+                <span>{% if show_tax %}{{ (1150 + (1150 * tax_rate / 100))|round|int|format_currency }}{% else %}{{ 1150|format_currency }}{% endif %}</span>
             </div>
         </div>
         

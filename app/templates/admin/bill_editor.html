@@ -3,6 +3,17 @@
 {% block title %}Bill Editor - {{ get_setting('restaurant_name', 'ERP') }}{% endblock %}
 
 {% block content %}
+<script>
+    // Currency configuration from backend
+    const CURRENCY_CODE = '{{ currency_code }}';
+    const CURRENCY_SYMBOL = '{{ currency_symbol }}';
+    
+    // Helper function to format currency
+    function formatCurrency(amount) {
+        return `${CURRENCY_SYMBOL}${Math.round(amount).toLocaleString()}`;
+    }
+</script>
+
 <div class="container mx-auto px-4 py-6">
     <!-- Page Header -->
     <div class="mb-8">
@@ -200,30 +211,30 @@
                 <div class="mb-2">
                     <div class="flex justify-between">
                         <span>Chicken Karahi</span>
-                        <span>PKR 850</span>
+                        <span>{{ 850|format_currency }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Naan (2x)</span>
-                        <span>PKR 120</span>
+                        <span>{{ 120|format_currency }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Lassi</span>
-                        <span>PKR 180</span>
+                        <span>{{ 180|format_currency }}</span>
                     </div>
                 </div>
                 
                 <div id="previewTotals" class="border-t border-gray-400 pt-2">
                     <div class="flex justify-between">
                         <span>Subtotal:</span>
-                        <span>PKR 1,150</span>
+                        <span>{{ 1150|format_currency }}</span>
                     </div>
                     <div id="previewTaxRow" class="flex justify-between">
                         <span>Tax ({{ get_setting('tax_rate', '17') }}%):</span>
-                        <span id="previewTaxAmount">PKR 196</span>
+                        <span id="previewTaxAmount">{{ 196|format_currency }}</span>
                     </div>
                     <div class="flex justify-between font-bold">
                         <span>Total:</span>
-                        <span>PKR 1,346</span>
+                        <span>{{ 1346|format_currency }}</span>
                     </div>
                 </div>
                 
@@ -573,8 +584,8 @@ function updateTaxPreview() {
                 const totalSpan = document.querySelector('.font-bold span:last-child');
                 
                 if (taxLabel) taxLabel.textContent = `Tax (${taxRate}%):`;
-                if (taxAmountSpan) taxAmountSpan.textContent = `PKR ${Math.round(taxAmount)}`;
-                if (totalSpan) totalSpan.textContent = `PKR ${Math.round(total)}`;
+                if (taxAmountSpan) taxAmountSpan.textContent = formatCurrency(taxAmount);
+                if (totalSpan) totalSpan.textContent = formatCurrency(total);
             }
         })
         .catch(error => console.error('Error fetching global settings:', error));
@@ -710,7 +721,7 @@ function generatePreviewHTML(templateData) {
     const taxHTML = templateData.show_tax ? 
         `<div style="display: flex; justify-content: space-between;">
             <span>Tax (17%):</span>
-            <span>PKR 196</span>
+            <span>${formatCurrency(196)}</span>
         </div>` : '';
     
     const qrCodeHTML = templateData.show_qr_code ? 
@@ -821,27 +832,27 @@ function generatePreviewHTML(templateData) {
             <div class="items">
                 <div class="item-row">
                     <span>Chicken Karahi</span>
-                    <span>PKR 850</span>
+                    <span>${formatCurrency(850)}</span>
                 </div>
                 <div class="item-row">
                     <span>Naan (2x)</span>
-                    <span>PKR 120</span>
+                    <span>${formatCurrency(120)}</span>
                 </div>
                 <div class="item-row">
                     <span>Lassi</span>
-                    <span>PKR 180</span>
+                    <span>${formatCurrency(180)}</span>
                 </div>
             </div>
             
             <div class="totals">
                 <div class="total-row">
                     <span>Subtotal:</span>
-                    <span>PKR 1,150</span>
+                    <span>${formatCurrency(1150)}</span>
                 </div>
                 ${taxHTML}
                 <div class="total-row final">
                     <span>Total:</span>
-                    <span>PKR 1,346</span>
+                    <span>${formatCurrency(1346)}</span>
                 </div>
             </div>
             

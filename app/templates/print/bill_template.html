@@ -252,7 +252,7 @@
             <div class="item-row">
                 <span class="item-name">{{ line.item.name }}</span>
                 <span class="item-qty">{{ line.qty|int }}</span>
-                <span class="item-price">PKR {{ "%.0f"|format(line.line_total) }}</span>
+                <span class="item-price">{{ line.line_total|format_currency }}</span>
             </div>
             {% endfor %}
         </div>
@@ -261,19 +261,19 @@
         <div class="totals">
             <div class="total-row">
                 <span>Subtotal:</span>
-                <span>PKR {{ "%.0f"|format(bill_data.subtotal) }}</span>
+                <span>{{ bill_data.subtotal|format_currency }}</span>
             </div>
             
             {% if template.show_tax %}
             <div class="total-row">
                 <span>Tax:</span>
-                <span>PKR {{ "%.0f"|format(bill_data.tax) }}</span>
+                <span>{{ bill_data.tax|format_currency }}</span>
             </div>
             {% endif %}
             
             <div class="total-row grand-total">
                 <span>Total:</span>
-                <span>PKR {{ "%.0f"|format(bill_data.total) }}</span>
+                <span>{{ bill_data.total|format_currency }}</span>
             </div>
             
             <div class="total-row total-row-margin">

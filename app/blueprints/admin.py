@@ -56,8 +56,14 @@ def get_global_settings():
 @require_permissions('admin.view')
 def bill_editor():
     from app.models import SystemSetting
+    from app.utils.currency_utils import get_currency_symbol, get_system_currency
     business_name = SystemSetting.get_setting('restaurant_name', 'My Business')
-    return render_template('admin/bill_editor.html', business_name=business_name)
+    currency_code = get_system_currency()
+    currency_symbol = get_currency_symbol(currency_code)
+    return render_template('admin/bill_editor.html', 
+                         business_name=business_name,
+                         currency_code=currency_code,
+                         currency_symbol=currency_symbol)
 
 @bp.route('/api/users')
 @login_required
