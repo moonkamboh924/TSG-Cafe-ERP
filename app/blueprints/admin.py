@@ -332,12 +332,21 @@ def update_user(user_id):
     try:
         # Update basic fields
         user.username = data.get('username', user.username)
-        user.email = data.get('email', user.email)
+        
+        # Only system administrators can change email and phone for owners
+        if user.role == 'owner' or user.is_owner:
+            if current_user.role == 'system_administrator':
+                user.email = data.get('email', user.email)
+                user.phone = data.get('phone', user.phone)
+            # Otherwise keep existing email and phone (don't update)
+        else:
+            user.email = data.get('email', user.email)
+            user.phone = data.get('phone', user.phone)
+        
         user.first_name = data.get('first_name', user.first_name)
         user.last_name = data.get('last_name', user.last_name)
         user.full_name = data.get('full_name', user.full_name)
         user.designation = data.get('designation', user.designation)
-        user.phone = data.get('phone', user.phone)
         user.address = data.get('address', user.address)
         user.department = data.get('department', user.department)
         

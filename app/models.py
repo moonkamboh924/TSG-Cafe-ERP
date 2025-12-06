@@ -368,6 +368,7 @@ class User(UserMixin, db.Model):
             'username': self.username,
             'email': self.email,
             'role': self.role,
+            'is_owner': self.is_owner,
             'first_name': self.first_name,
             'last_name': self.last_name,
             'full_name': self.full_name,

@@ -247,7 +247,7 @@
                 </div>
             </div>
             
-            <div>
+            <div id="roleContainer">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
                 <select id="userRole" title="Select user's role" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">Select Role</option>
@@ -260,6 +260,7 @@
                     <option value="officer">Officer</option>
                     <option value="worker">Worker</option>
                 </select>
+                <p id="ownerRoleNote" class="text-xs text-blue-600 mt-1 hidden">Owner role is assigned automatically and cannot be changed</p>
             </div>
             
             <div>
@@ -522,29 +523,51 @@ function openUserModalWithData(user, modal, title) {
         document.getElementById('userPhone').value = user.phone || '';
         document.getElementById('userAddress').value = user.address || '';
         
-        // Disable role field for owner role (cannot be changed)
         const roleField = document.getElementById('userRole');
-        if (user.role === 'owner') {
+        const ownerRoleNote = document.getElementById('ownerRoleNote');
+        const emailField = document.getElementById('userEmail');
+        const phoneField = document.getElementById('userPhone');
+        const isSystemAdmin = '{{ current_user.role }}' === 'system_administrator';
+        
+        // Handle owner role restrictions
+        if (user.role === 'owner' || user.is_owner) {
+            // Disable role field for owner
             roleField.disabled = true;
             roleField.classList.add('bg-gray-100', 'cursor-not-allowed');
-            // Add visual indicator that owner role is fixed
-            const roleContainer = roleField.parentElement;
-            let ownerNote = roleContainer.querySelector('.owner-role-note');
-            if (!ownerNote) {
-                ownerNote = document.createElement('p');
-                ownerNote.className = 'owner-role-note text-xs text-blue-600 mt-1';
-                ownerNote.textContent = 'Owner role is assigned automatically and cannot be changed';
-                roleContainer.appendChild(ownerNote);
+            ownerRoleNote.classList.remove('hidden');
+            
+            // Make email and phone read-only for owners (unless system admin)
+            if (!isSystemAdmin) {
+                emailField.readOnly = true;
+                emailField.classList.add('bg-gray-100', 'cursor-not-allowed');
+                emailField.title = 'Only System Administrators can change owner email';
+                
+                phoneField.readOnly = true;
+                phoneField.classList.add('bg-gray-100', 'cursor-not-allowed');
+                phoneField.title = 'Only System Administrators can change owner phone';
+            } else {
+                emailField.readOnly = false;
+                emailField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                emailField.title = '';
+                
+                phoneField.readOnly = false;
+                phoneField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                phoneField.title = '';
             }
         } else {
+            // Enable role field for non-owners
             roleField.disabled = false;
             roleField.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            // Remove owner note if exists
-            const roleContainer = roleField.parentElement;
-            const ownerNote = roleContainer.querySelector('.owner-role-note');
-            if (ownerNote) {
-                ownerNote.remove();
-            }
+            ownerRoleNote.classList.add('hidden');
+            
+            // Enable email and phone for non-owners
+            emailField.readOnly = false;
+            emailField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            emailField.title = '';
+            
+            phoneField.readOnly = false;
+            phoneField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            phoneField.title = '';
         }
         
         // Render navigation permissions with user's current permissions
@@ -555,17 +578,23 @@ function openUserModalWithData(user, modal, title) {
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
         
-        // Enable role field for new users
+        // Enable all fields for new users
         const roleField = document.getElementById('userRole');
+        const ownerRoleNote = document.getElementById('ownerRoleNote');
+        const emailField = document.getElementById('userEmail');
+        const phoneField = document.getElementById('userPhone');
+        
         roleField.disabled = false;
         roleField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        ownerRoleNote.classList.add('hidden');
         
-        // Remove owner note if exists
-        const roleContainer = roleField.parentElement;
-        const ownerNote = roleContainer.querySelector('.owner-role-note');
-        if (ownerNote) {
-            ownerNote.remove();
-        }
+        emailField.readOnly = false;
+        emailField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        emailField.title = '';
+        
+        phoneField.readOnly = false;
+        phoneField.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        phoneField.title = '';
         
         // Render navigation permissions with no selections
         renderNavigationPermissions([]);
