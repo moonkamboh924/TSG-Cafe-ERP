@@ -34,7 +34,7 @@ def index():
                          subscription=subscription_status,
                          usage=usage_stats,
                          invoices=invoices,
-                         plans=SubscriptionService.PLAN_PRICING)
+                         plans=SubscriptionService.get_all_plans())
 
 @bp.route('/api/status')
 @login_required
@@ -193,7 +193,7 @@ def plans():
     current_plan = business.subscription_plan if business else 'free'
     
     return render_template('subscriptions/plans.html',
-                         plans=SubscriptionService.PLAN_PRICING,
+                         plans=SubscriptionService.get_all_plans(),
                          plan_limits=SubscriptionService.PLAN_LIMITS,
                          current_plan=current_plan)
 
@@ -212,5 +212,5 @@ def change_plan(plan):
     
     return render_template('subscriptions/change_plan.html',
                          plan=plan,
-                         pricing=SubscriptionService.PLAN_PRICING[plan],
+                         pricing=SubscriptionService.get_plan_pricing(plan, 1),
                          current_plan=business.subscription_plan)

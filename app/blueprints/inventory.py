@@ -255,7 +255,14 @@ def create_inventory_item():
 @require_permissions('inventory.view')
 def get_inventory_item(item_id):
     """Get a specific inventory item"""
-    item = InventoryItem.query.get_or_404(item_id)
+    # MULTI-TENANT: Verify item belongs to user's business
+    if current_user.role == 'system_administrator':
+        item = InventoryItem.query.get_or_404(item_id)
+    else:
+        item = InventoryItem.query.filter_by(
+            id=item_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     return jsonify({
         'success': True,
         'item': item.to_dict()
@@ -267,7 +274,14 @@ def get_inventory_item(item_id):
 def update_inventory_item(item_id):
     """Update an inventory item"""
     try:
-        item = InventoryItem.query.get_or_404(item_id)
+        # MULTI-TENANT: Verify item belongs to user's business
+        if current_user.role == 'system_administrator':
+            item = InventoryItem.query.get_or_404(item_id)
+        else:
+            item = InventoryItem.query.filter_by(
+                id=item_id,
+                business_id=current_user.business_id
+            ).first_or_404()
         data = request.get_json()
         
         # Store old values for audit
@@ -314,7 +328,14 @@ def update_inventory_item(item_id):
 def delete_inventory_item(item_id):
     """Delete an inventory item (soft delete by setting is_active=False)"""
     try:
-        item = InventoryItem.query.get_or_404(item_id)
+        # MULTI-TENANT: Verify item belongs to user's business
+        if current_user.role == 'system_administrator':
+            item = InventoryItem.query.get_or_404(item_id)
+        else:
+            item = InventoryItem.query.filter_by(
+                id=item_id,
+                business_id=current_user.business_id
+            ).first_or_404()
         
         # Soft delete
         item.is_active = False

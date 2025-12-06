@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadCategories() {
     try {
-        const response = await fetch('/pos/api/categories');
+        const response = await fetch('/menu/api/categories');
         categories = await response.json();
         
         // Populate filter dropdown

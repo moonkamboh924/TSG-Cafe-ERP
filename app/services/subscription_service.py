@@ -18,19 +18,42 @@ from ..models import Business, Subscription, Invoice, PaymentMethod, PlanFeature
 class SubscriptionService:
     """Service class for subscription management"""
     
-    # Plan pricing configuration by business type
+    # Plan pricing configuration
     PLAN_PRICING = {
-        'cafe': {
-            'name': 'Cafe',
-            'icon': 'fa-coffee',
-            'description': 'Perfect for coffee shops and small cafes',
+        'basic': {
+            'name': 'Basic Plan',
+            'icon': 'fa-box',
+            'description': 'Perfect for small cafes and startups',
             'features': [
-                'Up to 10 users',
-                'Menu management (100 items)',
+                'Up to 3 users',
+                'Menu management (20 items)',
                 'Basic POS system',
                 'Inventory tracking',
                 'Daily sales reports',
                 'Email support'
+            ],
+            'pricing': {
+                1: 5,     # 1 month
+                3: 14,    # 3 months (10% discount)
+                6: 26,    # 6 months (15% discount)
+                12: 48    # 12 months (20% discount)
+            },
+            'trial_days': 14
+        },
+        'advance': {
+            'name': 'Advance Plan',
+            'icon': 'fa-rocket',
+            'description': 'Complete solution for growing businesses',
+            'features': [
+                'Up to 10 users',
+                'Menu management (100 items)',
+                'Advanced POS system',
+                'Inventory management',
+                'Kitchen display system',
+                'Multi-location support (up to 3)',
+                'Advanced analytics & reports',
+                'Priority support',
+                'Custom branding'
             ],
             'pricing': {
                 1: 29,    # 1 month
@@ -40,38 +63,15 @@ class SubscriptionService:
             },
             'trial_days': 14
         },
-        'restaurant': {
-            'name': 'Restaurant',
-            'icon': 'fa-utensils',
-            'description': 'Complete solution for full-service restaurants',
+        'premium': {
+            'name': 'Premium Plan',
+            'icon': 'fa-crown',
+            'description': 'Enterprise solution for large restaurants and chains',
             'features': [
                 'Up to 50 users',
                 'Unlimited menu items',
-                'Advanced POS with table management',
-                'Inventory management',
-                'Kitchen display system',
-                'Multi-location support (up to 3)',
-                'Advanced analytics & reports',
-                'Priority support',
-                'Custom branding'
-            ],
-            'pricing': {
-                1: 79,    # 1 month
-                3: 219,   # 3 months (10% discount)
-                6: 409,   # 6 months (15% discount)
-                12: 759   # 12 months (20% discount)
-            },
-            'trial_days': 14
-        },
-        'hotel': {
-            'name': 'Hotel',
-            'icon': 'fa-hotel',
-            'description': 'Enterprise solution for hotels and resorts',
-            'features': [
-                'Unlimited users',
-                'Unlimited menu items',
                 'Multi-restaurant management',
-                'Room service integration',
+                'Advanced POS with table management',
                 'Banquet & catering management',
                 'Unlimited locations',
                 'Advanced inventory & procurement',
@@ -82,10 +82,10 @@ class SubscriptionService:
                 'Custom integrations'
             ],
             'pricing': {
-                1: 199,   # 1 month
-                3: 549,   # 3 months (10% discount)
-                6: 1029,  # 6 months (15% discount)
-                12: 1909  # 12 months (20% discount)
+                1: 99,    # 1 month
+                3: 269,   # 3 months (10% discount)
+                6: 504,   # 6 months (15% discount)
+                12: 950   # 12 months (20% discount)
             },
             'trial_days': 14
         }
@@ -125,11 +125,11 @@ class SubscriptionService:
     
     # Plan limits configuration
     PLAN_LIMITS = {
-        'cafe': {
-            'max_users': 10,
-            'max_menu_items': 100,
+        'basic': {
+            'max_users': 3,
+            'max_menu_items': 20,
             'max_locations': 1,
-            'max_tables': 20,
+            'max_tables': 10,
             'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
             'kitchen_display': False,
@@ -140,14 +140,14 @@ class SubscriptionService:
             'api_access': False,
             'custom_branding': False,
             'priority_support': False,
-            'data_retention_days': 180,
+            'data_retention_days': 90,
             'export_data': True
         },
-        'restaurant': {
-            'max_users': 50,
-            'max_menu_items': -1,  # unlimited
+        'advance': {
+            'max_users': 10,
+            'max_menu_items': 100,
             'max_locations': 3,
-            'max_tables': 100,
+            'max_tables': 50,
             'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
             'kitchen_display': True,
@@ -161,11 +161,11 @@ class SubscriptionService:
             'data_retention_days': 365,
             'export_data': True
         },
-        'hotel': {
-            'max_users': -1,  # unlimited
-            'max_menu_items': -1,  # unlimited
-            'max_locations': -1,  # unlimited
-            'max_tables': -1,  # unlimited
+        'premium': {
+            'max_users': 50,
+            'max_menu_items': 500,
+            'max_locations': 10,
+            'max_tables': 200,
             'max_monthly_sales': -1,  # unlimited
             'inventory_management': True,
             'kitchen_display': True,
@@ -178,33 +178,178 @@ class SubscriptionService:
             'priority_support': True,
             'data_retention_days': -1,  # unlimited
             'export_data': True
+        },
+        'free': {
+            'max_users': 1,
+            'max_menu_items': 10,
+            'max_locations': 1,
+            'max_tables': 5,
+            'max_monthly_sales': 100,
+            'inventory_management': False,
+            'kitchen_display': False,
+            'table_management': False,
+            'room_service': False,
+            'banquet_management': False,
+            'advanced_reports': False,
+            'api_access': False,
+            'custom_branding': False,
+            'priority_support': False,
+            'data_retention_days': 30,
+            'export_data': False
         }
     }
     
     @classmethod
     def get_plan_limits(cls, plan):
-        """Get limits for a specific plan"""
-        return cls.PLAN_LIMITS.get(plan, cls.PLAN_LIMITS['cafe'])
+        """Get limits for a specific plan from database"""
+        from ..models import SubscriptionPlan
+        
+        # Try to get plan from database
+        plan_config = SubscriptionPlan.query.filter_by(plan_code=plan, is_active=True).first()
+        
+        if plan_config:
+            # Return limits from database
+            return {
+                'max_users': plan_config.max_users,
+                'max_menu_items': plan_config.max_menu_items,
+                'max_locations': 1 if plan == 'basic' else (3 if plan == 'advance' else 10),
+                'max_tables': 10 if plan == 'basic' else (50 if plan == 'advance' else 200),
+                'max_monthly_sales': plan_config.max_monthly_sales,
+                'max_inventory_items': plan_config.max_inventory_items,
+                'max_storage_mb': plan_config.max_storage_mb,
+                'inventory_management': True,
+                'kitchen_display': plan_config.advanced_reports if hasattr(plan_config, 'advanced_reports') else (plan != 'basic'),
+                'table_management': plan != 'basic',
+                'room_service': plan == 'premium',
+                'banquet_management': plan == 'premium',
+                'advanced_reports': plan_config.advanced_reports,
+                'api_access': plan_config.api_access,
+                'custom_branding': plan_config.custom_branding,
+                'priority_support': plan_config.priority_support,
+                'data_retention_days': 90 if plan == 'basic' else (365 if plan == 'advance' else -1),
+                'export_data': plan_config.data_export
+            }
+        
+        # Fallback to basic plan if not found
+        return {
+            'max_users': 3,
+            'max_menu_items': 20,
+            'max_locations': 1,
+            'max_tables': 10,
+            'max_monthly_sales': -1,
+            'max_inventory_items': -1,
+            'max_storage_mb': 1024,
+            'inventory_management': True,
+            'kitchen_display': False,
+            'table_management': False,
+            'room_service': False,
+            'banquet_management': False,
+            'advanced_reports': False,
+            'api_access': False,
+            'custom_branding': False,
+            'priority_support': False,
+            'data_retention_days': 90,
+            'export_data': True
+        }
     
     @classmethod
     def get_plan_pricing(cls, plan, subscription_months=1):
-        """Get pricing for a specific plan and subscription period"""
-        plan_info = cls.PLAN_PRICING.get(plan)
-        if not plan_info:
-            return 0
-        return plan_info['pricing'].get(subscription_months, 0)
+        """Get pricing for a specific plan from database"""
+        from ..models import SubscriptionPlan
+        
+        # Try to get plan from database
+        plan_config = SubscriptionPlan.query.filter_by(plan_code=plan, is_active=True).first()
+        
+        if plan_config:
+            # Calculate pricing based on subscription months
+            monthly_price = float(plan_config.monthly_price)
+            
+            # Apply discount for longer periods
+            discount = 0
+            if subscription_months >= 12:
+                discount = 20
+            elif subscription_months >= 6:
+                discount = 15
+            elif subscription_months >= 3:
+                discount = 10
+            
+            discounted_price = monthly_price * (1 - discount / 100)
+            total_price = discounted_price * subscription_months
+            
+            return {
+                'monthly_price': monthly_price,
+                'total_price': total_price,
+                'discount_percentage': discount,
+                'currency': plan_config.currency,
+                'trial_days': plan_config.trial_days if plan_config.has_trial else 0
+            }
+        
+        # Fallback pricing if plan not found
+        return {
+            'monthly_price': 0,
+            'total_price': 0,
+            'discount_percentage': 0,
+            'currency': 'USD',
+            'trial_days': 0
+        }
     
     @classmethod
     def calculate_monthly_price(cls, plan, subscription_months=1):
         """Calculate monthly price for a subscription period"""
-        total_price = cls.get_plan_pricing(plan, subscription_months)
-        return round(total_price / subscription_months, 2) if subscription_months > 0 else 0
+        pricing = cls.get_plan_pricing(plan, subscription_months)
+        return round(pricing['total_price'] / subscription_months, 2) if subscription_months > 0 else pricing['monthly_price']
     
     @classmethod
     def get_discount_percentage(cls, subscription_months):
         """Get discount percentage for subscription period"""
-        period_info = cls.SUBSCRIPTION_PERIODS.get(subscription_months, {})
-        return period_info.get('discount', 0)
+        if subscription_months >= 12:
+            return 20
+        elif subscription_months >= 6:
+            return 15
+        elif subscription_months >= 3:
+            return 10
+        return 0
+    
+    @classmethod
+    def get_all_plans(cls):
+        """Get all available plans from database"""
+        from ..models import SubscriptionPlan
+        
+        plans = SubscriptionPlan.query.filter_by(is_active=True, is_visible=True).order_by(SubscriptionPlan.display_order).all()
+        
+        result = []
+        for plan in plans:
+            features_list = plan.get_features_list() if hasattr(plan, 'get_features_list') else []
+            
+            result.append({
+                'code': plan.plan_code,
+                'name': plan.plan_name,
+                'description': plan.description,
+                'monthly_price': float(plan.monthly_price),
+                'yearly_price': float(plan.yearly_price),
+                'currency': plan.currency,
+                'trial_days': plan.trial_days if plan.has_trial else 0,
+                'features': features_list,
+                'limits': {
+                    'max_users': plan.max_users,
+                    'max_menu_items': plan.max_menu_items,
+                    'max_inventory_items': plan.max_inventory_items,
+                    'max_monthly_sales': plan.max_monthly_sales
+                },
+                'advanced_features': {
+                    'advanced_reports': plan.advanced_reports,
+                    'multi_location': plan.multi_location,
+                    'api_access': plan.api_access,
+                    'priority_support': plan.priority_support,
+                    'custom_branding': plan.custom_branding,
+                    'data_export': plan.data_export
+                },
+                'is_featured': plan.is_featured,
+                'badge_text': plan.badge_text,
+                'badge_color': plan.badge_color
+            })
+        
+        return result
     
     @classmethod
     def create_subscription(cls, business_id, plan='cafe', subscription_months=1, payment_method_id=None):
@@ -412,7 +557,7 @@ class SubscriptionService:
             first_day = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             current_count = Sale.query.filter(
                 Sale.business_id == business_id,
-                Sale.sale_date >= first_day
+                Sale.created_at >= first_day
             ).count()
             return current_count < limit_value
         
@@ -555,7 +700,7 @@ class SubscriptionService:
         first_day = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         monthly_sales = Sale.query.filter(
             Sale.business_id == business_id,
-            Sale.sale_date >= first_day
+            Sale.created_at >= first_day
         ).count()
         
         return {

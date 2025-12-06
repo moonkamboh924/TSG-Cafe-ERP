@@ -260,7 +260,7 @@ def checkout():
         
         for item_data in items:
             item = MenuItem.query.get(item_data['item_id'])
-            if not item:
+            if not item or item.business_id != current_user.business_id:
                 return jsonify({'error': f'Item not found: {item_data["item_id"]}'}), 400
             
             qty = float(item_data['qty'])
@@ -317,6 +317,8 @@ def checkout():
         for item_data in items:
             if not validate_inventory_availability(item_data['item_id'], float(item_data['qty'])):
                 item = MenuItem.query.get(item_data['item_id'])
+                if item and item.business_id != current_user.business_id:
+                    return jsonify({'error': 'Access denied'}), 403
                 return jsonify({'error': f'Insufficient inventory for {item.name if item else "item"}'}), 400
         
         # Create sale lines and update inventory
@@ -334,6 +336,9 @@ def checkout():
             
             # Check if item has recipe - use recipe-based deduction, otherwise use legacy FIFO
             item = MenuItem.query.get(line_data['item_id'])
+            if item and item.business_id != current_user.business_id:
+                db.session.rollback()
+                return jsonify({'error': 'Access denied'}), 403
             if item and item.recipe_items:
                 # Recipe-based inventory deduction
                 if not deduct_inventory_for_menu_item(line_data['item_id'], line_data['qty']):
@@ -362,7 +367,7 @@ def checkout():
                 
                 # Update inventory item current stock for legacy items only
                 inventory_item = InventoryItem.query.get(line_data['item_id'])
-                if inventory_item:
+                if inventory_item and inventory_item.business_id == current_user.business_id:
                     inventory_item.current_stock = max(0, float(inventory_item.current_stock) - float(line_data['qty']))
         
         db.session.commit()
@@ -516,7 +521,7 @@ def update_sale(sale_id):
             
             for item_data in data['items']:
                 item = MenuItem.query.get(item_data['item_id'])
-                if not item:
+                if not item or item.business_id != current_user.business_id:
                     return jsonify({'error': f'Item not found: {item_data["item_id"]}'}), 400
                 
                 qty = float(item_data['qty'])
@@ -601,7 +606,14 @@ def delete_sale(sale_id):
 def print_sale_bill(sale_id):
     """Print bill for a specific sale using bill template settings"""
     try:
-        sale = Sale.query.get_or_404(sale_id)
+        # MULTI-TENANT: Verify sale belongs to user's business
+        if current_user.role == 'system_administrator':
+            sale = Sale.query.get_or_404(sale_id)
+        else:
+            sale = Sale.query.filter_by(
+                id=sale_id,
+                business_id=current_user.business_id
+            ).first_or_404()
         
         # Get bill template settings
         from app.models import BillTemplate, SystemSetting
@@ -653,7 +665,14 @@ def print_sale_bill(sale_id):
 @login_required
 @require_permissions('pos.view')
 def print_bill(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
+    # MULTI-TENANT: Verify sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        sale = Sale.query.get_or_404(sale_id)
+    else:
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
     
     # Get bill template settings and business info from global settings
     from ..models import BillTemplate, SystemSetting
@@ -879,6 +898,12 @@ def bulk_delete_credit_sales():
         
         for credit_sale_id in credit_sale_ids:
             credit_sale = CreditSale.query.get(credit_sale_id)
+            
+            # MULTI-TENANT: Skip if not found or doesn't belong to user's business
+            if not credit_sale:
+                continue
+            if current_user.role != 'system_administrator' and credit_sale.business_id != current_user.business_id:
+                continue
             if not credit_sale:
                 continue
                 
@@ -931,7 +956,14 @@ def pay_credit_sale(credit_sale_id):
     from ..models import CreditPayment
     
     try:
-        credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+        # MULTI-TENANT: Verify credit sale belongs to user's business
+        if current_user.role == 'system_administrator':
+            credit_sale = CreditSale.query.get_or_404(credit_sale_id)
+        else:
+            credit_sale = CreditSale.query.filter_by(
+                id=credit_sale_id,
+                business_id=current_user.business_id
+            ).first_or_404()
         data = request.get_json()
         
         if not data:

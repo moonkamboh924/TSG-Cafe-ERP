@@ -19,8 +19,8 @@ def index():
 @login_required
 @require_permissions('menu.view')
 def list_categories():
-    # MULTI-TENANT: Filter by business_id
-    categories = MenuCategory.query.filter_by(business_id=current_user.business_id).order_by(MenuCategory.order_index).all()
+    # Categories are shared across all businesses (business_id=None)
+    categories = MenuCategory.query.filter_by(business_id=None).order_by(MenuCategory.order_index).all()
     return jsonify([{
         'id': cat.id,
         'name': cat.name,
@@ -354,8 +354,11 @@ def deduct_inventory_for_order(menu_item_id, quantity):
     Returns True if successful, False if insufficient stock
     """
     try:
+        from flask_login import current_user
         item = MenuItem.query.get(menu_item_id)
-        if not item or not item.recipe_items:
+        if not item or item.business_id != current_user.business_id:
+            return False  # Item not found or access denied
+        if not item.recipe_items:
             return True  # No recipe to deduct from
         
         # Check if sufficient stock exists for all ingredients
