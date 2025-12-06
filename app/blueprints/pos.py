@@ -719,6 +719,22 @@ def get_credit_sales():
         }
     })
 
+@bp.route('/api/sales/<int:sale_id>')
+@login_required
+@require_permissions('pos.view')
+def get_sale_details(sale_id):
+    """Get individual sale/order details including line items"""
+    # MULTI-TENANT: Verify sale belongs to user's business
+    if current_user.role == 'system_administrator':
+        sale = Sale.query.get_or_404(sale_id)
+    else:
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            business_id=current_user.business_id
+        ).first_or_404()
+    
+    return jsonify(sale.to_dict())
+
 @bp.route('/api/credit-sales/<int:credit_sale_id>')
 @login_required
 @require_permissions('pos.view')
