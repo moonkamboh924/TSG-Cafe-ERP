@@ -232,6 +232,14 @@ class User(UserMixin, db.Model):
         if self.is_protected:
             return False
         
+        # Business owners can only edit themselves, not other users
+        # Only system administrators can edit owner accounts
+        if self.role == 'owner':
+            if user.role == 'system_administrator':
+                return True
+            # Owners can only edit their own profile
+            return user.id == self.id
+        
         # System administrators can edit other system administrators (except protected ones)
         if user.role == 'system_administrator' and self.role == 'system_administrator':
             return True

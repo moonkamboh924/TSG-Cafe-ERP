@@ -318,6 +318,17 @@ def update_user(user_id):
             'error': 'Access denied. Only System Administrators can assign the system administrator role.'
         }), 403
     
+    # Prevent changing role to/from owner (only system administrators can do this)
+    if current_user.role != 'system_administrator':
+        if data.get('role') == 'owner' and user.role != 'owner':
+            return jsonify({
+                'error': 'Access denied. Only System Administrators can assign the owner role.'
+            }), 403
+        if user.role == 'owner' and data.get('role') != 'owner':
+            return jsonify({
+                'error': 'Access denied. Owner role cannot be changed. Contact System Administrator.'
+            }), 403
+    
     try:
         # Update basic fields
         user.username = data.get('username', user.username)
