@@ -1077,6 +1077,7 @@ def bill_preview():
     from app.models import SystemSetting
     business_name = SystemSetting.get_setting('restaurant_name', 'My Business', business_id=current_user.business_id)
     tax_rate = float(SystemSetting.get_setting('tax_rate', '0', business_id=current_user.business_id))
+    service_charge_rate = float(SystemSetting.get_setting('service_charge', '10', business_id=current_user.business_id))
     
     # Get template data from query parameters
     template_type = request.args.get('template_type', 'receipt')
@@ -1118,6 +1119,7 @@ def bill_preview():
         'font_size': font_size,
         'logo_filename': logo_filename,
         'tax_rate': tax_rate,
+        'service_charge_rate': service_charge_rate,
         'business_id': current_user.business_id,
         'cashier_name': f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.username
     }

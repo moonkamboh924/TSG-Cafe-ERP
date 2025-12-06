@@ -204,15 +204,26 @@
                 <span>Subtotal:</span>
                 <span>{{ 1150|format_currency }}</span>
             </div>
+            {% if service_charge_rate and service_charge_rate > 0 %}
+            <div class="total-row">
+                <span>Service Charge ({{ service_charge_rate }}%):</span>
+                <span>{{ (1150 * service_charge_rate / 100)|round|int|format_currency }}</span>
+            </div>
+            {% endif %}
             {% if show_tax %}
             <div class="total-row">
                 <span>Tax ({{ tax_rate }}%):</span>
-                <span>{{ (1150 * tax_rate / 100)|round|int|format_currency }}</span>
+                <span>{{ ((1150 + (1150 * (service_charge_rate|default(0)) / 100)) * tax_rate / 100)|round|int|format_currency }}</span>
             </div>
             {% endif %}
             <div class="total-row grand-total">
                 <span>Total:</span>
-                <span>{% if show_tax %}{{ (1150 + (1150 * tax_rate / 100))|round|int|format_currency }}{% else %}{{ 1150|format_currency }}{% endif %}</span>
+                {% set subtotal = 1150 %}
+                {% set service_charge = (subtotal * (service_charge_rate|default(0)) / 100)|round|int %}
+                {% set taxable_amount = subtotal + service_charge %}
+                {% set tax_amount = (taxable_amount * tax_rate / 100)|round|int if show_tax else 0 %}
+                {% set total = taxable_amount + tax_amount %}
+                <span>{{ total|format_currency }}</span>
             </div>
         </div>
         
