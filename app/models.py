@@ -1269,15 +1269,17 @@ class PaymentMethod(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
     
     # Payment method details
-    type = db.Column(db.String(20), nullable=False)  # card, bank_account, paypal
-    provider = db.Column(db.String(50), nullable=False)  # stripe, paypal, etc.
-    provider_payment_method_id = db.Column(db.String(100), nullable=False)  # External ID from payment provider
+    type = db.Column(db.String(20), nullable=False)  # card, bank_account, paypal, cash, manual
+    provider = db.Column(db.String(50), nullable=False)  # stripe, paypal, manual, etc.
+    provider_payment_method_id = db.Column(db.String(100), nullable=True)  # External ID from payment provider
     
     # Card/account details (masked)
     last4 = db.Column(db.String(4), nullable=True)  # Last 4 digits
     brand = db.Column(db.String(20), nullable=True)  # visa, mastercard, etc.
     exp_month = db.Column(db.Integer, nullable=True)
     exp_year = db.Column(db.Integer, nullable=True)
+    cardholder_name = db.Column(db.String(100), nullable=True)
+    billing_address = db.Column(db.Text, nullable=True)  # JSON or text address
     
     # Status
     is_default = db.Column(db.Boolean, default=False, nullable=False)
@@ -1303,6 +1305,7 @@ class PaymentMethod(db.Model):
             'brand': self.brand,
             'exp_month': self.exp_month,
             'exp_year': self.exp_year,
+            'cardholder_name': self.cardholder_name,
             'is_default': self.is_default,
             'is_active': self.is_active,
             'is_expired': self.is_expired()

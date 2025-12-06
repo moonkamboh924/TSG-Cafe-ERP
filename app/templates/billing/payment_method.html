@@ -27,13 +27,83 @@
                 </div>
                 <div class="card-body">
                     <form id="payment-form">
-                        <div class="mb-3">
-                            <label class="form-label">Card Information</label>
-                            <div id="card-element" class="form-control" style="height: 40px; padding-top: 10px;">
-                                <!-- Stripe Elements will be inserted here -->
+                        {% if stripe_key %}
+                        <!-- Stripe Mode -->
+                        <div id="stripe-mode">
+                            <div class="mb-3">
+                                <label class="form-label">Card Information</label>
+                                <div id="card-element" class="form-control" style="height: 40px; padding-top: 10px;">
+                                    <!-- Stripe Elements will be inserted here -->
+                                </div>
+                                <div id="card-errors" class="text-danger mt-2" role="alert"></div>
                             </div>
-                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
                         </div>
+                        {% else %}
+                        <!-- Local Mode -->
+                        <div id="local-mode">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Development Mode:</strong> Stripe is not configured. You can add payment methods manually for testing.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Cardholder Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="cardholderName" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Card Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="cardType" required>
+                                        <option value="card">Credit/Debit Card</option>
+                                        <option value="bank_account">Bank Account</option>
+                                        <option value="manual">Manual Payment</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Card Brand <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="cardBrand" required>
+                                        <option value="visa">Visa</option>
+                                        <option value="mastercard">Mastercard</option>
+                                        <option value="amex">American Express</option>
+                                        <option value="discover">Discover</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last 4 Digits <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="last4" maxlength="4" pattern="[0-9]{4}" required>
+                                    <small class="form-text text-muted">Last 4 digits of card number</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Expiry Month <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="expMonth" required>
+                                        <option value="">Select Month</option>
+                                        {% for i in range(1, 13) %}
+                                        <option value="{{ i }}">{{ '%02d'|format(i) }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Expiry Year <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="expYear" required>
+                                        <option value="">Select Year</option>
+                                        {% for year in range(2025, 2036) %}
+                                        <option value="{{ year }}">{{ year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
 
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="setDefault" checked>
@@ -102,10 +172,15 @@
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
                     <h6 class="card-title">
-                        <i class="fas fa-shield-alt me-2 text-success"></i>Secure Payment
+                        <i class="fas fa-shield-alt me-2 text-success"></i>
+                        {% if stripe_key %}Secure Payment{% else %}Development Mode{% endif %}
                     </h6>
                     <p class="small text-muted mb-0">
+                        {% if stripe_key %}
                         Your payment information is encrypted and secure. We use Stripe to process payments and never store your full card details.
+                        {% else %}
+                        Stripe is not configured. You can manually add payment methods for testing. These methods won't process real payments.
+                        {% endif %}
                     </p>
                 </div>
             </div>
@@ -127,7 +202,8 @@
 </div>
 
 <script>
-// Initialize Stripe
+{% if stripe_key %}
+// Stripe Mode
 const stripe = Stripe('{{ stripe_key }}');
 const elements = stripe.elements();
 
@@ -159,6 +235,7 @@ cardElement.on('change', function(event) {
         displayError.textContent = '';
     }
 });
+{% endif %}
 
 // Handle form submission
 const form = document.getElementById('payment-form');
@@ -171,44 +248,70 @@ form.addEventListener('submit', async function(event) {
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
     
     try {
-        // Create payment method
+        {% if stripe_key %}
+        // Stripe mode - create payment method via Stripe
         const {paymentMethod, error} = await stripe.createPaymentMethod({
             type: 'card',
             card: cardElement,
         });
         
         if (error) {
-            // Show error
             document.getElementById('card-errors').textContent = error.message;
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
+            return;
+        }
+        
+        const paymentData = {
+            type: 'card',
+            provider: 'stripe',
+            stripe_payment_method_id: paymentMethod.id,
+            set_default: document.getElementById('setDefault').checked
+        };
+        {% else %}
+        // Local mode - collect manual payment data
+        const paymentData = {
+            type: document.getElementById('cardType').value,
+            provider: 'manual',
+            cardholder_name: document.getElementById('cardholderName').value,
+            brand: document.getElementById('cardBrand').value,
+            last4: document.getElementById('last4').value,
+            exp_month: parseInt(document.getElementById('expMonth').value),
+            exp_year: parseInt(document.getElementById('expYear').value),
+            set_default: document.getElementById('setDefault').checked
+        };
+        {% endif %}
+        
+        // Send to server
+        const response = await fetch('{{ url_for("billing.add_payment_method") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Payment method added successfully!');
+            window.location.href = '{{ url_for("billing.index") }}';
         } else {
-            // Send to server
-            const response = await fetch('{{ url_for("billing.add_payment_method") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    payment_method_id: paymentMethod.id,
-                    set_default: document.getElementById('setDefault').checked
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                alert('Payment method added successfully!');
-                window.location.href = '{{ url_for("billing.index") }}';
-            } else {
-                document.getElementById('card-errors').textContent = data.error;
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
-            }
+            {% if stripe_key %}
+            document.getElementById('card-errors').textContent = data.error;
+            {% else %}
+            alert('Error: ' + data.error);
+            {% endif %}
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
         }
     } catch (error) {
         console.error('Error:', error);
+        {% if stripe_key %}
         document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+        {% else %}
+        alert('An error occurred. Please try again.');
+        {% endif %}
         submitButton.disabled = false;
         submitButton.innerHTML = '<i class="fas fa-plus me-2"></i>Add Payment Method';
     }

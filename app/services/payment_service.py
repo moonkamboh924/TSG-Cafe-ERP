@@ -27,9 +27,26 @@ class PaymentService:
     @classmethod
     def initialize_stripe(cls):
         """Initialize Stripe with API key from config"""
-        stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
-        if not stripe.api_key:
-            logger.warning('STRIPE_SECRET_KEY not configured')
+        stripe_key = current_app.config.get('STRIPE_SECRET_KEY')
+        if stripe_key and stripe_key != 'your-stripe-secret-key':
+            stripe.api_key = stripe_key
+            return True
+        else:
+            logger.info('Stripe not configured - using local payment mode')
+            return False
+    
+    @classmethod
+    def is_stripe_enabled(cls):
+        """Check if Stripe is properly configured"""
+        stripe_key = current_app.config.get('STRIPE_SECRET_KEY')
+        return stripe_key and stripe_key != 'your-stripe-secret-key' and len(stripe_key) > 10
+    
+    @classmethod
+    def get_publishable_key(cls):
+        """Get Stripe publishable key"""
+        if cls.is_stripe_enabled():
+            return current_app.config.get('STRIPE_PUBLISHABLE_KEY', '')
+        return None
     
     @classmethod
     def create_customer(cls, business_id, email, name=None):
@@ -67,18 +84,82 @@ class PaymentService:
             raise Exception(f'Payment service error: {str(e)}')
     
     @classmethod
-    def add_payment_method(cls, business_id, payment_method_id, set_default=True):
-        """Add a payment method to a business"""
-        cls.initialize_stripe()
+    def add_payment_method(cls, business_id, payment_method_data, set_default=True):
+        """
+        Add a payment method to a business
+        Supports both Stripe (with stripe_payment_method_id) and local mode (with manual data)
         
+        Args:
+            business_id: Business ID
+            payment_method_data: Dict containing either:
+                - stripe_payment_method_id: for Stripe mode
+                - type, provider, last4, brand, exp_month, exp_year, cardholder_name: for local mode
+            set_default: Whether to set as default payment method
+        """
         business = Business.query.get(business_id)
         if not business:
             raise ValueError('Business not found')
         
+        # Determine mode based on whether stripe_payment_method_id is provided
+        if payment_method_data.get('stripe_payment_method_id'):
+            # Stripe mode
+            if not cls.is_stripe_enabled():
+                raise Exception('Stripe is not properly configured')
+            return cls._add_payment_method_stripe(
+                business_id, 
+                payment_method_data.get('stripe_payment_method_id'), 
+                set_default
+            )
+        else:
+            # Local mode
+            return cls._add_payment_method_local(business_id, payment_method_data, set_default)
+    
+    @classmethod
+    def _add_payment_method_local(cls, business_id, payment_data, set_default=True):
+        """Add payment method locally without Stripe"""
+        try:
+            # Mark all other payment methods as not default if this is default
+            if set_default:
+                PaymentMethod.query.filter_by(business_id=business_id).update({'is_default': False})
+            
+            # Create payment method
+            pm = PaymentMethod(
+                business_id=business_id,
+                type=payment_data.get('type', 'card'),  # card, bank_account, cash, etc.
+                provider=payment_data.get('provider', 'manual'),
+                provider_payment_method_id=None,
+                last4=payment_data.get('last4', '0000'),
+                brand=payment_data.get('brand', 'Manual'),
+                exp_month=payment_data.get('exp_month'),
+                exp_year=payment_data.get('exp_year'),
+                cardholder_name=payment_data.get('cardholder_name'),
+                billing_address=payment_data.get('billing_address'),
+                is_default=set_default,
+                is_active=True
+            )
+            
+            db.session.add(pm)
+            db.session.commit()
+            
+            logger.info(f'Local payment method added for business {business_id}')
+            return pm
+            
+        except Exception as e:
+            logger.error(f'Error adding local payment method: {str(e)}')
+            db.session.rollback()
+            raise Exception(f'Failed to add payment method: {str(e)}')
+    
+    @classmethod
+    def _add_payment_method_stripe(cls, business_id, payment_method_id, set_default=True):
+        """Add payment method via Stripe"""
+        cls.initialize_stripe()
+        
+        business = Business.query.get(business_id)
+        
         # Ensure customer exists
         if not business.stripe_customer_id:
             owner = User.query.filter_by(business_id=business_id, role='owner').first()
-            cls.create_customer(business_id, owner.email if owner else business.contact_email)
+            cls.create_customer(business_id, owner.email if owner else business.owner_email)
         
         try:
             # Attach payment method to customer

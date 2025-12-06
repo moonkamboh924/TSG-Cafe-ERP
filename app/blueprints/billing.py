@@ -80,18 +80,17 @@ def add_payment_method():
     business = get_current_business()
     
     data = request.get_json()
-    payment_method_id = data.get('payment_method_id')
-    set_default = data.get('set_default', True)
     
-    if not payment_method_id:
-        return jsonify({'success': False, 'error': 'Payment method ID is required'}), 400
+    # Validate required fields
+    if not data.get('type'):
+        return jsonify({'success': False, 'error': 'Payment method type is required'}), 400
     
     try:
-        # Add payment method
+        # Add payment method (works with or without Stripe)
         pm = PaymentService.add_payment_method(
             business_id=business.id,
-            payment_method_id=payment_method_id,
-            set_default=set_default
+            payment_method_data=data,
+            set_default=data.get('set_default', True)
         )
         
         return jsonify({
