@@ -363,6 +363,7 @@ def checkout():
         if payment_method == 'credit':
             # Create credit sale record
             credit_sale = CreditSale(
+                business_id=current_user.business_id,
                 sale_id=sale.id,
                 customer_name=customer_name,
                 customer_phone=customer_phone,
