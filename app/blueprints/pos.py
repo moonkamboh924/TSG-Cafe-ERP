@@ -276,11 +276,18 @@ def checkout():
                 'line_total': line_total
             })
         
-        # Get tax rate from global settings
+        # Get tax rate and service charge from global settings
         from app.models import SystemSetting
         tax_rate = float(SystemSetting.get_setting('tax_rate', 16)) / 100
-        tax = subtotal * tax_rate
-        total = subtotal + tax
+        service_charge_rate = float(SystemSetting.get_setting('service_charge', 10)) / 100
+        
+        # Calculate service charge on subtotal
+        service_charge = subtotal * service_charge_rate
+        
+        # Calculate tax on (subtotal + service charge)
+        taxable_amount = subtotal + service_charge
+        tax = taxable_amount * tax_rate
+        total = taxable_amount + tax
         
         # Create sale record with current local time converted to UTC for storage
         from app.utils.timezone_utils import convert_local_to_utc
@@ -295,6 +302,7 @@ def checkout():
             customer_phone=customer_phone,
             table_number=table_number,
             subtotal=subtotal,
+            service_charge=service_charge,
             tax=tax,
             total=total,
             payment_method=payment_method,

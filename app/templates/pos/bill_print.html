@@ -384,6 +384,13 @@
                 <span>{{ sale.subtotal|format_currency }}</span>
             </div>
             
+            {% if sale.service_charge and sale.service_charge > 0 %}
+            <div class="total-row">
+                <span>Service Charge ({{ get_setting('service_charge', '10') }}%):</span>
+                <span>{{ sale.service_charge|format_currency }}</span>
+            </div>
+            {% endif %}
+            
             {% if show_tax %}
             <div class="total-row">
                 <span>Tax ({{ get_setting('tax_rate', '17') }}%):</span>

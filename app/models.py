@@ -505,6 +505,7 @@ class Sale(db.Model):
     table_number = db.Column(db.String(10))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     subtotal = db.Column(db.Numeric(10, 2), nullable=False)
+    service_charge = db.Column(db.Numeric(10, 2), default=0, nullable=False)
     tax = db.Column(db.Numeric(10, 2), nullable=False)
     total = db.Column(db.Numeric(10, 2), nullable=False)
     payment_method = db.Column(db.String(20), nullable=False)
@@ -526,6 +527,7 @@ class Sale(db.Model):
             'table_number': self.table_number,
             'created_at': local_time.isoformat() if local_time else None,
             'subtotal': float(self.subtotal),
+            'service_charge': float(self.service_charge) if self.service_charge else 0,
             'tax': float(self.tax),
             'total': float(self.total),
             'payment_method': self.payment_method,
