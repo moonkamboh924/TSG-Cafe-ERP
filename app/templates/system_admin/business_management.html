@@ -723,7 +723,7 @@ function businessManager() {
                 document.getElementById('detailsUpdated').textContent = business.updated_at ? new Date(business.updated_at).toLocaleString() : '—';
                 
                 // New enhanced fields
-                document.getElementById('detailsBusinessId').textContent = business.id;
+                document.getElementById('detailsBusinessId').textContent = business.business_code || business.id;
                 document.getElementById('detailsUsersCount').textContent = business.user_count || '0';
                 document.getElementById('detailsStatusBadge').textContent = business.is_active ? 'Active' : 'Inactive';
                 document.getElementById('detailsStatusBadge').className = `px-3 py-1 backdrop-blur-sm rounded-full text-xs font-medium ${business.is_active ? 'bg-green-500/30 text-green-100' : 'bg-gray-500/30 text-gray-100'}`;
@@ -853,7 +853,7 @@ function businessManager() {
                 const csvHeader = 'Business ID,Business Name,Owner Email,Subscription Plan,Status,Users,Created Date,Last Updated\n';
                 const csvRows = businesses.map(biz => {
                     return [
-                        biz.id,
+                        biz.business_code || biz.id,
                         `"${biz.business_name}"`,
                         `"${biz.owner_email || ''}"`,
                         biz.subscription_plan,
