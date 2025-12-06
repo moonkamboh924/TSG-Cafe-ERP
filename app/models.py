@@ -13,12 +13,13 @@ class Business(db.Model):
     __tablename__ = 'businesses'
     
     id = db.Column(db.Integer, primary_key=True)
+    business_code = db.Column(db.String(50), unique=True, nullable=True, index=True)  # Human-readable business ID
     business_name = db.Column(db.String(200), unique=True, nullable=False, index=True)
     owner_email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     owner_id = db.Column(db.Integer, nullable=True)  # Will be set after user creation
     
     # Subscription & Status
-    subscription_plan = db.Column(db.String(20), default='free', nullable=False)  # free, basic, premium
+    subscription_plan = db.Column(db.String(20), default='basic', nullable=False)  # Uses plan_code from subscription_plans table
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     trial_end_date = db.Column(db.DateTime, nullable=True)  # Trial period expiration
     subscription_status = db.Column(db.String(20), default='trial', nullable=False)  # trial, active, past_due, cancelled, suspended
@@ -106,6 +107,7 @@ class Business(db.Model):
         plan_config = self.get_plan_details()
         result = {
             'id': self.id,
+            'business_code': self.business_code,
             'business_name': self.business_name,
             'owner_email': self.owner_email,
             'subscription_plan': self.subscription_plan,
@@ -726,9 +728,9 @@ class BillTemplate(db.Model):
                 
         except Exception as e:
             db.session.rollback()
-            print(f"Error in get_template: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in get_template: {str(e)}", exc_info=True)
             # Return a default template object even if there's an error
             return cls(
                 template_type=template_type,
@@ -771,32 +773,44 @@ class SystemSetting(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     @classmethod
-    def get_setting(cls, key, default=None, business_id=None):
-        """Get setting value, optionally filtered by business_id"""
-        # If business_id provided, filter by it
-        if business_id is not None:
-            setting = cls.query.filter_by(key=key, business_id=business_id).first()
-        else:
+    def get_setting(cls, key, default=None, business_id='_AUTO_'):
+        """Get setting value, optionally filtered by business_id
+        
+        Args:
+            key: Setting key
+            default: Default value if not found
+            business_id: Business ID (None=global only, '_AUTO_'=use current user's business)
+        """
+        # Use sentinel value '_AUTO_' to distinguish between explicit None and not provided
+        if business_id == '_AUTO_':
             # Try to get from current user's business first
             try:
                 from flask_login import current_user
                 if current_user.is_authenticated and hasattr(current_user, 'business_id') and current_user.business_id:
                     setting = cls.query.filter_by(key=key, business_id=current_user.business_id).first()
                 else:
-                    setting = cls.query.filter_by(key=key).first()
+                    setting = cls.query.filter_by(key=key, business_id=None).first()
             except:
-                # Fallback to any setting with this key
-                setting = cls.query.filter_by(key=key).first()
+                # Fallback to global setting
+                setting = cls.query.filter_by(key=key, business_id=None).first()
+        else:
+            # business_id explicitly provided (can be None for global or a specific ID)
+            setting = cls.query.filter_by(key=key, business_id=business_id).first()
         
         return setting.value if setting else default
     
     @classmethod
-    def set_setting(cls, key, value, description=None, business_id=None):
-        """Set setting value, optionally for specific business"""
-        # If business_id provided, use it
-        if business_id is not None:
-            setting = cls.query.filter_by(key=key, business_id=business_id).first()
-        else:
+    def set_setting(cls, key, value, description=None, business_id='_AUTO_'):
+        """Set setting value, optionally for specific business
+        
+        Args:
+            key: Setting key
+            value: Setting value
+            description: Optional description
+            business_id: Business ID (None=global, '_AUTO_'=use current user's business)
+        """
+        # Use sentinel value '_AUTO_' to distinguish between explicit None and not provided
+        if business_id == '_AUTO_':
             # Try to use current user's business
             try:
                 from flask_login import current_user
@@ -804,9 +818,14 @@ class SystemSetting(db.Model):
                     business_id = current_user.business_id
                     setting = cls.query.filter_by(key=key, business_id=business_id).first()
                 else:
-                    setting = cls.query.filter_by(key=key).first()
+                    business_id = None
+                    setting = cls.query.filter_by(key=key, business_id=None).first()
             except:
-                setting = cls.query.filter_by(key=key).first()
+                business_id = None
+                setting = cls.query.filter_by(key=key, business_id=None).first()
+        else:
+            # business_id explicitly provided (can be None for global or a specific ID)
+            setting = cls.query.filter_by(key=key, business_id=business_id).first()
         
         if setting:
             setting.value = value
@@ -1115,7 +1134,7 @@ class Subscription(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
-    plan = db.Column(db.String(20), nullable=False)  # free, basic, premium
+    plan = db.Column(db.String(20), nullable=False)  # Uses plan_code from subscription_plans table
     status = db.Column(db.String(20), default='active', nullable=False)  # active, cancelled, past_due, suspended
     
     # Billing cycle
@@ -1491,4 +1510,23 @@ class PlanFeature(db.Model):
             'description': self.description
         }
 
+
+class BusinessNameHistory(db.Model):
+    """Track all business name changes to prevent duplicate names"""
+    __tablename__ = 'business_name_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id', ondelete='CASCADE'), nullable=False, index=True)
+    business_name = db.Column(db.String(200), nullable=False, index=True)
+    changed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    changed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'business_id': self.business_id,
+            'business_name': self.business_name,
+            'changed_at': self.changed_at.isoformat(),
+            'changed_by': self.changed_by
+        }
 

@@ -3,7 +3,7 @@ Business Management Blueprint for System Administrators
 """
 
 from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from datetime import datetime, timezone
 from sqlalchemy import func, or_
 from ...models import (
@@ -28,6 +28,7 @@ from ...models import (
     MenuRecipe,
     SystemSetting,
     BillTemplate,
+    BusinessNameHistory,
 )
 from ...extensions import db
 from ..decorators import require_system_admin, system_admin_api_required
@@ -332,13 +333,35 @@ def manage_business(business_id):
         is_active = data.get('is_active')
 
         if name:
-            existing = Business.query.filter(
-                Business.business_name == name,
-                Business.id != business_id
-            ).first()
-            if existing:
-                return jsonify({'error': 'Business name already exists'}), 400
-            business.business_name = name.strip()
+            name = name.strip()
+            
+            # Check if name is different from current name
+            if name != business.business_name:
+                # Check if new name already exists in active businesses
+                existing = Business.query.filter(
+                    Business.business_name == name,
+                    Business.id != business_id
+                ).first()
+                if existing:
+                    return jsonify({'error': 'Business name already registered'}), 400
+                
+                # Check if name was ever used before (in history)
+                existing_history = BusinessNameHistory.query.filter(
+                    BusinessNameHistory.business_name == name
+                ).first()
+                if existing_history:
+                    return jsonify({'error': 'Business name was previously used and cannot be reused'}), 400
+                
+                # Save old name to history before updating
+                old_name_history = BusinessNameHistory(
+                    business_id=business.id,
+                    business_name=business.business_name,
+                    changed_by=current_user.id
+                )
+                db.session.add(old_name_history)
+                
+                # Update business name (business_code remains unchanged)
+                business.business_name = name
 
         if email:
             existing_email = Business.query.filter(
@@ -513,8 +536,8 @@ def get_business_analytics(business_id):
         })
         
     except Exception as e:
-        import traceback
-        print(f"Analytics error: {str(e)}")
-        print(traceback.format_exc())
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Analytics error: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 

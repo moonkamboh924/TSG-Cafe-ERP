@@ -21,7 +21,11 @@ def index():
     
     currency_code = get_system_currency(current_user.business_id)
     currency_symbol = get_currency_symbol(currency_code)
-    return render_template('dashboard/index.html', currency_code=currency_code, currency_symbol=currency_symbol)
+    business = Business.query.get(current_user.business_id)
+    return render_template('dashboard/index.html', 
+                         currency_code=currency_code, 
+                         currency_symbol=currency_symbol,
+                         business=business)
 
 @bp.route('/api/kpis/today')
 @login_required

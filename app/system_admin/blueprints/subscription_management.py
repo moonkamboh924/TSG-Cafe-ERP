@@ -226,7 +226,13 @@ def upgrade_subscription(business_id):
         data = request.get_json()
         new_plan = data.get('plan')
         
-        if not new_plan or new_plan not in ['free', 'basic', 'premium', 'enterprise']:
+        # Validate plan exists in SubscriptionPlan table
+        if not new_plan:
+            return jsonify({'error': 'Subscription plan is required'}), 400
+        
+        from ...models import SubscriptionPlan
+        plan_config = SubscriptionPlan.query.filter_by(plan_code=new_plan, is_active=True).first()
+        if not plan_config:
             return jsonify({'error': 'Invalid subscription plan'}), 400
         
         business = Business.query.get_or_404(business_id)

@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TSG Cafe System{% endblock %}</title>
     
+    <!-- Favicon - System Admin Controlled -->
+    {% set favicon_file = get_setting('system_favicon', None, None) %}
+    {% if favicon_file %}
+    <link rel="icon" href="{{ url_for('static', filename=favicon_file) }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename=favicon_file) }}">
+    {% else %}
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {% endif %}
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     

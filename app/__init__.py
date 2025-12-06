@@ -1,12 +1,23 @@
 from flask import Flask
 from datetime import datetime, timezone
 import os
+import logging
 from .extensions import db, migrate, login_manager, mail, cache
 from .blueprints import dashboard, admin, pos, menu, inventory, finance, reports, profile
+
+# Production mode flag - set to True to disable verbose console output
+PRODUCTION_MODE = os.environ.get('FLASK_ENV', 'development') == 'production'
 
 def create_app(config_object="config.Config"):
     app = Flask(__name__)
     app.config.from_object(config_object)
+    
+    # Setup logger
+    logger = logging.getLogger(__name__)
+    if not PRODUCTION_MODE:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
 
     # Setup logging
     try:
@@ -98,9 +109,10 @@ def create_app(config_object="config.Config"):
         app.register_blueprint(system_admin_monitoring_bp)
         app.register_blueprint(system_admin_subscriptions_bp)
         
-        print("[OK] System admin blueprints registered successfully")
+        if not PRODUCTION_MODE:
+            logger.info("System admin blueprints registered successfully")
     except Exception as e:
-        print(f"[ERROR] Failed to register system admin blueprints: {e}")
+        logger.error(f"Failed to register system admin blueprints: {e}")
         # Continue without system admin blueprints if there are issues
 
     # Import models to ensure they are registered with SQLAlchemy
@@ -125,23 +137,30 @@ def create_app(config_object="config.Config"):
                 
                 if demo_mode:
                     from .services.tenant_service import TenantService
+                    from .models import SubscriptionPlan
+                    
+                    # Get first available plan or default to 'basic'
+                    default_plan = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.display_order).first()
+                    plan_code = default_plan.plan_code if default_plan else 'basic'
+                    
                     try:
                         demo_tenant = TenantService.create_tenant(
                             business_name='Demo Restaurant',
                             owner_email='demo@example.com',
                             owner_name='Demo Admin',
-                            subscription_plan='free'
+                            subscription_plan=plan_code
                         )
-                        print(f"[DEMO] Demo tenant created:")
-                        print(f"  Username: {demo_tenant['owner']['username']}")
-                        print(f"  Password: {demo_tenant['owner']['temp_password']}")
+                        if not PRODUCTION_MODE:
+                            logger.info(f"Demo tenant created - Username: {demo_tenant['owner']['username']}")
+                            # Password removed from logs for security
                     except Exception as e:
-                        print(f"[DEMO] Failed to create demo tenant: {str(e)}")
+                        logger.error(f"Failed to create demo tenant: {str(e)}")
             else:
-                print(f"[OK] Multi-tenant system ready - {tenant_count} tenant(s) active")
+                if not PRODUCTION_MODE:
+                    logger.info(f"Multi-tenant system ready - {tenant_count} tenant(s) active")
                 
         except Exception as e:
-            print(f"Warning: Database initialization issue: {str(e)}")
+            logger.warning(f"Database initialization issue: {str(e)}")
     
     # Initialize database in app context
     with app.app_context():
@@ -162,12 +181,14 @@ def create_app(config_object="config.Config"):
         from .utils.currency_utils import get_currency_symbol, get_system_currency
         from flask_login import current_user
         
-        def get_setting(key, default=None):
+        def get_setting(key, default=None, business_id='_AUTO_'):
             try:
                 # MULTI-TENANT: Use current user's business_id if authenticated
-                business_id = None
-                if current_user.is_authenticated and hasattr(current_user, 'business_id'):
-                    business_id = current_user.business_id
+                if business_id == '_AUTO_':
+                    if current_user.is_authenticated and hasattr(current_user, 'business_id'):
+                        business_id = current_user.business_id
+                    else:
+                        business_id = None
                 return SystemSetting.get_setting(key, default, business_id=business_id)
             except Exception as e:
                 app.logger.warning(f"Error getting setting {key}: {str(e)}")
@@ -227,7 +248,17 @@ def create_app(config_object="config.Config"):
     @app.route('/favicon.ico')
     def favicon():
         from flask import send_from_directory
+        from app.models import SystemSetting
         import os
+        
+        # Check for custom favicon set by system admin
+        custom_favicon = SystemSetting.get_setting('system_favicon', None, business_id=None)
+        
+        if custom_favicon and os.path.exists(os.path.join(app.root_path, 'static', custom_favicon)):
+            return send_from_directory(os.path.join(app.root_path, 'static'),
+                                     custom_favicon)
+        
+        # Default favicon
         return send_from_directory(os.path.join(app.root_path, 'static'),
                                  'favicon.ico', mimetype='image/vnd.microsoft.icon')
     

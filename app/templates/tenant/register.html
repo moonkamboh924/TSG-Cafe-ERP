@@ -1288,6 +1288,28 @@
                 }
             });
 
+            // Step 1: Validate business name and email availability
+            if (step === 1) {
+                const businessName = document.getElementById('business_name').value.trim();
+                const ownerEmail = document.getElementById('owner_email').value.trim();
+                const phoneNumber = document.getElementById('phone_number').value.trim();
+                
+                if (!businessNameAvailable) {
+                    showCustomModal('Business Name Not Available', 'This business name is already registered or was previously used. Please choose a different name.');
+                    return false;
+                }
+                
+                if (!emailAvailable) {
+                    showCustomModal('Email Not Available', 'This email address is already registered. Please use a different email.');
+                    return false;
+                }
+                
+                if (!phoneAvailable) {
+                    showCustomModal('Phone Number Not Available', 'This phone number is already registered. Please use a different phone number.');
+                    return false;
+                }
+            }
+
             if (step === 2) {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirm_password').value;
@@ -1448,7 +1470,7 @@
             }
         }
 
-        // Input Validation
+        // Input Validation (only for fields without API validation)
         function validateInput(inputId, groupId, pattern) {
             const input = document.getElementById(inputId);
             const group = document.getElementById(groupId);
@@ -1468,19 +1490,24 @@
             });
         }
 
-        validateInput('business_name', 'businessNameGroup');
+        // Only validate owner name with this function
+        // business_name, owner_email, and phone_number use API validation
         validateInput('owner_name', 'ownerNameGroup');
-        validateInput('owner_email', 'emailGroup', /^[^\s@]+@[^\s@]+\.[^\s@]+$/);
         validateInput('phone_number', 'phoneGroup', /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/);
 
         // Availability Check
         let checkTimeout;
         
+        let businessNameAvailable = true;  // Start as true, API will validate
+        let emailAvailable = true;          // Start as true, API will validate
+        let phoneAvailable = true;          // Start as true, API will validate
+
         function checkAvailability() {
             const businessName = document.getElementById('business_name').value.trim();
             const ownerEmail = document.getElementById('owner_email').value.trim();
+            const phoneNumber = document.getElementById('phone_number').value.trim();
             
-            if (!businessName && !ownerEmail) return;
+            if (!businessName && !ownerEmail && !phoneNumber) return;
             
             clearTimeout(checkTimeout);
             checkTimeout = setTimeout(() => {
@@ -1489,30 +1516,68 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         business_name: businessName,
-                        owner_email: ownerEmail
+                        owner_email: ownerEmail,
+                        phone_number: phoneNumber
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    const businessFeedback = document.getElementById('businessNameFeedback');
-                    if (businessName && businessFeedback) {
+                    console.log('Availability check response:', data);
+                    
+                    const businessNameGroup = document.getElementById('businessNameGroup');
+                    const businessNameInput = document.getElementById('business_name');
+                    
+                    if (businessName && data.hasOwnProperty('business_name_available')) {
+                        businessNameAvailable = data.business_name_available;
+                        
+                        console.log('Business name available:', data.business_name_available);
+                        
                         if (data.business_name_available) {
-                            businessFeedback.textContent = '';
-                            businessFeedback.className = 'input-feedback success';
+                            businessNameGroup.classList.remove('invalid');
+                            businessNameGroup.classList.add('valid');
+                            businessNameInput.style.borderColor = '#28a745';
                         } else {
-                            businessFeedback.textContent = '';
-                            businessFeedback.className = 'input-feedback error';
+                            businessNameGroup.classList.remove('valid');
+                            businessNameGroup.classList.add('invalid');
+                            businessNameInput.style.borderColor = '#dc3545';
                         }
                     }
                     
-                    const emailFeedback = document.getElementById('emailFeedback');
-                    if (ownerEmail && emailFeedback) {
+                    const emailGroup = document.getElementById('emailGroup');
+                    const emailInput = document.getElementById('owner_email');
+                    
+                    if (ownerEmail && data.hasOwnProperty('email_available')) {
+                        emailAvailable = data.email_available;
+                        
+                        console.log('Email available:', data.email_available);
+                        
                         if (data.email_available) {
-                            emailFeedback.textContent = '';
-                            emailFeedback.className = 'input-feedback success';
+                            emailGroup.classList.remove('invalid');
+                            emailGroup.classList.add('valid');
+                            emailInput.style.borderColor = '#28a745';
                         } else {
-                            emailFeedback.textContent = '';
-                            emailFeedback.className = 'input-feedback error';
+                            emailGroup.classList.remove('valid');
+                            emailGroup.classList.add('invalid');
+                            emailInput.style.borderColor = '#dc3545';
+                        }
+                    }
+                    
+                    const phoneGroup = document.getElementById('phoneGroup');
+                    const phoneInput = document.getElementById('phone_number');
+                    
+                    if (phoneNumber && data.hasOwnProperty('phone_available')) {
+                        phoneAvailable = data.phone_available;
+                        
+                        console.log('Phone available:', data.phone_available);
+                        
+                        if (data.phone_available) {
+                            phoneGroup.classList.remove('invalid');
+                            phoneGroup.classList.add('valid');
+                            phoneInput.style.borderColor = '#28a745';
+                        } else {
+                            phoneGroup.classList.remove('valid');
+                            phoneGroup.classList.add('invalid');
+                            phoneInput.style.borderColor = '#dc3545';
                         }
                     }
                 })
@@ -1539,12 +1604,34 @@
             // Availability Check Event Listeners
             const businessNameInput = document.getElementById('business_name');
             const ownerEmailInput = document.getElementById('owner_email');
+            const phoneNumberInput = document.getElementById('phone_number');
             
             if (businessNameInput) {
                 businessNameInput.addEventListener('input', checkAvailability);
+                businessNameInput.addEventListener('blur', checkAvailability);
+                
+                // Check immediately if field has pre-filled value
+                if (businessNameInput.value.trim()) {
+                    checkAvailability();
+                }
             }
             if (ownerEmailInput) {
                 ownerEmailInput.addEventListener('input', checkAvailability);
+                ownerEmailInput.addEventListener('blur', checkAvailability);
+                
+                // Check immediately if field has pre-filled value
+                if (ownerEmailInput.value.trim()) {
+                    checkAvailability();
+                }
+            }
+            if (phoneNumberInput) {
+                phoneNumberInput.addEventListener('input', checkAvailability);
+                phoneNumberInput.addEventListener('blur', checkAvailability);
+                
+                // Check immediately if field has pre-filled value
+                if (phoneNumberInput.value.trim()) {
+                    checkAvailability();
+                }
             }
 
             // Password Strength

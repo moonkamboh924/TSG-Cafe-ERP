@@ -29,6 +29,173 @@ class VerificationService:
         return f"verification:{code_type}:{identifier}"
     
     @staticmethod
+    def send_login_notification(user):
+        """
+        Send login notification email to business owner or system administrator
+        
+        Args:
+            user: User object who logged in
+            
+        Returns:
+            dict: Result with success status
+        """
+        try:
+            from datetime import datetime, timezone
+            from ..models import SystemSetting
+            import socket
+            
+            # Get business name (system admins don't have business_id)
+            if user.business_id:
+                business_name = SystemSetting.get_setting('restaurant_name', 'My Business', business_id=user.business_id)
+            else:
+                # System administrator - use system name
+                business_name = 'TSG Cafe ERP System'
+            
+            # Get login details
+            login_time = datetime.now(timezone.utc).strftime('%B %d, %Y at %I:%M %p UTC')
+            
+            # Try to get IP address (may not be available in all contexts)
+            try:
+                ip_address = socket.gethostbyname(socket.gethostname())
+            except:
+                ip_address = 'Unknown'
+            
+            # Prepare email
+            subject = f"🔐 New Login Alert - {business_name}"
+            
+            html_body = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 10px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                              color: white; padding: 20px 15px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .header h1 {{ margin: 0; font-size: 24px; }}
+                    .content {{ background: #f8f9fa; padding: 20px 15px; }}
+                    .info-box {{ background: white; border-left: 4px solid #667eea; 
+                                padding: 12px; margin: 15px 0; border-radius: 5px; }}
+                    .info-row {{ display: flex; justify-content: space-between; padding: 8px 0; 
+                               border-bottom: 1px solid #e9ecef; flex-wrap: wrap; }}
+                    .info-label {{ font-weight: bold; color: #666; font-size: 14px; }}
+                    .info-value {{ color: #333; font-size: 14px; word-break: break-word; }}
+                    .alert {{ background: #fff3cd; border-left: 4px solid #ffc107; 
+                             padding: 12px; margin: 15px 0; border-radius: 5px; font-size: 14px; }}
+                    .footer {{ text-align: center; padding: 15px 10px; color: #666; font-size: 11px; }}
+                    
+                    /* Mobile responsive */
+                    @media only screen and (max-width: 600px) {{
+                        .container {{ padding: 5px; }}
+                        .header {{ padding: 15px 10px; border-radius: 5px 5px 0 0; }}
+                        .header h1 {{ font-size: 20px; }}
+                        .content {{ padding: 15px 10px; }}
+                        .info-box {{ padding: 10px; margin: 10px 0; }}
+                        .info-row {{ flex-direction: column; padding: 5px 0; }}
+                        .info-label, .info-value {{ font-size: 13px; }}
+                        .info-value {{ margin-top: 3px; }}
+                        .alert {{ padding: 10px; margin: 10px 0; font-size: 13px; }}
+                        .footer {{ padding: 12px 8px; font-size: 10px; }}
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔐 Login Notification</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hello <strong>{user.full_name}</strong>,</p>
+                        <p>We detected a new login to your <strong>{business_name}</strong> account.</p>
+                        
+                        <div class="info-box">
+                            <div class="info-row">
+                                <span class="info-label">👤 Account:</span>
+                                <span class="info-value">{user.email}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">⏰ Time:</span>
+                                <span class="info-value">{login_time}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">🌐 IP Address:</span>
+                                <span class="info-value">{ip_address}</span>
+                            </div>
+                            <div class="info-row" style="border-bottom: none;">
+                                <span class="info-label">💼 Role:</span>
+                                <span class="info-value">{user.role.title()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="alert">
+                            <strong>⚠️ Security Notice:</strong><br>
+                            If this wasn't you, please secure your account immediately by changing your password 
+                            and contacting support.
+                        </div>
+                        
+                        <p>This notification helps protect your account from unauthorized access.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; 2025 Trisync Global. All rights reserved.</p>
+                        <p>This is an automated security notification.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Plain text version for email clients that don't support HTML
+            text_body = f"""
+            🔐 Login Notification
+            
+            Hello {user.full_name},
+            
+            We detected a new login to your {business_name} account.
+            
+            Login Details:
+            - Account: {user.email}
+            - Time: {login_time}
+            - IP Address: {ip_address}
+            - Role: {user.role.title()}
+            
+            ⚠️ Security Notice:
+            If this wasn't you, please secure your account immediately by changing your password 
+            and contacting support.
+            
+            This notification helps protect your account from unauthorized access.
+            
+            © 2025 Trisync Global. All rights reserved.
+            This is an automated security notification.
+            """
+            
+            # Send email with display name (same as verification emails)
+            sender_email = current_app.config.get('MAIL_USERNAME')
+            sender_name = 'TSG Cafe ERP'
+            
+            msg = Message(
+                subject=subject,
+                sender=(sender_name, sender_email),  # Display name and email
+                recipients=[user.email],
+                body=text_body,
+                html=html_body
+            )
+            
+            mail.send(msg)
+            
+            return {
+                'success': True,
+                'message': 'Login notification sent successfully'
+            }
+            
+        except Exception as e:
+            current_app.logger.error(f'Failed to send login notification: {str(e)}')
+            return {
+                'success': False,
+                'message': str(e)
+            }
+    
+    @staticmethod
     def send_email_code(email, business_name=None):
         """
         Generate and send verification code via email
@@ -55,19 +222,33 @@ class VerificationService:
             <!DOCTYPE html>
             <html>
             <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 10px; }}
                     .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                              color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f8f9fa; padding: 30px; }}
-                    .code-box {{ background: white; border: 2px dashed #667eea; padding: 20px; 
+                              color: white; padding: 20px 15px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .header h1 {{ margin: 0; font-size: 24px; }}
+                    .content {{ background: #f8f9fa; padding: 20px 15px; }}
+                    .code-box {{ background: white; border: 2px dashed #667eea; padding: 20px 15px; 
                                 text-align: center; font-size: 32px; font-weight: bold; 
                                 letter-spacing: 8px; color: #667eea; margin: 20px 0; 
-                                border-radius: 8px; }}
+                                border-radius: 8px; word-break: break-all; }}
                     .warning {{ background: #fff3cd; border-left: 4px solid #ffc107; 
-                               padding: 15px; margin: 20px 0; }}
-                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+                               padding: 12px; margin: 15px 0; font-size: 14px; }}
+                    .footer {{ text-align: center; padding: 15px 10px; color: #666; font-size: 11px; }}
+                    
+                    /* Mobile responsive */
+                    @media only screen and (max-width: 600px) {{
+                        .container {{ padding: 5px; }}
+                        .header {{ padding: 15px 10px; border-radius: 5px 5px 0 0; }}
+                        .header h1 {{ font-size: 20px; }}
+                        .content {{ padding: 15px 10px; }}
+                        .code-box {{ font-size: 28px; letter-spacing: 6px; padding: 15px 10px; margin: 15px 0; }}
+                        .warning {{ padding: 10px; margin: 10px 0; font-size: 13px; }}
+                        .footer {{ padding: 12px 8px; font-size: 10px; }}
+                        body, p {{ font-size: 14px; }}
+                    }}
                 </style>
             </head>
             <body>

@@ -35,6 +35,9 @@
                 <button onclick="switchTab('tutorials')" id="tab-tutorials" class="flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-gray-700 hover:bg-white/50">
                     <i class="fas fa-video mr-2"></i>Video Tutorials
                 </button>
+                <button onclick="switchTab('favicon')" id="tab-favicon" class="flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 text-gray-700 hover:bg-white/50">
+                    <i class="fas fa-icons mr-2"></i>Favicon
+                </button>
             </div>
         </div>
 
@@ -297,6 +300,84 @@
             </div>
         </div>
 
+        <!-- Favicon Settings -->
+        <div id="content-favicon" class="tab-content hidden">
+            <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-icons text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">System Favicon</h2>
+                        <p class="text-sm text-gray-600">Customize the browser tab icon for your ERP system</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Current Favicon Display -->
+                    <div class="bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Current Favicon</label>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-20 h-20 bg-white rounded-xl border-2 border-orange-300 flex items-center justify-center shadow-md">
+                                <img id="current-favicon-preview" src="{{ url_for('static', filename='favicon.ico') }}" alt="Current Favicon" class="w-16 h-16 object-contain">
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-700 font-medium">This icon appears in browser tabs</p>
+                                <p class="text-xs text-gray-500 mt-1" id="favicon-filename">Default favicon.ico</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload New Favicon -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-upload text-orange-600 mr-2"></i>Upload New Favicon
+                        </label>
+                        <div class="mt-2 flex items-center space-x-4">
+                            <label class="flex-1 flex flex-col items-center px-6 py-6 bg-gray-50 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <span class="text-sm text-gray-600">Click to upload favicon</span>
+                                <span class="text-xs text-gray-500 mt-1">PNG, JPG, ICO, SVG (max 2MB)</span>
+                                <input type="file" id="favicon-upload" accept=".png,.jpg,.jpeg,.ico,.svg" class="hidden" onchange="previewFavicon(event)">
+                            </label>
+                            <div id="new-favicon-preview-container" class="hidden">
+                                <div class="w-20 h-20 bg-white rounded-xl border-2 border-green-300 flex items-center justify-center shadow-md">
+                                    <img id="new-favicon-preview" src="" alt="New Favicon" class="w-16 h-16 object-contain">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-4">
+                        <button onclick="uploadFavicon()" id="btn-upload-favicon" class="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-upload mr-2"></i>Upload Favicon
+                        </button>
+                        <button onclick="deleteFavicon()" id="btn-delete-favicon" class="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                            <i class="fas fa-trash-alt mr-2"></i>Restore Default
+                        </button>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-blue-900">About Favicon</h4>
+                                <ul class="text-sm text-blue-800 mt-2 space-y-1 list-disc list-inside">
+                                    <li>Favicon appears in browser tabs, bookmarks, and browser history</li>
+                                    <li>Recommended size: 32x32 pixels or 16x16 pixels</li>
+                                    <li>Supported formats: PNG, JPG, ICO, SVG</li>
+                                    <li>Changes apply system-wide to all users</li>
+                                    <li>You may need to refresh browser (Ctrl+F5) to see changes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}
@@ -308,6 +389,7 @@ let currentTab = 'welcome';
 // Load settings on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadWelcomePageSettings();
+    loadCurrentFavicon();
 });
 
 function switchTab(tabName) {
@@ -407,6 +489,156 @@ function showNotification(message, type) {
         notification.style.transform = 'translateY(-20px)';
         setTimeout(() => notification.remove(), 300);
     }, 3000);
+}
+
+// Favicon Management Functions
+let selectedFaviconFile = null;
+
+async function loadCurrentFavicon() {
+    try {
+        const response = await fetch('/system-admin/settings/api/favicon');
+        const data = await response.json();
+        
+        if (data.success && data.favicon) {
+            const previewImg = document.getElementById('current-favicon-preview');
+            const filenameText = document.getElementById('favicon-filename');
+            
+            previewImg.src = `/static/${data.favicon}`;
+            filenameText.textContent = data.favicon;
+        }
+    } catch (error) {
+        console.error('Error loading favicon:', error);
+    }
+}
+
+function previewFavicon(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            showNotification('File size must be less than 2MB', 'error');
+            event.target.value = '';
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/x-icon', 'image/svg+xml'];
+        if (!validTypes.includes(file.type)) {
+            showNotification('Invalid file type. Please use PNG, JPG, ICO, or SVG', 'error');
+            event.target.value = '';
+            return;
+        }
+
+        selectedFaviconFile = file;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewContainer = document.getElementById('new-favicon-preview-container');
+            const previewImg = document.getElementById('new-favicon-preview');
+            
+            previewImg.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+            
+            // Enable upload button
+            document.getElementById('btn-upload-favicon').disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+async function uploadFavicon() {
+    if (!selectedFaviconFile) {
+        showNotification('Please select a file first', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('favicon', selectedFaviconFile);
+
+    try {
+        const uploadBtn = document.getElementById('btn-upload-favicon');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+
+        const response = await fetch('/system-admin/settings/api/favicon/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(result.message || 'Favicon uploaded successfully!', 'success');
+            
+            // Update current favicon display
+            const previewImg = document.getElementById('current-favicon-preview');
+            const filenameText = document.getElementById('favicon-filename');
+            previewImg.src = `/static/${result.favicon}`;
+            filenameText.textContent = result.favicon;
+            
+            // Hide new preview
+            document.getElementById('new-favicon-preview-container').classList.add('hidden');
+            document.getElementById('favicon-upload').value = '';
+            selectedFaviconFile = null;
+            
+            // Notify user to refresh
+            setTimeout(() => {
+                showNotification('Press Ctrl+F5 to see changes in browser tab', 'info');
+            }, 1500);
+        } else {
+            showNotification('Error: ' + (result.error || 'Upload failed'), 'error');
+        }
+    } catch (error) {
+        console.error('Error uploading favicon:', error);
+        showNotification('Error uploading favicon', 'error');
+    } finally {
+        const uploadBtn = document.getElementById('btn-upload-favicon');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload Favicon';
+    }
+}
+
+async function deleteFavicon() {
+    if (!confirm('Are you sure you want to restore the default favicon?')) {
+        return;
+    }
+
+    try {
+        const deleteBtn = document.getElementById('btn-delete-favicon');
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+
+        const response = await fetch('/system-admin/settings/api/favicon', {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(result.message || 'Default favicon restored!', 'success');
+            
+            // Reset to default
+            const previewImg = document.getElementById('current-favicon-preview');
+            const filenameText = document.getElementById('favicon-filename');
+            previewImg.src = '/static/favicon.ico';
+            filenameText.textContent = 'Default favicon.ico';
+            
+            // Notify user to refresh
+            setTimeout(() => {
+                showNotification('Press Ctrl+F5 to see changes in browser tab', 'info');
+            }, 1500);
+        } else {
+            showNotification('Error: ' + (result.error || 'Delete failed'), 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting favicon:', error);
+        showNotification('Error deleting favicon', 'error');
+    } finally {
+        const deleteBtn = document.getElementById('btn-delete-favicon');
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>Restore Default';
+    }
 }
 </script>
 {% endblock %}

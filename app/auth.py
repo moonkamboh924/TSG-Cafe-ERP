@@ -126,6 +126,15 @@ def login():
                 login_user(user, remember=True)
                 log_audit('login', 'user', user.id)
                 
+                # Send login notification email to owner and system administrators
+                if user.is_owner or user.role in ['owner', 'system_administrator']:
+                    try:
+                        from app.services.verification_service import VerificationService
+                        VerificationService.send_login_notification(user)
+                    except Exception as e:
+                        # Don't fail login if email fails
+                        logging.error(f'Failed to send login notification: {str(e)}')
+                
                 # Check if password change is required
                 if user.requires_password_change:
                     return redirect(url_for('admin.change_password_required'))

@@ -124,7 +124,7 @@ def create_item():
                 menu_item_id=item.id,
                 inventory_item_id=recipe_data['inventory_item_id'],
                 quantity=recipe_data['quantity'],
-                unit=recipe_data['unit']
+                unit=recipe_data.get('unit', 'unit')  # Default to 'unit' if not provided
             )
             db.session.add(recipe)
         
@@ -176,7 +176,7 @@ def update_item(item_id):
                     menu_item_id=item.id,
                     inventory_item_id=recipe_data['inventory_item_id'],
                     quantity=recipe_data['quantity'],
-                    unit=recipe_data['unit']
+                    unit=recipe_data.get('unit', 'unit')  # Default to 'unit' if not provided
                 )
                 db.session.add(recipe)
         
@@ -319,14 +319,14 @@ def update_item_recipe(item_id):
         # Remove existing recipe items
         MenuRecipe.query.filter_by(menu_item_id=item.id).delete()
         
-        # Add new recipe items
+        # Add recipe items if provided
         recipe_items = data.get('recipe_items', [])
         for recipe_data in recipe_items:
             recipe = MenuRecipe(
                 menu_item_id=item.id,
                 inventory_item_id=recipe_data['inventory_item_id'],
                 quantity=recipe_data['quantity'],
-                unit=recipe_data['unit']
+                unit=recipe_data.get('unit', 'unit')  # Default to 'unit' if not provided
             )
             db.session.add(recipe)
         

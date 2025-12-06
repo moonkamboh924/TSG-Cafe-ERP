@@ -269,8 +269,9 @@ def create_system_administrator():
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating system administrator: {str(e)}")
-        print(f"Data received: {data}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating system administrator: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/api/delete/<int:user_id>', methods=['DELETE'])

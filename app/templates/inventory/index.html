@@ -290,8 +290,33 @@ class InventoryManager {
     }
     
     async loadUnits() {
-        // Units are now loaded dynamically based on category selection
-        // This method is kept for compatibility but units are populated by updateUnitsBasedOnCategory
+        // Load all units by default
+        await this.loadAllUnits();
+    }
+    
+    async loadAllUnits() {
+        const unitSelect = document.getElementById('itemUnit');
+        if (!unitSelect) return;
+        
+        unitSelect.innerHTML = '<option value="">Select Unit</option>';
+        
+        try {
+            const response = await fetch('/inventory/api/inventory-units');
+            const data = await response.json();
+            
+            if (data.success && data.units) {
+                data.units.forEach(unit => {
+                    const option = document.createElement('option');
+                    option.value = unit.value;
+                    option.textContent = unit.label;
+                    unitSelect.appendChild(option);
+                });
+                console.log('Loaded', data.units.length, 'units');
+            }
+        } catch (error) {
+            console.error('Error loading units:', error);
+            this.loadFallbackWeightUnits(unitSelect);
+        }
     }
     
     async updateUnitsBasedOnCategory(e) {
@@ -535,6 +560,9 @@ class InventoryManager {
         document.getElementById('modalTitle').textContent = 'Add Inventory Item';
         document.getElementById('itemForm').reset();
         document.getElementById('isActive').checked = true;
+        
+        // Load all units on modal open
+        await this.loadAllUnits();
         
         // Generate new SKU
         try {

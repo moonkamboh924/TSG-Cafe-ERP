@@ -31,10 +31,16 @@ class TenantService:
             dict: Created business and user information
         """
         try:
-            # Check if business already exists
+            # Check if business name already exists (current or historical)
+            from ..models import BusinessNameHistory
             existing_business = Business.query.filter_by(business_name=business_name).first()
             if existing_business:
-                raise ValueError(f"Business '{business_name}' already exists")
+                raise ValueError(f"Business name '{business_name}' is already registered")
+            
+            # Check if name was used before by any business
+            historical_name = BusinessNameHistory.query.filter_by(business_name=business_name).first()
+            if historical_name:
+                raise ValueError(f"Business name '{business_name}' was previously used and cannot be reused")
             
             # Check if email already exists
             existing_user = User.query.filter_by(email=owner_email).first()
@@ -64,6 +70,17 @@ class TenantService:
             )
             db.session.add(business)
             db.session.flush()  # Get business ID
+            
+            # Generate and set business code based on business name
+            business.business_code = TenantService._generate_business_code(business_name)
+            
+            # Record the initial business name in history
+            from ..models import BusinessNameHistory
+            name_history = BusinessNameHistory(
+                business_id=business.id,
+                business_name=business_name
+            )
+            db.session.add(name_history)
             
             # Generate secure credentials
             username = TenantService._generate_username(business_name)
@@ -129,9 +146,6 @@ class TenantService:
             # Create default system settings for this tenant
             TenantService._create_default_settings(business.id, business_name)
             
-            # Create default menu structure
-            TenantService._create_default_menu_structure(business.id)
-            
             db.session.commit()
             
             return {
@@ -151,6 +165,47 @@ class TenantService:
         except Exception as e:
             db.session.rollback()
             raise e
+    
+    @staticmethod
+    def _generate_business_code(business_name):
+        """Generate unique business code based on business name abbreviation + padded number"""
+        import re
+        
+        # Extract letters only and convert to uppercase
+        letters_only = re.sub(r'[^A-Za-z]', '', business_name).upper()
+        
+        if not letters_only:
+            abbreviation = 'BIZ'
+        else:
+            # Create abbreviation from business name
+            words = re.findall(r'[A-Z][a-z]*', business_name.title())
+            
+            if len(words) >= 2:
+                # Use first letter of each word (e.g., "Art by Lishy" -> "ABL")
+                abbreviation = ''.join(word[0] for word in words if word)
+            elif len(letters_only) >= 3:
+                # Use first 3-4 letters (e.g., "Restaurant" -> "REST")
+                abbreviation = letters_only[:4]
+            else:
+                # Use all letters and pad if needed
+                abbreviation = letters_only.ljust(3, 'X')
+        
+        # Limit abbreviation to 4 characters max
+        abbreviation = abbreviation[:4]
+        
+        # Get total count of existing businesses + 1
+        total_businesses = Business.query.count()
+        business_number = total_businesses + 1
+        
+        # Generate code: ABBREVIATION + 3-digit padded number
+        business_code = f"{abbreviation}{business_number:03d}"
+        
+        # Ensure uniqueness (in case of race conditions or deletions)
+        while Business.query.filter_by(business_code=business_code).first():
+            business_number += 1
+            business_code = f"{abbreviation}{business_number:03d}"
+        
+        return business_code
     
     @staticmethod
     def _generate_username(business_name):
@@ -230,58 +285,6 @@ class TenantService:
                     value=value
                 )
                 db.session.add(setting)
-    
-    @staticmethod
-    def _create_default_menu_structure(business_id):
-        """Create default menu categories and sample items"""
-        from ..models import MenuCategory, MenuItem
-        
-        # Default menu categories
-        categories = [
-            {'name': 'Appetizers', 'order_index': 1},
-            {'name': 'Main Courses', 'order_index': 2},
-            {'name': 'Beverages', 'order_index': 3},
-            {'name': 'Desserts', 'order_index': 4}
-        ]
-        
-        for cat_data in categories:
-            category = MenuCategory(
-                business_id=business_id,
-                name=cat_data['name'],
-                order_index=cat_data['order_index'],
-                is_active=True
-            )
-            db.session.add(category)
-            db.session.flush()  # Get category ID
-            
-            # Add sample menu items for each category
-            if cat_data['name'] == 'Beverages':
-                items = [
-                    {'name': 'Coffee', 'price': 3.50},
-                    {'name': 'Tea', 'price': 2.50},
-                    {'name': 'Soft Drink', 'price': 2.00}
-                ]
-            elif cat_data['name'] == 'Main Courses':
-                items = [
-                    {'name': 'Grilled Chicken', 'price': 15.99},
-                    {'name': 'Pasta Special', 'price': 12.99}
-                ]
-            else:
-                items = []
-            
-            for i, item_data in enumerate(items, 1):
-                # Generate SKU for menu item
-                sku = f"MENU{category.id:02d}{i:03d}"
-                
-                menu_item = MenuItem(
-                    business_id=business_id,
-                    category_id=category.id,
-                    sku=sku,
-                    name=item_data['name'],
-                    price=item_data['price'],
-                    is_active=True
-                )
-                db.session.add(menu_item)
     
     @staticmethod
     def get_tenant_info(business_id):

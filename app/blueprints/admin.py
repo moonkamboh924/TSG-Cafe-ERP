@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file, current_app
 from flask_login import login_required, current_user
-from app.models import User, SystemSetting, AuditLog, BillTemplate, Sale, db
+from app.models import User, SystemSetting, AuditLog, BillTemplate, Sale, Business, BusinessNameHistory, db
 from app.auth import require_permissions, log_audit
 from app.services.backup_service import backup_service
 from app.services.data_persistence import data_persistence
@@ -826,6 +826,68 @@ def upload_profile_picture():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+@bp.route('/api/check-business-name', methods=['POST'])
+@login_required
+@require_permissions('admin.view')
+def check_business_name():
+    """Check if business name is available (not duplicate)"""
+    from app.models import Business, BusinessNameHistory
+    
+    data = request.get_json()
+    business_name = data.get('business_name', '').strip()
+    
+    if not business_name:
+        return jsonify({'available': False, 'message': 'Business name is required'}), 400
+    
+    # Get current user's business
+    current_business = Business.query.get(current_user.business_id)
+    if not current_business:
+        return jsonify({'available': False, 'message': 'Business not found'}), 404
+    
+    # Skip check if name hasn't changed
+    if business_name == current_business.business_name:
+        return jsonify({'available': True})
+    
+    from sqlalchemy import func
+    
+    # Check if name exists in active businesses (excluding current business, case-insensitive)
+    existing = Business.query.filter(
+        func.lower(Business.business_name) == business_name.lower(),
+        Business.id != current_user.business_id
+    ).first()
+    
+    if existing:
+        return jsonify({
+            'available': False,
+            'message': 'Business name already registered by another business'
+        })
+    
+    # Check if name is used as display name by other businesses (case-insensitive)
+    existing_display = SystemSetting.query.filter(
+        SystemSetting.key == 'restaurant_name',
+        func.lower(SystemSetting.value) == business_name.lower(),
+        SystemSetting.business_id != current_user.business_id
+    ).first()
+    
+    if existing_display:
+        return jsonify({
+            'available': False,
+            'message': 'Business name is currently in use as a display name by another business'
+        })
+    
+    # Check if name was ever used before (in history, case-insensitive)
+    existing_history = BusinessNameHistory.query.filter(
+        func.lower(BusinessNameHistory.business_name) == business_name.lower()
+    ).first()
+    
+    if existing_history:
+        return jsonify({
+            'available': False,
+            'message': 'Business name was previously used and cannot be reused'
+        })
+    
+    return jsonify({'available': True})
+
 @bp.route('/api/save-settings', methods=['POST'])
 @login_required
 @require_permissions('admin.edit')
@@ -833,6 +895,63 @@ def save_settings():
     data = request.get_json()
     
     try:
+        # Validate business name if it's being changed
+        from app.models import Business, BusinessNameHistory
+        
+        new_name = data.get('restaurantName', '').strip()
+        if new_name:
+            current_business = Business.query.get(current_user.business_id)
+            if current_business and new_name != current_business.business_name:
+                from sqlalchemy import func
+                
+                # Check for duplicates in active businesses (case-insensitive)
+                existing = Business.query.filter(
+                    func.lower(Business.business_name) == new_name.lower(),
+                    Business.id != current_user.business_id
+                ).first()
+                
+                if existing:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Business name already registered by another business'
+                    }), 400
+                
+                # Check if name is used as display name by other businesses (case-insensitive)
+                existing_display = SystemSetting.query.filter(
+                    SystemSetting.key == 'restaurant_name',
+                    func.lower(SystemSetting.value) == new_name.lower(),
+                    SystemSetting.business_id != current_user.business_id
+                ).first()
+                
+                if existing_display:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Business name is currently in use as a display name by another business'
+                    }), 400
+                
+                # Check in history (case-insensitive)
+                existing_history = BusinessNameHistory.query.filter(
+                    func.lower(BusinessNameHistory.business_name) == new_name.lower()
+                ).first()
+                
+                if existing_history:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Business name was previously used and cannot be reused'
+                    }), 400
+                
+                # Save old name to history before updating
+                old_name_history = BusinessNameHistory(
+                    business_id=current_business.id,
+                    business_name=current_business.business_name,
+                    changed_by=current_user.id
+                )
+                db.session.add(old_name_history)
+                
+                # Update business name in Business table
+                current_business.business_name = new_name
+                current_business.updated_at = datetime.now(timezone.utc)
+        
         # Define the settings mapping
         settings_mapping = {
             'restaurantName': 'restaurant_name',
@@ -975,10 +1094,9 @@ def save_bill_template():
         
     except Exception as e:
         db.session.rollback()
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Error saving bill template: {str(e)}")
-        print(error_details)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error saving bill template: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'message': f'Error: {str(e)}'
@@ -1191,13 +1309,12 @@ def get_backup_info_test():
             'database_stats': db_stats
         })
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        logger.error(f"Error in get_backup_info_test: {error_details}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_backup_info_test", exc_info=True)
         return jsonify({
             'success': False,
-            'error': str(e),
-            'error_details': error_details if current_app.debug else None
+            'error': str(e)
         }), 500
 
 @bp.route('/api/backup-info')
@@ -1221,13 +1338,12 @@ def get_backup_info():
             'database_stats': db_stats
         })
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        logger.error(f"Error in get_backup_info: {error_details}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_backup_info", exc_info=True)
         return jsonify({
             'success': False,
-            'error': str(e),
-            'error_details': error_details if current_app.debug else None
+            'error': str(e)
         }), 500
 
 @bp.route('/api/create-backup', methods=['POST'])
@@ -1257,13 +1373,12 @@ def create_backup():
             'backup_info': backup_info
         })
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        logger.error(f"Error in create_backup: {error_details}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in create_backup", exc_info=True)
         return jsonify({
             'success': False,
-            'message': str(e),
-            'error_details': error_details if current_app.debug else None
+            'message': str(e)
         }), 500
 
 @bp.route('/api/restore-backup', methods=['POST'])

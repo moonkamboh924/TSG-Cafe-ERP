@@ -2,13 +2,26 @@
 System Settings Blueprint for System Administrators
 """
 
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, current_app
 from flask_login import login_required
 from ...extensions import db
 from ...models import SystemSetting
 from ..decorators import require_system_admin, system_admin_api_required
+from werkzeug.utils import secure_filename
+import os
+import uuid
 
 bp = Blueprint('system_admin_settings', __name__, url_prefix='/system-admin/settings')
+
+# Favicon upload configuration
+ALLOWED_FAVICON_EXTENSIONS = {'png', 'jpg', 'jpeg', 'ico', 'svg'}
+
+def get_favicon_folder():
+    """Get absolute path to static folder"""
+    return os.path.join(current_app.root_path, 'static')
+
+def allowed_favicon_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_FAVICON_EXTENSIONS
 
 @bp.route('/')
 @login_required
@@ -79,6 +92,104 @@ def update_welcome_settings():
         return jsonify({
             'success': True,
             'message': 'Welcome page settings updated successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Favicon Management API
+
+@bp.route('/api/favicon')
+@login_required
+@system_admin_api_required
+def get_favicon():
+    """Get current favicon setting"""
+    try:
+        favicon = SystemSetting.get_setting('system_favicon', None, business_id=None)
+        return jsonify({
+            'success': True,
+            'favicon': favicon
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/favicon/upload', methods=['POST'])
+@login_required
+@system_admin_api_required
+def upload_favicon():
+    """Upload a new favicon"""
+    try:
+        if 'favicon' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+        
+        file = request.files['favicon']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not allowed_favicon_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, ICO, SVG'}), 400
+        
+        # Delete old favicon if exists
+        old_favicon = SystemSetting.get_setting('system_favicon', None, business_id=None)
+        if old_favicon and old_favicon != 'favicon.ico':
+            old_path = os.path.join(get_favicon_folder(), old_favicon)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except Exception as e:
+                    current_app.logger.warning(f"Could not delete old favicon: {e}")
+        
+        # Generate unique filename with secure name
+        original_ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"favicon_{uuid.uuid4().hex[:8]}.{original_ext}"
+        
+        # Save file with absolute path
+        filepath = os.path.join(get_favicon_folder(), filename)
+        file.save(filepath)
+        
+        # Update setting with explicit business_id=None for global setting
+        SystemSetting.set_setting('system_favicon', filename, description='System favicon file', business_id=None)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Favicon uploaded successfully',
+            'favicon': filename
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/api/favicon', methods=['DELETE'])
+@login_required
+@system_admin_api_required
+def delete_favicon():
+    """Delete custom favicon and restore default"""
+    try:
+        # Get current favicon
+        favicon = SystemSetting.get_setting('system_favicon', None, business_id=None)
+        
+        if favicon and favicon != 'favicon.ico':
+            # Delete file
+            filepath = os.path.join(get_favicon_folder(), favicon)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            # Remove setting
+            setting = SystemSetting.query.filter_by(
+                key='system_favicon',
+                business_id=None
+            ).first()
+            if setting:
+                db.session.delete(setting)
+                db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Favicon deleted successfully. Default favicon restored.'
         })
         
     except Exception as e:

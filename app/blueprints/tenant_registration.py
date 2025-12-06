@@ -99,10 +99,10 @@ def register():
         except Exception as e:
             # Show actual error for debugging
             flash(f'Registration failed: {str(e)}', 'error')
-            # Also log the error
-            import traceback
-            print(f"Registration error: {str(e)}")
-            print(f"Traceback: {traceback.format_exc()}")
+            # Log error details
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Registration error: {str(e)}", exc_info=True)
             return render_template('tenant/register.html',
                                  plans=plans,
                                  business_name=business_name,
@@ -120,25 +120,57 @@ def register():
 
 @bp.route('/api/check-availability', methods=['POST'])
 def check_availability():
-    """API endpoint to check business name and email availability"""
+    """API endpoint to check business name, email, and phone availability"""
     data = request.get_json()
     business_name = data.get('business_name', '').strip()
     owner_email = data.get('owner_email', '').strip().lower()
+    phone_number = data.get('phone_number', '').strip()
     
     result = {
         'business_name_available': True,
-        'email_available': True
+        'email_available': True,
+        'phone_available': True,
+        'message': ''
     }
     
     if business_name:
-        from ..models import Business
-        existing_business = Business.query.filter_by(business_name=business_name).first()
-        result['business_name_available'] = existing_business is None
+        from ..models import Business, BusinessNameHistory, SystemSetting
+        from sqlalchemy import func
+        
+        # Check official business names (case-insensitive)
+        existing_business = Business.query.filter(
+            func.lower(Business.business_name) == business_name.lower()
+        ).first()
+        if existing_business:
+            result['business_name_available'] = False
+            result['message'] = 'This business name is already registered'
+        else:
+            # Check current display names in settings (case-insensitive)
+            existing_display = SystemSetting.query.filter(
+                SystemSetting.key == 'restaurant_name',
+                func.lower(SystemSetting.value) == business_name.lower()
+            ).first()
+            if existing_display:
+                result['business_name_available'] = False
+                result['message'] = 'This business name is currently in use as a display name'
+            else:
+                # Check historical names (case-insensitive)
+                historical_name = BusinessNameHistory.query.filter(
+                    func.lower(BusinessNameHistory.business_name) == business_name.lower()
+                ).first()
+                if historical_name:
+                    result['business_name_available'] = False
+                    result['message'] = 'This business name was previously used and cannot be reused'
     
     if owner_email:
         from ..models import User
         existing_user = User.query.filter_by(email=owner_email).first()
         result['email_available'] = existing_user is None
+    
+    if phone_number:
+        from ..models import User
+        existing_phone = User.query.filter_by(phone=phone_number).first()
+        result['phone_available'] = existing_phone is None
     
     return jsonify(result)
 

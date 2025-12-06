@@ -357,16 +357,40 @@ def delete_inventory_item(item_id):
 @login_required
 @require_permissions('inventory.view')
 def get_inventory_categories():
-    """Get all unique inventory categories"""
-    # MULTI-TENANT: Filter by business_id
-    categories = db.session.query(InventoryItem.category).distinct().filter(
-        InventoryItem.business_id == current_user.business_id,
+    """Get all unique inventory categories - shared across all businesses"""
+    # Predefined categories
+    predefined_categories = [
+        'Vegetables',
+        'Fruits',
+        'Meat & Poultry',
+        'Seafood',
+        'Dairy Products',
+        'Bakery Items',
+        'Beverages',
+        'Spices & Seasonings',
+        'Oils & Fats',
+        'Grains & Cereals',
+        'Canned Goods',
+        'Frozen Foods',
+        'Cleaning Supplies',
+        'Paper Products',
+        'Packaging Materials',
+        'Kitchen Equipment',
+        'Other'
+    ]
+    
+    # Get ALL existing categories from ALL businesses (system-wide)
+    existing_categories = db.session.query(InventoryItem.category).distinct().filter(
         InventoryItem.is_active == True
     ).all()
     
+    # Combine predefined and existing categories
+    all_categories = set(predefined_categories)
+    all_categories.update([cat[0] for cat in existing_categories if cat[0]])
+    
     return jsonify({
         'success': True,
-        'categories': [cat[0] for cat in categories if cat[0]]
+        'categories': sorted(list(all_categories))
     })
 
 @bp.route('/api/inventory-units')

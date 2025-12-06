@@ -428,7 +428,7 @@ async function loadExpenseCategories(dateFrom, dateTo) {
         const data = result.data;
         
         // Calculate total
-        const total = data.reduce((sum, item) => sum + parseFloat(item.total), 0);
+        const total = data.reduce((sum, item) => sum + parseFloat(item.total_amount), 0);
         document.getElementById('expenseCategoriesTotal').textContent = formatCurrency(total);
         
         // Update chart
