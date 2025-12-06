@@ -426,10 +426,12 @@ async function loadGlobalSettings() {
         const response = await fetch('/admin/api/global-settings');
         if (response.ok) {
             const settings = await response.json();
+            console.log('⚙️ Global settings loaded:', settings);
             const taxRate = parseFloat(settings.tax_rate || 0) / 100;
             const serviceCharge = parseFloat(settings.service_charge || 0) / 100;
             window.globalTaxRate = taxRate;
             window.globalServiceCharge = serviceCharge;
+            console.log('💰 Tax Rate:', taxRate * 100 + '%', 'Service Charge:', serviceCharge * 100 + '%');
             
             // Update tax rate display
             const taxRateDisplay = document.getElementById('taxRate');
@@ -445,6 +447,8 @@ async function loadGlobalSettings() {
             
             // Update cart totals with new tax rate and service charge
             updateCart();
+        } else {
+            console.error('❌ Failed to load settings:', response.status);
         }
     } catch (error) {
         console.error('Failed to load global settings:', error);
@@ -588,6 +592,16 @@ function updateCart() {
     const taxRate = window.globalTaxRate || 0.0; // Use global tax rate or fallback to 0%
     const tax = taxableAmount * taxRate;
     const total = taxableAmount + tax;
+    
+    console.log('💵 Cart totals:', {
+        subtotal,
+        serviceChargeRate: (serviceChargeRate * 100) + '%',
+        serviceCharge,
+        taxableAmount,
+        taxRate: (taxRate * 100) + '%',
+        tax,
+        total
+    });
     
     document.getElementById('subtotal').textContent = formatCurrency(subtotal);
     document.getElementById('serviceCharge').textContent = formatCurrency(serviceCharge);
@@ -1685,15 +1699,21 @@ async function viewCreditOrder(creditSaleId) {
         
         // Fetch the order details to get sale lines
         let orderItems = [];
+        console.log('📦 Fetching order details for sale_id:', creditSale.sale_id);
         if (creditSale.sale_id) {
             try {
                 const orderResponse = await fetch(`/pos/api/sales/${creditSale.sale_id}`);
+                console.log('📡 Order response status:', orderResponse.status);
                 if (orderResponse.ok) {
                     const orderData = await orderResponse.json();
+                    console.log('✅ Order data received:', orderData);
                     orderItems = orderData.lines || [];
+                    console.log('📦 Order items:', orderItems);
+                } else {
+                    console.error('❌ Failed to fetch order:', orderResponse.status, orderResponse.statusText);
                 }
             } catch (err) {
-                console.warn('Could not load order items:', err);
+                console.error('❌ Error loading order items:', err);
             }
         }
         
@@ -1736,7 +1756,11 @@ async function viewCreditOrder(creditSaleId) {
                         `).join('')}
                     </div>
                 </div>
-                ` : ''}
+                ` : `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                    <p class="text-yellow-800">⚠️ No order items found for this credit sale.</p>
+                </div>
+                `}
                 
                 <!-- Credit Amount Details -->
                 <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
