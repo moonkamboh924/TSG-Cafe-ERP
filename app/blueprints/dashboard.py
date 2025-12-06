@@ -370,6 +370,19 @@ def revenue_details():
             )
         ).scalar() or 0
         
+        # Get cash credit payments to add to cash sales
+        credit_payments_cash_temp = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
+            and_(
+                CreditPayment.business_id == current_user.business_id,
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end,
+                CreditPayment.payment_method == 'cash'
+            )
+        ).scalar() or 0
+        
+        # Add cash credit payments to cash sales for proper Cash total
+        cash_sales += credit_payments_cash_temp
+        
         # Account sales (online payments, bank transfers, etc.) - exclude credit payment sales
         account_sales = db.session.query(func.sum(Sale.total)).filter(
             and_(
@@ -379,6 +392,19 @@ def revenue_details():
                 ~Sale.invoice_no.like('%-PAY-%')  # Exclude credit payment sale records
             )
         ).scalar() or 0
+        
+        # Get online credit payments to add to account sales
+        credit_payments_online_temp = db.session.query(func.sum(CreditPayment.payment_amount)).filter(
+            and_(
+                CreditPayment.business_id == current_user.business_id,
+                CreditPayment.payment_date >= today_start,
+                CreditPayment.payment_date < today_end,
+                CreditPayment.payment_method.in_(['online', 'bank_transfer', 'account'])
+            )
+        ).scalar() or 0
+        
+        # Add online credit payments to account sales for proper Account total
+        account_sales += credit_payments_online_temp
         
         # Credit sales for today
         from ..models import CreditSale
