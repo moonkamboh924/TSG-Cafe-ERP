@@ -38,6 +38,7 @@ def get_global_settings():
         'restaurant_address': SystemSetting.get_setting('restaurant_address', ''),
         'restaurant_phone': SystemSetting.get_setting('restaurant_phone', ''),
         'tax_rate': SystemSetting.get_setting('tax_rate', '16'),
+        'service_charge': SystemSetting.get_setting('service_charge', '10'),
         'currency': SystemSetting.get_setting('currency', 'PKR'),
         'date_format': SystemSetting.get_setting('date_format', 'DD/MM/YYYY'),
         'time_format': SystemSetting.get_setting('time_format', '12'),
