@@ -191,7 +191,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">Revenue</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsRevenue">₹0</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="detailsRevenue">₹ 0</p>
                     </div>
                     <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
                         <i class="fas fa-rupee-sign text-emerald-600 text-xl"></i>
@@ -743,16 +743,19 @@ function businessManager() {
                 const data = await response.json();
                 
                 if (response.ok) {
+                    // Get currency symbol from API response
+                    const currencySymbol = data.currency_symbol || '₹';
+                    
                     // Update stats cards
                     document.getElementById('detailsSalesCount').textContent = data.total_sales || 0;
-                    document.getElementById('detailsRevenue').textContent = '₹' + (data.total_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsRevenue').textContent = currencySymbol + ' ' + (data.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     document.getElementById('detailsMenuItems').textContent = data.menu_items || 0;
-                    document.getElementById('detailsExpenses').textContent = '₹' + (data.total_expenses || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    document.getElementById('detailsCreditSales').textContent = '₹' + (data.credit_sales || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    document.getElementById('detailsPendingCredits').textContent = '₹' + (data.pending_credits || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsExpenses').textContent = currencySymbol + ' ' + (data.total_expenses || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsCreditSales').textContent = currencySymbol + ' ' + (data.credit_sales || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsPendingCredits').textContent = currencySymbol + ' ' + (data.pending_credits || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     
                     const netProfit = (data.total_revenue || 0) - (data.total_expenses || 0);
-                    document.getElementById('detailsNetProfit').textContent = '₹' + netProfit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('detailsNetProfit').textContent = currencySymbol + ' ' + netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     document.getElementById('detailsNetProfit').className = `font-bold text-lg ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`;
                     
                     // Update activity timeline
@@ -777,11 +780,13 @@ function businessManager() {
                 } else {
                     // Set default values if analytics fails
                     document.getElementById('detailsSalesCount').textContent = '—';
-                    document.getElementById('detailsRevenue').textContent = '₹0';
+                    document.getElementById('detailsRevenue').textContent = '₹ 0';
                     document.getElementById('detailsMenuItems').textContent = '—';
-                    document.getElementById('detailsExpenses').textContent = '₹0';
-                    document.getElementById('detailsCreditSales').textContent = '₹0';
-                    document.getElementById('detailsPendingCredits').textContent = '₹0';
+                    document.getElementById('detailsExpenses').textContent = '₹ 0';
+                    document.getElementById('detailsCreditSales').textContent = '₹ 0';
+                    document.getElementById('detailsPendingCredits').textContent = '₹ 0';
+                    document.getElementById('detailsNetProfit').textContent = '₹ 0';
+                    document.getElementById('detailsActivityTimeline').innerHTML = '<p class="text-sm text-gray-500">No recent activity</p>';
                     document.getElementById('detailsNetProfit').textContent = '₹0';
                     document.getElementById('detailsActivityTimeline').innerHTML = '<p class="text-sm text-gray-500">Analytics data unavailable</p>';
                 }

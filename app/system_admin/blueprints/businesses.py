@@ -467,7 +467,14 @@ def get_business_analytics(business_id):
     """Get comprehensive analytics for a specific business"""
     
     try:
+        from ...models import SystemSetting
+        from ...utils.currency_utils import get_currency_symbol, get_system_currency
+        
         business = Business.query.get_or_404(business_id)
+        
+        # Get business currency
+        currency_code = get_system_currency(business_id=business_id)
+        currency_symbol = get_currency_symbol(currency_code)
         
         # Calculate total sales and revenue
         total_sales = Sale.query.filter_by(business_id=business_id).count()
@@ -521,6 +528,8 @@ def get_business_analytics(business_id):
         return jsonify({
             'business_id': business_id,
             'business_name': business.business_name,
+            'currency_code': currency_code,
+            'currency_symbol': currency_symbol,
             'total_sales': total_sales,
             'total_revenue': float(total_revenue),
             'total_expenses': float(total_expenses),
